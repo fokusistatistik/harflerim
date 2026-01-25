@@ -1,0 +1,30 @@
+{
+    "name": "Harf Yuvası - Harf Öğrenme",
+    "short_name": "Harf Yuvası",
+    "description": "ASD odaklı Türkçe harf tanıma ve işitsel-görsel eşleştirme uygulaması",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFDD0",
+    "theme_color": "#FFFDD0",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "education",
+        "kids"
+    ],
+    "lang": "tr",
+    "dir": "ltr"
+}

@@ -1,0 +1,46 @@
+{
+    "app": {
+        "title": "HarfArkadaşım",
+        "subtitle": "Harflerle Eğlenceli Öğrenme"
+    },
+    "game": {
+        "findLetter": "Hadi {{letter}} harfini bulalım!",
+        "listening": "Dinliyorum...",
+        "tapToStart": "Başlamak için dokun"
+    },
+    "feedback": {
+        "success": [
+            "Harika!",
+            "Çok güzel!",
+            "Aferin!",
+            "Mükemmel!",
+            "Süpersin!"
+        ],
+        "retry": [
+            "Tekrar deneyelim mi?",
+            "Bir daha bakalım",
+            "Birlikte bulalım"
+        ],
+        "encouragement": [
+            "Çok yaklaştın!",
+            "Devam et!",
+            "Sen yaparsın!"
+        ]
+    },
+    "ui": {
+        "settings": "Ayarlar",
+        "statistics": "İstatistikler",
+        "export": "Verileri Dışa Aktar",
+        "reset": "Sıfırla",
+        "volume": "Ses Seviyesi",
+        "speed": "Konuşma Hızı",
+        "pitch": "Ses Tonu"
+    },
+    "stats": {
+        "totalAttempts": "Toplam Deneme",
+        "successRate": "Başarı Oranı",
+        "averageTime": "Ortalama Süre",
+        "bestLetter": "En İyi Harf",
+        "practiceMore": "Daha Fazla Pratik Gerekli"
+    }
+}
