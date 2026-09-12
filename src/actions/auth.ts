@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { createAuthSession, destroyAuthSession, verifyPassword } from '@/lib/auth';
+import { logAudit } from '@/lib/auditLog';
 
 export async function login(_prev: string | null, formData: FormData): Promise<string | null> {
     const username = String(formData.get('username') ?? '').trim();
@@ -17,14 +18,17 @@ export async function login(_prev: string | null, formData: FormData): Promise<s
     });
 
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
+        await logAudit('LOGIN_FAILURE', null, `Denenen kullanıcı adı: ${username}`);
         return 'Kullanıcı adı veya şifre doğru değil. Tekrar dene.';
     }
 
     await createAuthSession(user.id);
+    await logAudit('LOGIN_SUCCESS', user.id);
     redirect('/');
 }
 
 export async function logout() {
-    await destroyAuthSession();
+    const userId = await destroyAuthSession();
+    await logAudit('LOGOUT', userId);
     redirect('/giris');
 }

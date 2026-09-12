@@ -11,6 +11,8 @@ import Link from 'next/link';
 
 import { LETTER_OBJECTS, ALPHABET_ORDER, AUDIOS, LETTER_IMAGES, LetterAsset } from '@/store/gameData';
 import { useLevelStore } from '@/store/levelStore';
+import { useAudio } from '@/components/AudioProvider';
+import { useNotificationStore } from '@/store/notificationStore';
 import { DraggableToken } from './DraggableToken';
 import { TargetFrame } from './TargetFrame';
 import { HintImage } from './HintImage';
@@ -43,6 +45,8 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 
 export default function GameBoard() {
     const { currentLevel, advanceLevel, getLevelConfig, isDayComplete, sessionId } = useLevelStore();
+    const { askLetter, celebrateSuccess, encourageRetry } = useAudio();
+    const pushToast = useNotificationStore((s) => s.pushToast);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [levelConfig, setLevelConfig] = useState(getLevelConfig(currentLevel));
@@ -86,6 +90,19 @@ export default function GameBoard() {
             return () => clearTimeout(timer);
         }
     }, [isPlaying, currentLevel]);
+
+    // Hint Logic
+    const [showHint, setShowHint] = useState(false);
+
+    useEffect(() => {
+        // Reset hint when level starts
+        setShowHint(false);
+        const timer = setTimeout(() => {
+            setShowHint(true);
+        }, 5000); // 5 seconds idle -> Show Hint
+
+        return () => clearTimeout(timer);
+    }, [targetLetter, status]); // Reset on new letter or status change
 
     // Loading state
     if (!sessionId) return <div className="flex h-screen items-center justify-center text-softIndigo">Yükleniyor...</div>;
@@ -133,6 +150,7 @@ export default function GameBoard() {
         setOptions(allOptions);
         setStatus('idle');
         setStartTime(Date.now());
+        askLetter(randomTarget).catch(() => {});
     };
 
     const handleLevelSelect = (level: number) => {
@@ -152,19 +170,6 @@ export default function GameBoard() {
             }
         }
     };
-
-    // Hint Logic
-    const [showHint, setShowHint] = useState(false);
-
-    useEffect(() => {
-        // Reset hint when level starts
-        setShowHint(false);
-        const timer = setTimeout(() => {
-            setShowHint(true);
-        }, 5000); // 5 seconds idle -> Show Hint
-
-        return () => clearTimeout(timer);
-    }, [targetLetter, status]); // Reset on new letter or status change
 
     const handleDragStart = (event: any) => {
         setActiveId(event.active.id);
@@ -188,6 +193,8 @@ export default function GameBoard() {
         if (isCorrect) {
             setStatus('success');
             playSuccess();
+            celebrateSuccess().catch(() => {});
+            pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
             confetti({
                 particleCount: 150,
                 spread: 70,
@@ -205,6 +212,8 @@ export default function GameBoard() {
         } else {
             setStatus('error');
             playError();
+            encourageRetry().catch(() => {});
+            pushToast({ scope: 'child', kind: 'error', message: 'Tekrar deneyelim' });
             setTimeout(() => setStatus('idle'), 800);
         }
     };

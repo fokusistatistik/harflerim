@@ -26,12 +26,18 @@ export async function createAuthSession(userId: string) {
     });
 }
 
-export async function destroyAuthSession() {
+export async function destroyAuthSession(): Promise<string | null> {
     const token = cookies().get(AUTH_COOKIE)?.value;
+    let userId: string | null = null;
+
     if (token) {
+        const session = await db.authSession.findUnique({ where: { id: token } });
+        userId = session?.userId ?? null;
         await db.authSession.deleteMany({ where: { id: token } });
     }
+
     cookies().delete(AUTH_COOKIE);
+    return userId;
 }
 
 export async function getCurrentUser() {

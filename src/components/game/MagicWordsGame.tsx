@@ -11,6 +11,8 @@ import confetti from 'canvas-confetti';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
+import { useAudio } from '@/components/AudioProvider';
+import { useNotificationStore } from '@/store/notificationStore';
 
 const ALL_WORDS = Object.values(LETTER_OBJECTS).flat();
 
@@ -110,6 +112,8 @@ export default function MagicWordsGame() {
     const { progress, updateProgress, loaded } = useMagicWordsProgress();
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
+    const { celebrateSuccess, encourageRetry } = useAudio();
+    const pushToast = useNotificationStore((s) => s.pushToast);
 
     // Recognition
     const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
@@ -179,11 +183,13 @@ export default function MagicWordsGame() {
         isProcessingRef.current = true; // LOCK
 
         playCorrect();
+        celebrateSuccess().catch(() => {});
+        pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
         updateProgress(true);
         confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 }, colors: ['#FFC0CB', '#FFD700', '#00BFFF', '#32CD32'] });
 
         moveToNextCard();
-    }, [playCorrect, updateProgress, moveToNextCard]);
+    }, [playCorrect, celebrateSuccess, pushToast, updateProgress, moveToNextCard]);
 
 
     const handleSkip = useCallback(() => {
@@ -192,10 +198,11 @@ export default function MagicWordsGame() {
 
         setSkipTriggered(true);
         playSad();
+        encourageRetry().catch(() => {});
         updateProgress(false);
 
         moveToNextCard();
-    }, [playSad, updateProgress, moveToNextCard]);
+    }, [playSad, encourageRetry, updateProgress, moveToNextCard]);
 
 
     // --- MATCH LISTENER ---
@@ -291,7 +298,7 @@ export default function MagicWordsGame() {
             {/* FOOTER */}
             <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t-2 border-indigo-50 rounded-t-[2.5rem] p-6 pb-8 z-30 flex flex-col items-center min-h-[160px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 {transcript ? (
-                    <span className="text-3xl font-extrabold text-indigo-600 break-words leading-tight">"{transcript}"</span>
+                    <span className="text-3xl font-extrabold text-indigo-600 break-words leading-tight">&quot;{transcript}&quot;</span>
                 ) : (
                     !listening ? (
                         <button onClick={() => SpeechRecognition.startListening({ continuous: true, language: 'tr-TR' })} className="mt-4 px-6 py-3 bg-red-100 text-red-600 rounded-full font-bold animate-bounce flex gap-2">

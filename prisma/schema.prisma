@@ -19,6 +19,23 @@ model User {
   settings     UserSettings?
   sessions     Session[]
   authSessions AuthSession[]
+  auditLogs    AuditLog[]
+}
+
+/// Kim, ne zaman, ne yaptı kaydı. Loop-Kuralları md. "Her önemli işlem iz bırakır".
+/// eventType değerleri src/lib/auditLog.ts'deki AuditEventType union'ı ile tip
+/// güvenceli tutulur — SQLite Prisma'da native enum desteklemediği için burada
+/// düz String olarak saklanır.
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
 }
 
 /// Guardian-controlled settings. Reachable only through the parent gate.

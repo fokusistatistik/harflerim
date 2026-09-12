@@ -8,6 +8,8 @@ import confetti from 'canvas-confetti';
 import Link from 'next/link';
 import { Home, RefreshCw, Trophy, Lock, Star } from 'lucide-react';
 import clsx from 'clsx';
+import { useAudio } from '@/components/AudioProvider';
+import { useNotificationStore } from '@/store/notificationStore';
 // import { getDailySession } from '@/actions/game';
 
 // Card Interface
@@ -35,6 +37,9 @@ export default function MemoryMatchGame() {
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
+
+    const { celebrateSuccess, encourageRetry } = useAudio();
+    const pushToast = useNotificationStore((s) => s.pushToast);
 
     // Sounds
     const [playFlip] = useSound('https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3', { volume: 0.5 });
@@ -109,6 +114,8 @@ export default function MemoryMatchGame() {
                 // MATCH
                 setTimeout(() => {
                     playMatch();
+                    celebrateSuccess().catch(() => {});
+                    pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
                     newCards[newFlipped[0]].isMatched = true;
                     newCards[newFlipped[1]].isMatched = true;
                     setCards(newCards);
@@ -119,6 +126,7 @@ export default function MemoryMatchGame() {
             } else {
                 // MISMATCH
                 setTimeout(() => {
+                    encourageRetry().catch(() => {});
                     newCards[newFlipped[0]].isFlipped = false;
                     newCards[newFlipped[1]].isFlipped = false;
                     setCards(newCards);

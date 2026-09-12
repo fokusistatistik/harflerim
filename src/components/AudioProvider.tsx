@@ -2,11 +2,11 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useTurkishSpeech } from '@/hooks/useTurkishSpeech';
-import type { AudioConfig, TurkishLetter } from '@/types/game';
+import type { AudioConfig } from '@/types/game';
 
 interface AudioContextValue {
     speak: (text: string) => Promise<void>;
-    askLetter: (letter: TurkishLetter) => Promise<void>;
+    askLetter: (letter: string) => Promise<void>;
     celebrateSuccess: () => Promise<void>;
     encourageRetry: () => Promise<void>;
     isSpeaking: boolean;

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Andika, Patrick_Hand } from 'next/font/google';
-// import { AudioProvider } from '@/components/AudioProvider';
+import { AudioProvider } from '@/components/AudioProvider';
 import { ParentFooter } from '@/components/ui/ParentFooter';
 import { Header } from '@/components/ui/Header';
 import { DayComplete } from '@/components/ui/DayComplete';
+import { ToastHost } from '@/components/ui/ToastHost';
 import { APP_NAME } from '@/config/brand';
 import { getCurrentUser } from '@/lib/auth';
 import './globals.css';
@@ -55,11 +56,12 @@ export default async function RootLayout({
     return (
         <html lang="tr" className={`${andika.variable} ${patrickHand.variable}`}>
             <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16' : ''}`}>
-                {/* <AudioProvider> */}
-                {user && <Header />}
-                {children}
-                {user && <DayComplete />}
-                {/* </AudioProvider> */}
+                <AudioProvider>
+                    {user && <Header />}
+                    {user && <ToastHost />}
+                    {children}
+                    {user && <DayComplete />}
+                </AudioProvider>
                 {user && <ParentFooter />}
             </body>
         </html>

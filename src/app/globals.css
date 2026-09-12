@@ -2,6 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Papatya tasarım tokenleri.
+ * Üç durum: sistem tercihi (media query), açık mod zorlaması, koyu mod zorlaması.
+ * Duyusal tema anahtarı (Faz 2.1 ebeveyn paneli) ileride <html data-theme="..."> ile bağlanır.
+ */
+:root {
+  --papatya-cream: #FBF8EF;
+  --papatya-surface: #FFFFFF;
+  --papatya-ink: #2A2722;
+  --papatya-ink-soft: #5C5648;
+  --papatya-petal: #E8B33C;
+  --papatya-petal-deep: #C08F22;
+  --papatya-leaf: #5F7A52;
+  --papatya-sky: #6B87A8;
+  --papatya-rose: #C4756A;
+  --papatya-rule: #E3DCC9;
+
+  --papatya-space-1: 4px;
+  --papatya-space-2: 8px;
+  --papatya-space-3: 16px;
+  --papatya-space-4: 24px;
+  --papatya-space-5: 40px;
+
+  --papatya-radius-sm: 8px;
+  --papatya-radius-md: 16px;
+  --papatya-radius-lg: 28px;
+
+  --papatya-duration-fast: 150ms;
+  --papatya-duration-base: 300ms;
+  --papatya-duration-slow: 600ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papatya-cream: #16150F;
+    --papatya-surface: #1F1D16;
+    --papatya-ink: #F0EBDC;
+    --papatya-ink-soft: #B8B0A0;
+    --papatya-petal: #F0C158;
+    --papatya-petal-deep: #E8B33C;
+    --papatya-leaf: #8FAD7F;
+    --papatya-sky: #90ABCC;
+    --papatya-rose: #DB9187;
+    --papatya-rule: #35322A;
+  }
+}
+
+:root[data-theme="dark"] {
+  --papatya-cream: #16150F;
+  --papatya-surface: #1F1D16;
+  --papatya-ink: #F0EBDC;
+  --papatya-ink-soft: #B8B0A0;
+  --papatya-petal: #F0C158;
+  --papatya-petal-deep: #E8B33C;
+  --papatya-leaf: #8FAD7F;
+  --papatya-sky: #90ABCC;
+  --papatya-rose: #DB9187;
+  --papatya-rule: #35322A;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --papatya-duration-fast: 0ms;
+    --papatya-duration-base: 0ms;
+    --papatya-duration-slow: 0ms;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;

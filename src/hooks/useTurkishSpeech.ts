@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AudioConfig, TurkishLetter } from '@/types/game';
+import type { AudioConfig } from '@/types/game';
 
 interface UseTurkishSpeechReturn {
     speak: (text: string) => Promise<void>;
-    askLetter: (letter: TurkishLetter) => Promise<void>;
+    askLetter: (letter: string) => Promise<void>;
     celebrateSuccess: () => Promise<void>;
     encourageRetry: () => Promise<void>;
     isSpeaking: boolean;
@@ -25,6 +25,7 @@ export function useTurkishSpeech(): UseTurkishSpeechReturn {
     const [isSupported, setIsSupported] = useState(false);
     const [config, setConfig] = useState<AudioConfig>(DEFAULT_CONFIG);
     const synthRef = useRef<SpeechSynthesis | null>(null);
+    const hasInteractedRef = useRef(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -33,10 +34,29 @@ export function useTurkishSpeech(): UseTurkishSpeechReturn {
         }
     }, []);
 
+    // Bazı tarayıcılar (özellikle mobil Safari) kullanıcı etkileşimi olmadan
+    // sesli konuşmayı engeller. İlk dokunuş/tıklama/tuşa kadar speak() sessizce
+    // atlanır — hata fırlatmaz, konsolu kirletmez, oyun akışını bloklamaz.
+    useEffect(() => {
+        const unlock = () => {
+            hasInteractedRef.current = true;
+        };
+        window.addEventListener('pointerdown', unlock, { once: true });
+        window.addEventListener('keydown', unlock, { once: true });
+        return () => {
+            window.removeEventListener('pointerdown', unlock);
+            window.removeEventListener('keydown', unlock);
+        };
+    }, []);
+
     const speak = useCallback(
         async (text: string): Promise<void> => {
             if (!synthRef.current || !isSupported) {
                 console.warn('Speech synthesis not supported');
+                return;
+            }
+
+            if (!hasInteractedRef.current) {
                 return;
             }
 
@@ -68,7 +88,7 @@ export function useTurkishSpeech(): UseTurkishSpeechReturn {
     );
 
     const askLetter = useCallback(
-        async (letter: TurkishLetter): Promise<void> => {
+        async (letter: string): Promise<void> => {
             const phrases = [
                 `Hadi ${letter} harfini bulalım!`,
                 `${letter} harfi nerede?`,
