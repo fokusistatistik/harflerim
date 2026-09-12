@@ -20,6 +20,7 @@ model User {
   sessions     Session[]
   authSessions AuthSession[]
   auditLogs    AuditLog[]
+  dailyUsage   DailyUsage[]
 }
 
 /// Kim, ne zaman, ne yaptı kaydı. Loop-Kuralları md. "Her önemli işlem iz bırakır".
@@ -81,6 +82,22 @@ model Session {
   events      Event[]
 
   @@unique([userId, date, gameId]) // One session per game per day
+}
+
+/// Oyun-bağımsız günlük toplam ekran süresi. `Session.totalDuration` her oyunun
+/// kendi seansını izlerken, bu tablo tüm oyunlar genelindeki günlük toplamı
+/// tutar ve `UserSettings.dailyScreenLimit`'e karşı denetlenir (Faz 1.17/1.10).
+/// `completedAt` dolduğunda "gün tamamlandı" durumu oyundan bağımsız olarak
+/// uygulama genelinde geçerli olur.
+model DailyUsage {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         String // Format: "YYYY-MM-DD"
+  totalSeconds Int       @default(0)
+  completedAt  DateTime?
+
+  @@unique([userId, date])
 }
 
 model Event {

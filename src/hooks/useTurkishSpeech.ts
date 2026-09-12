@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: AudioConfig = {
     volume: 1.0,
 };
 
-export function useTurkishSpeech(): UseTurkishSpeechReturn {
+export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechReturn {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isSupported, setIsSupported] = useState(false);
     const [config, setConfig] = useState<AudioConfig>(DEFAULT_CONFIG);
@@ -51,6 +51,10 @@ export function useTurkishSpeech(): UseTurkishSpeechReturn {
 
     const speak = useCallback(
         async (text: string): Promise<void> => {
+            if (!enabled) {
+                return;
+            }
+
             if (!synthRef.current || !isSupported) {
                 console.warn('Speech synthesis not supported');
                 return;
@@ -84,7 +88,7 @@ export function useTurkishSpeech(): UseTurkishSpeechReturn {
                 synthRef.current!.speak(utterance);
             });
         },
-        [config, isSupported]
+        [config, isSupported, enabled]
     );
 
     const askLetter = useCallback(

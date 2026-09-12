@@ -52,11 +52,17 @@ export default async function RootLayout({
     children: React.ReactNode;
 }) {
     const user = await getCurrentUser();
+    const settings = user?.settings;
 
     return (
-        <html lang="tr" className={`${andika.variable} ${patrickHand.variable}`}>
+        <html
+            lang="tr"
+            className={`${andika.variable} ${patrickHand.variable}`}
+            data-reduce-motion={settings?.reduceMotion ? 'true' : undefined}
+            data-contrast={settings?.highContrast ? 'high' : undefined}
+        >
             <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16' : ''}`}>
-                <AudioProvider>
+                <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
                     {user && <Header />}
                     {user && <ToastHost />}
                     {children}

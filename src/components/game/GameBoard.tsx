@@ -44,7 +44,8 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 };
 
 export default function GameBoard() {
-    const { currentLevel, advanceLevel, getLevelConfig, isDayComplete, sessionId } = useLevelStore();
+    const { currentLevel, advanceLevel, getLevelConfig, isGameComplete, isDayComplete, sessionId } = useLevelStore();
+    const isLocked = isGameComplete || isDayComplete;
     const { askLetter, celebrateSuccess, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
 
@@ -159,7 +160,7 @@ export default function GameBoard() {
         // "No Reset button".
         // "Levels unlock sequentially".
         // currentLevel is the highest unlocked.
-        if (level <= currentLevel && !isDayComplete) {
+        if (level <= currentLevel && !isLocked) {
             // Technically we can't 'go back' easily with this Store logic unless we separate MaxLevel from CurrentLevel.
             // For strict "Daily 24" flow, we play the Current Level.
             // We can allow replaying previous levels if we update Store to support 'playingLevel' state.
@@ -266,9 +267,9 @@ export default function GameBoard() {
                     {[...Array(24)].map((_, i) => {
                         const id = i + 1;
                         const cfg = getLevelConfig(id);
-                        const isUnlocked = id <= currentLevel && !isDayComplete;
+                        const isUnlocked = id <= currentLevel && !isLocked;
                         const isCompleted = id < currentLevel;
-                        const isCurrent = id === currentLevel && !isDayComplete;
+                        const isCurrent = id === currentLevel && !isLocked;
 
                         // Calculate Winding Position using Math.sin
                         // Center is 50%, sway is +/- 35%

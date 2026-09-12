@@ -18,10 +18,11 @@ const AudioContext = createContext<AudioContextValue | undefined>(undefined);
 
 interface AudioProviderProps {
     children: ReactNode;
+    speechEnabled?: boolean;
 }
 
-export function AudioProvider({ children }: AudioProviderProps) {
-    const audioControls = useTurkishSpeech();
+export function AudioProvider({ children, speechEnabled = true }: AudioProviderProps) {
+    const audioControls = useTurkishSpeech(speechEnabled);
 
     return (
         <AudioContext.Provider value={audioControls}>

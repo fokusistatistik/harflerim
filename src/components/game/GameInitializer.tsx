@@ -9,7 +9,15 @@ export function GameInitializer({ state }: { state: GameState }) {
 
     useEffect(() => {
         if (state) {
-            init(state.sessionId, state.levelReached, state.totalDuration, state.isDayComplete);
+            init(
+                state.sessionId,
+                state.levelReached,
+                state.totalDuration,
+                state.isGameComplete,
+                state.isDayComplete,
+                state.dailyScreenSeconds,
+                state.dailyScreenLimit
+            );
         }
     }, [state, init]);
 

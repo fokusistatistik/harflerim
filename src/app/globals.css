@@ -70,6 +70,37 @@
   }
 }
 
+/* Kullanıcının kendi tercihi (UserSettings.reduceMotion, Faz 1.17) işletim
+   sistemi tercihinden bağımsız olarak da aynı sonucu üretir. */
+[data-reduce-motion="true"] {
+  --papatya-duration-fast: 0ms;
+  --papatya-duration-base: 0ms;
+  --papatya-duration-slow: 0ms;
+}
+
+/* Yüksek kontrast (UserSettings.highContrast, Faz 1.17): metin/zemin ayrımı
+   ve kural çizgileri belirginleştirilir, renk paleti değişmez. Tema (açık/koyu)
+   ile aynı üç durumlu desenle birleşir: bare → sistem koyu → açık kilit. */
+[data-contrast="high"] {
+  --papatya-ink: #000000;
+  --papatya-ink-soft: #000000;
+  --papatya-rule: #2A2722;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-contrast="high"]:not([data-theme="light"]) {
+    --papatya-ink: #FFFFFF;
+    --papatya-ink-soft: #FFFFFF;
+    --papatya-rule: #F0EBDC;
+  }
+}
+
+[data-theme="dark"][data-contrast="high"] {
+  --papatya-ink: #FFFFFF;
+  --papatya-ink-soft: #FFFFFF;
+  --papatya-rule: #F0EBDC;
+}
+
 * {
   margin: 0;
   padding: 0;

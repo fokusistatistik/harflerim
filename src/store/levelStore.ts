@@ -6,11 +6,24 @@ export type DayPhase = 'Morning' | 'Noon' | 'Afternoon' | 'Evening' | 'Sleep';
 interface LevelState {
     currentLevel: number;
     totalDuration: number;
+    /** Bu oyunun kendi 24 seviyelik merdiveni bitti mi. */
+    isGameComplete: boolean;
+    /** Tüm oyunlar genelindeki günlük süre bütçesi doldu mu (Faz 1.17). */
     isDayComplete: boolean;
+    dailyScreenSeconds: number;
+    dailyScreenLimit: number;
     sessionId: string | null;
 
     // Actions
-    initSession: (sessionId: string, level: number, duration: number, isComplete: boolean) => void;
+    initSession: (
+        sessionId: string,
+        level: number,
+        duration: number,
+        isGameComplete: boolean,
+        isDayComplete: boolean,
+        dailyScreenSeconds: number,
+        dailyScreenLimit: number
+    ) => void;
     advanceLevel: (isCorrect: boolean, targetLetter: string, reactionTime: number) => void;
 
     getLevelConfig: (level: number) => {
@@ -25,47 +38,62 @@ const TOTAL_LEVELS = 24;
 export const useLevelStore = create<LevelState>((set, get) => ({
     currentLevel: 1,
     totalDuration: 0,
+    isGameComplete: false,
     isDayComplete: false,
+    dailyScreenSeconds: 0,
+    dailyScreenLimit: 1800,
     sessionId: null,
 
-    initSession: (sessionId, level, duration, isComplete) => {
-        // If level is 25 or isComplete is true -> Day Complete
-        const done = isComplete || level > TOTAL_LEVELS;
+    initSession: (sessionId, level, duration, isGameComplete, isDayComplete, dailyScreenSeconds, dailyScreenLimit) => {
+        const gameDone = isGameComplete || level > TOTAL_LEVELS;
         set({
             sessionId,
-            currentLevel: done ? TOTAL_LEVELS : level,
+            currentLevel: gameDone ? TOTAL_LEVELS : level,
             totalDuration: duration,
-            isDayComplete: done
+            isGameComplete: gameDone,
+            isDayComplete,
+            dailyScreenSeconds,
+            dailyScreenLimit,
         });
     },
 
     advanceLevel: async (isCorrect, targetLetter, reactionTime) => {
-        const { currentLevel, totalDuration, sessionId, isDayComplete } = get();
-        if (!sessionId || isDayComplete) return;
+        const { currentLevel, totalDuration, sessionId, isGameComplete, isDayComplete } = get();
+        if (!sessionId || isGameComplete || isDayComplete) return;
 
-        // Optimistically update duration regardless of correctness?
-        // Server updates it. Let's match server logic: Adds reactionTime/1000
+        // Optimistically update duration; sunucu senkronu sonrası kesin değerlerle üzerine yazılır.
         const addedSec = Math.ceil(reactionTime / 1000);
         const newTotal = totalDuration + addedSec;
 
         if (isCorrect) {
-            // Optimistic Update Level
             let next = currentLevel + 1;
-            let complete = false;
+            let gameDone = false;
 
             if (next > TOTAL_LEVELS) {
                 next = 24; // Visual cap
-                complete = true;
+                gameDone = true;
             }
 
-            set({ currentLevel: next, totalDuration: newTotal, isDayComplete: complete });
+            set({ currentLevel: next, totalDuration: newTotal, isGameComplete: gameDone });
 
-            // Server Sync
-            await submitLevelResult(sessionId, currentLevel, true, reactionTime, targetLetter);
+            const result = await submitLevelResult(sessionId, currentLevel, true, reactionTime, targetLetter);
+            if (result) {
+                set({
+                    isDayComplete: result.isDayComplete,
+                    dailyScreenSeconds: result.dailyScreenSeconds,
+                    dailyScreenLimit: result.dailyScreenLimit,
+                });
+            }
         } else {
-            // Log wrong attempt + update duration
             set({ totalDuration: newTotal });
-            await submitLevelResult(sessionId, currentLevel, false, reactionTime, targetLetter);
+            const result = await submitLevelResult(sessionId, currentLevel, false, reactionTime, targetLetter);
+            if (result) {
+                set({
+                    isDayComplete: result.isDayComplete,
+                    dailyScreenSeconds: result.dailyScreenSeconds,
+                    dailyScreenLimit: result.dailyScreenLimit,
+                });
+            }
         }
     },
 

@@ -3,12 +3,18 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { getDailyUsage, addDailyUsageSeconds } from '@/lib/dailyUsage';
 
 export interface GameState {
     sessionId: string;
     levelReached: number;
     totalDuration: number;
+    /** Bu oyunun kendi seviye merdiveni bitti mi (Session.completedAt). */
+    isGameComplete: boolean;
+    /** Tüm oyunlar genelindeki günlük süre bütçesi doldu mu (DailyUsage.completedAt). */
     isDayComplete: boolean;
+    dailyScreenSeconds: number;
+    dailyScreenLimit: number;
     gameId: string;
 }
 
@@ -41,21 +47,34 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
         });
     }
 
+    const dailyUsage = await getDailyUsage(user.id);
+
     return {
         sessionId: session.id,
         levelReached: session.levelReached,
         totalDuration: session.totalDuration,
-        isDayComplete: !!session.completedAt,
+        isGameComplete: !!session.completedAt,
+        isDayComplete: dailyUsage.isDayComplete,
+        dailyScreenSeconds: dailyUsage.totalSeconds,
+        dailyScreenLimit: dailyUsage.dailyScreenLimit,
         gameId: session.gameId
     };
 }
 
-// Game Configuration for Limits
-const GAME_LIMITS: Record<string, { maxLevel: number; maxDuration: number }> = {
-    'letter-hunt': { maxLevel: 24, maxDuration: 1800 }, // 30 mins
-    // Add future games here with their own IDs and limits
-    'default': { maxLevel: 100, maxDuration: 3600 }
+// Her oyunun kendi seviye merdiveni (Faz 1.17: süre artık burada değil,
+// global günlük bütçe olarak dailyUsage.ts üzerinden yönetiliyor).
+const GAME_LIMITS: Record<string, { maxLevel: number }> = {
+    'letter-hunt': { maxLevel: 24 },
+    // Add future games here with their own IDs
+    'default': { maxLevel: 100 }
 };
+
+export interface SubmitResult {
+    isGameComplete: boolean;
+    isDayComplete: boolean;
+    dailyScreenSeconds: number;
+    dailyScreenLimit: number;
+}
 
 export async function submitLevelResult(
     sessionId: string,
@@ -63,7 +82,7 @@ export async function submitLevelResult(
     isCorrect: boolean,
     reactionTime: number,
     targetLetter: string
-) {
+): Promise<SubmitResult | null> {
     // Log Event
     await db.event.create({
         data: {
@@ -77,14 +96,24 @@ export async function submitLevelResult(
 
     // Fetch current session
     const currentSession = await db.session.findUnique({ where: { id: sessionId } });
-    if (!currentSession) return;
-    if (currentSession.completedAt) return; // Already locked
+    if (!currentSession) return null;
 
-    // Get Limits
-    const limits = GAME_LIMITS[currentSession.gameId] || GAME_LIMITS['default'];
-
-    // Calculate new duration
+    // Süre her zaman global günlük bütçeye işlenir — oyun kendi merdiveninde
+    // kilitli olsa bile çocuk başka bir oyuna geçebilir, o yüzden bu adım
+    // erken dönüşten önce çalışır.
     const addedSeconds = Math.ceil(reactionTime / 1000);
+    const dailyUsage = await addDailyUsageSeconds(currentSession.userId, addedSeconds);
+
+    if (currentSession.completedAt) {
+        return {
+            isGameComplete: true,
+            isDayComplete: dailyUsage.isDayComplete,
+            dailyScreenSeconds: dailyUsage.totalSeconds,
+            dailyScreenLimit: dailyUsage.dailyScreenLimit,
+        };
+    }
+
+    const limits = GAME_LIMITS[currentSession.gameId] || GAME_LIMITS['default'];
     const newTotalDuration = currentSession.totalDuration + addedSeconds;
 
     let nextLevel = currentSession.levelReached;
@@ -93,12 +122,9 @@ export async function submitLevelResult(
     }
 
     let completedAt: Date | null = null;
-
-    // Check against retrieved limits
-    if (nextLevel > limits.maxLevel || newTotalDuration >= limits.maxDuration) {
+    if (nextLevel > limits.maxLevel) {
         completedAt = new Date();
-        // Cap visual level
-        if (nextLevel > limits.maxLevel) nextLevel = limits.maxLevel + 1;
+        nextLevel = limits.maxLevel + 1; // Cap visual level
     }
 
     await db.session.update({
@@ -109,4 +135,11 @@ export async function submitLevelResult(
             completedAt: completedAt
         }
     });
+
+    return {
+        isGameComplete: !!completedAt,
+        isDayComplete: dailyUsage.isDayComplete,
+        dailyScreenSeconds: dailyUsage.totalSeconds,
+        dailyScreenLimit: dailyUsage.dailyScreenLimit,
+    };
 }
