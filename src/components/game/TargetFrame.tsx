@@ -10,18 +10,15 @@ interface TargetFrameProps {
     id: string;
     targetLetter: string;
     status: 'idle' | 'success' | 'error';
+    letterImages: Record<string, string>;
 }
 
-import { LETTER_IMAGES } from '@/store/gameData';
-
-// ...
-
-export function TargetFrame({ id, targetLetter, status }: TargetFrameProps) {
+export function TargetFrame({ id, targetLetter, status, letterImages }: TargetFrameProps) {
     const { isOver, setNodeRef } = useDroppable({
         id: id,
     });
 
-    const imgSrc = LETTER_IMAGES[targetLetter];
+    const imgSrc = letterImages[targetLetter];
 
     return (
         <div ref={setNodeRef} className="relative">

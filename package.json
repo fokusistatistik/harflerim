@@ -9,6 +9,7 @@
         "start": "next start -p 3041",
         "lint": "next lint",
         "seed": "tsx prisma/seed.ts",
+        "seed:content": "tsx prisma/seedContent.ts",
         "test": "vitest run",
         "test:watch": "vitest"
     },

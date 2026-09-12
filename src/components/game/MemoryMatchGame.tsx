@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LETTER_IMAGES, AUDIOS } from '@/store/gameData';
+import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { Home, RefreshCw, Trophy, Lock, Star } from 'lucide-react';
 import clsx from 'clsx';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useGameContent } from '@/hooks/useGameContent';
 // import { getDailySession } from '@/actions/game';
 
 // Card Interface
@@ -40,6 +41,7 @@ export default function MemoryMatchGame() {
 
     const { celebrateSuccess, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
+    const { data: content } = useGameContent();
 
     // Sounds
     const [playFlip] = useSound('https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3', { volume: 0.5 });
@@ -55,6 +57,8 @@ export default function MemoryMatchGame() {
     }, []);
 
     const startLevel = (lvl: number) => {
+        if (!content) return; // İçerik henüz veritabanından gelmedi (Faz 1.4)
+
         // Difficulty Logic:
         // Lvl 1-3: 6 cards (3 pairs)
         // Lvl 4-8: 8 cards (4 pairs)
@@ -66,7 +70,7 @@ export default function MemoryMatchGame() {
         if (lvl > 8) pairCount = 6;
         if (lvl > 15) pairCount = 8;
 
-        const availableLetters = Object.keys(LETTER_IMAGES);
+        const availableLetters = Object.keys(content.letterImages);
         // Shuffle available letters
         availableLetters.sort(() => Math.random() - 0.5);
 
@@ -75,7 +79,7 @@ export default function MemoryMatchGame() {
         // Create Pairs
         let deck: Card[] = [];
         selectedLetters.forEach(letter => {
-            const img = LETTER_IMAGES[letter];
+            const img = content.letterImages[letter];
             deck.push({ id: `${letter}-1`, letter, img, isFlipped: false, isMatched: false });
             deck.push({ id: `${letter}-2`, letter, img, isFlipped: false, isMatched: false });
         });
@@ -181,6 +185,10 @@ export default function MemoryMatchGame() {
         if (level <= 18) return "bg-gradient-to-b from-amber-50 to-orange-50";
         return "bg-gradient-to-b from-indigo-50 to-violet-100";
     };
+
+    if (!content) {
+        return <div className="flex h-screen items-center justify-center text-teal-600">Yükleniyor...</div>;
+    }
 
     if (gameCompleted) {
         return (

@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, RefreshCw, Home, Infinity as InfinityIcon } from 'lucide-react';
-import { LETTER_OBJECTS, AUDIOS } from '@/store/gameData';
+import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
@@ -13,8 +13,7 @@ import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
-
-const ALL_WORDS = Object.values(LETTER_OBJECTS).flat();
+import { useGameContent } from '@/hooks/useGameContent';
 
 // --- PERSISTENCE HELPER ---
 const useMagicWordsProgress = () => {
@@ -110,6 +109,7 @@ export default function MagicWordsGame() {
 
     // Progress & Sound
     const { progress, updateProgress, loaded } = useMagicWordsProgress();
+    const { data: content } = useGameContent();
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
     const { celebrateSuccess, encourageRetry } = useAudio();
@@ -123,9 +123,15 @@ export default function MagicWordsGame() {
     // Init
     useEffect(() => {
         setIsClient(true);
-        const shuffled = [...ALL_WORDS].sort(() => 0.5 - Math.random());
-        setGameWords(shuffled);
     }, []);
+
+    // İçerik veritabanından (Faz 1.4) gelince kelime destesini bir kez karıştır.
+    useEffect(() => {
+        if (!content) return;
+        const allWords = Object.values(content.letterObjects).flat();
+        const shuffled = [...allWords].sort(() => 0.5 - Math.random());
+        setGameWords(shuffled);
+    }, [content]);
 
     const currentWordObj = gameWords[currentIndex];
 
@@ -231,7 +237,7 @@ export default function MagicWordsGame() {
 
 
     // Render
-    if (!isClient || !loaded) return null;
+    if (!isClient || !loaded || !content || gameWords.length === 0) return null;
     if (!browserSupportsSpeechRecognition) return <div className="p-10 text-center">Chrome kullanın.</div>;
     if (gameStatus === 'error') return <ErrorScreen onRetry={handleStartGame} />;
     if (gameStatus === 'idle' || gameStatus === 'checking') return <WelcomeScreen onStart={handleStartGame} status={gameStatus} />;

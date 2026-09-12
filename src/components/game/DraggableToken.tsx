@@ -4,16 +4,16 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { LETTER_IMAGES } from '@/store/gameData';
 
 interface DraggableTokenProps {
     letter: string;
     id: string;
     disabled?: boolean;
     highlight?: boolean; // New prop for hints
+    letterImages: Record<string, string>;
 }
 
-export function DraggableToken({ letter, id, disabled, highlight }: DraggableTokenProps) {
+export function DraggableToken({ letter, id, disabled, highlight, letterImages }: DraggableTokenProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: id,
         data: { letter },
@@ -24,7 +24,7 @@ export function DraggableToken({ letter, id, disabled, highlight }: DraggableTok
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
     } : undefined;
 
-    const imgSrc = LETTER_IMAGES[letter];
+    const imgSrc = letterImages[letter];
 
     return (
         <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="z-50 touch-none">

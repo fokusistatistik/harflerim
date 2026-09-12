@@ -126,6 +126,31 @@ model DailyUsage {
   @@unique([userId, date])
 }
 
+/// Harf grubu (Faz 1.4): `gameData.ts`'teki `LETTER_OBJECTS`/`LETTER_IMAGES`'ın
+/// veritabanı karşılığı. Üç oyun da (Harf Avı, Hafıza Kartları, Sihirli
+/// Kelimeler) aynı harf/kelime/görsel üçlüsünü kullandığı için tek bir şema
+/// hepsini karşılar — ayrı oyun-bazlı içerik tablosuna gerek yok.
+model ContentSet {
+  id       String        @id @default(uuid())
+  letter   String        @unique // "A", "B", "Ç", "İ" ... (Türkçe alfabe)
+  order    Int // ALPHABET_ORDER'daki sıra
+  imageUrl String // harf görseli (eski LETTER_IMAGES[letter])
+  items    ContentItem[]
+
+  @@index([order])
+}
+
+model ContentItem {
+  id           String     @id @default(uuid())
+  contentSetId String
+  contentSet   ContentSet @relation(fields: [contentSetId], references: [id], onDelete: Cascade)
+  word         String
+  imageUrl     String
+  order        Int // eski LETTER_OBJECTS[letter] dizisindeki sıra
+
+  @@index([contentSetId])
+}
+
 model Event {
   id           String   @id @default(uuid())
   sessionId    String

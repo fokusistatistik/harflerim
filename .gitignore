@@ -37,3 +37,7 @@ next-env.d.ts
 # Local database backups
 prisma/*.db.backup-*
 prisma/*.db.oldschema
+
+# SQLite transient files (never meaningful to commit)
+prisma/*.db-journal
+shadow.db

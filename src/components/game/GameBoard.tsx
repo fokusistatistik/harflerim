@@ -9,10 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Star } from 'lucide-react';
 import Link from 'next/link';
 
-import { LETTER_OBJECTS, ALPHABET_ORDER, AUDIOS, LETTER_IMAGES, LetterAsset } from '@/store/gameData';
+import { AUDIOS, type LetterAsset } from '@/store/gameData';
 import { useLevelStore } from '@/store/levelStore';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useGameContent } from '@/hooks/useGameContent';
 import { DraggableToken } from './DraggableToken';
 import { TargetFrame } from './TargetFrame';
 import { HintImage } from './HintImage';
@@ -48,6 +49,7 @@ export default function GameBoard() {
     const isLocked = isGameComplete || isDayComplete;
     const { askLetter, celebrateSuccess, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
+    const { data: content } = useGameContent();
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [levelConfig, setLevelConfig] = useState(getLevelConfig(currentLevel));
@@ -105,15 +107,17 @@ export default function GameBoard() {
         return () => clearTimeout(timer);
     }, [targetLetter, status]); // Reset on new letter or status change
 
-    // Loading state
-    if (!sessionId) return <div className="flex h-screen items-center justify-center text-softIndigo">Yükleniyor...</div>;
+    // Loading state — hem oturum hem içerik (Faz 1.4: veritabanından) hazır olmalı
+    if (!sessionId || !content) return <div className="flex h-screen items-center justify-center text-softIndigo">Yükleniyor...</div>;
+
+    const { alphabetOrder, letterObjects, letterImages } = content;
 
     const startRound = () => {
         const config = getLevelConfig(currentLevel);
 
         // Pick Target
-        const randomTarget = ALPHABET_ORDER[Math.floor(Math.random() * ALPHABET_ORDER.length)];
-        const objects = LETTER_OBJECTS[randomTarget];
+        const randomTarget = alphabetOrder[Math.floor(Math.random() * alphabetOrder.length)];
+        const objects = letterObjects[randomTarget];
         const randomObj = objects[Math.floor(Math.random() * objects.length)];
 
         setTargetLetter(randomTarget);
@@ -125,7 +129,7 @@ export default function GameBoard() {
         const used = new Set<string>([randomTarget]);
 
         const addDistractor = (candidate: string) => {
-            if (!used.has(candidate) && ALPHABET_ORDER.includes(candidate)) {
+            if (!used.has(candidate) && alphabetOrder.includes(candidate)) {
                 distList.push(candidate);
                 used.add(candidate);
                 return true;
@@ -141,7 +145,7 @@ export default function GameBoard() {
         }
 
         while (distList.length < count - 1) {
-            const rand = ALPHABET_ORDER[Math.floor(Math.random() * ALPHABET_ORDER.length)];
+            const rand = alphabetOrder[Math.floor(Math.random() * alphabetOrder.length)];
             addDistractor(rand);
         }
         setDistractors(distList);
@@ -373,6 +377,7 @@ export default function GameBoard() {
                         id="target-frame"
                         targetLetter={targetLetter}
                         status={status}
+                        letterImages={letterImages}
                     />
                     <p className="text-xl md:text-2xl text-softIndigo font-bold">{currentObject?.word}</p>
                 </div>
@@ -386,6 +391,7 @@ export default function GameBoard() {
                                     letter={opt}
                                     disabled={status === 'success'}
                                     highlight={showHint && opt === targetLetter}
+                                    letterImages={letterImages}
                                 />
                             </div>
                         ))}
@@ -395,9 +401,9 @@ export default function GameBoard() {
                 <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
                     {activeId ? (
                         <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center text-7xl font-bold text-indigo-600 shadow-2xl opacity-90 border-4 border-indigo-500 overflow-hidden transform scale-110 rotate-3">
-                            {LETTER_IMAGES[activeId.split('-')[1]] ? (
+                            {letterImages[activeId.split('-')[1]] ? (
                                 <img
-                                    src={LETTER_IMAGES[activeId.split('-')[1]]}
+                                    src={letterImages[activeId.split('-')[1]]}
                                     alt={activeId.split('-')[1]}
                                     className="w-[80%] h-[80%] object-contain"
                                 />
