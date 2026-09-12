@@ -5,6 +5,7 @@ const db = new PrismaClient();
 
 async function main() {
     const passwordHash = await bcrypt.hash('1234', 10);
+    const parentPin = await bcrypt.hash('0000', 10);
 
     const melike = await db.user.upsert({
         where: { username: 'Melike' },
@@ -14,7 +15,7 @@ async function main() {
             passwordHash,
             firstName: 'Melike',
             lastName: 'Bostanoğlu',
-            settings: { create: {} },
+            settings: { create: { parentPin } },
         },
     });
 

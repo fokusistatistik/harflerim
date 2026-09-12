@@ -45,6 +45,10 @@ model UserSettings {
   userId   String @unique
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// bcrypt hash (Faz 1.3). Şema varsayılanı "0000" düz metindir yalnızca
+  /// tip/NOT NULL güvencesi içindir — gerçek satırlar prisma/seed.ts ve
+  /// src/actions/parentGate.ts tarafından her zaman hash'lenerek yazılır.
+  /// Var olan düz metin satırları prisma/backfillParentPin.ts ile taşınır.
   parentPin String @default("0000")
 
   dailyScreenLimit Int     @default(1800)

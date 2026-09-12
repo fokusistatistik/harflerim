@@ -5,9 +5,13 @@ import { useLevelStore } from '@/store/levelStore';
 import { Moon, Sun, Home } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { useLongPress } from '@/hooks/useLongPress';
+import { useParentGateStore } from '@/store/parentGateStore';
 
 export function Header() {
     const { currentLevel, isDayComplete } = useLevelStore();
+    const openPinPrompt = useParentGateStore((s) => s.openPinPrompt);
+    const longPress = useLongPress(openPinPrompt);
     const [time, setTime] = useState('');
     const [dateStr, setDateStr] = useState('');
 
@@ -27,8 +31,11 @@ export function Header() {
 
             {/* Left: Home & Clock */}
             <div className="flex items-center gap-3 md:gap-4">
+                {/* Kısa dokunuş: ana sayfaya git. Uzun basma (~700ms): ebeveyn
+                    kapısını aç (Faz 1.3) — çocuğun yanlışlıkla bulamayacağı bir jest. */}
                 <Link
                     href="/"
+                    {...longPress}
                     className="inline-flex items-center justify-center min-w-tap min-h-tap p-2 bg-orange-100 rounded-xl text-orange-500 hover:bg-orange-200 hover:scale-105 transition-all shadow-sm border border-orange-200"
                     title="Ana Sayfa"
                 >
