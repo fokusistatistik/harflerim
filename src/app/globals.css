@@ -7,17 +7,20 @@
  * Üç durum: sistem tercihi (media query), açık mod zorlaması, koyu mod zorlaması.
  * Duyusal tema anahtarı (Faz 2.1 ebeveyn paneli) ileride <html data-theme="..."> ile bağlanır.
  */
+/* Renkler "R G B" kanal üçlüsü olarak saklanır (hex değil) — Tailwind'in
+   opacity modifikatörü (ör. bg-papatya-petal/15) yalnızca bu formatta,
+   rgb(var(--x) / <alpha-value>) kalıbıyla çalışabilir (bkz. tailwind.config.js). */
 :root {
-  --papatya-cream: #FBF8EF;
-  --papatya-surface: #FFFFFF;
-  --papatya-ink: #2A2722;
-  --papatya-ink-soft: #5C5648;
-  --papatya-petal: #E8B33C;
-  --papatya-petal-deep: #C08F22;
-  --papatya-leaf: #5F7A52;
-  --papatya-sky: #6B87A8;
-  --papatya-rose: #C4756A;
-  --papatya-rule: #E3DCC9;
+  --papatya-cream: 251 248 239; /* #FBF8EF */
+  --papatya-surface: 255 255 255; /* #FFFFFF */
+  --papatya-ink: 42 39 34; /* #2A2722 */
+  --papatya-ink-soft: 92 86 72; /* #5C5648 */
+  --papatya-petal: 232 179 60; /* #E8B33C */
+  --papatya-petal-deep: 192 143 34; /* #C08F22 */
+  --papatya-leaf: 95 122 82; /* #5F7A52 */
+  --papatya-sky: 107 135 168; /* #6B87A8 */
+  --papatya-rose: 196 117 106; /* #C4756A */
+  --papatya-rule: 227 220 201; /* #E3DCC9 */
 
   --papatya-space-1: 4px;
   --papatya-space-2: 8px;
@@ -49,30 +52,30 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --papatya-cream: #16150F;
-    --papatya-surface: #1F1D16;
-    --papatya-ink: #F0EBDC;
-    --papatya-ink-soft: #B8B0A0;
-    --papatya-petal: #F0C158;
-    --papatya-petal-deep: #E8B33C;
-    --papatya-leaf: #8FAD7F;
-    --papatya-sky: #90ABCC;
-    --papatya-rose: #DB9187;
-    --papatya-rule: #35322A;
+    --papatya-cream: 22 21 15; /* #16150F */
+    --papatya-surface: 31 29 22; /* #1F1D16 */
+    --papatya-ink: 240 235 220; /* #F0EBDC */
+    --papatya-ink-soft: 184 176 160; /* #B8B0A0 */
+    --papatya-petal: 240 193 88; /* #F0C158 */
+    --papatya-petal-deep: 232 179 60; /* #E8B33C */
+    --papatya-leaf: 143 173 127; /* #8FAD7F */
+    --papatya-sky: 144 171 204; /* #90ABCC */
+    --papatya-rose: 219 145 135; /* #DB9187 */
+    --papatya-rule: 53 50 42; /* #35322A */
   }
 }
 
 :root[data-theme="dark"] {
-  --papatya-cream: #16150F;
-  --papatya-surface: #1F1D16;
-  --papatya-ink: #F0EBDC;
-  --papatya-ink-soft: #B8B0A0;
-  --papatya-petal: #F0C158;
-  --papatya-petal-deep: #E8B33C;
-  --papatya-leaf: #8FAD7F;
-  --papatya-sky: #90ABCC;
-  --papatya-rose: #DB9187;
-  --papatya-rule: #35322A;
+  --papatya-cream: 22 21 15;
+  --papatya-surface: 31 29 22;
+  --papatya-ink: 240 235 220;
+  --papatya-ink-soft: 184 176 160;
+  --papatya-petal: 240 193 88;
+  --papatya-petal-deep: 232 179 60;
+  --papatya-leaf: 143 173 127;
+  --papatya-sky: 144 171 204;
+  --papatya-rose: 219 145 135;
+  --papatya-rule: 53 50 42;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -95,23 +98,23 @@
    ve kural çizgileri belirginleştirilir, renk paleti değişmez. Tema (açık/koyu)
    ile aynı üç durumlu desenle birleşir: bare → sistem koyu → açık kilit. */
 [data-contrast="high"] {
-  --papatya-ink: #000000;
-  --papatya-ink-soft: #000000;
-  --papatya-rule: #2A2722;
+  --papatya-ink: 0 0 0;
+  --papatya-ink-soft: 0 0 0;
+  --papatya-rule: 42 39 34; /* #2A2722 */
 }
 
 @media (prefers-color-scheme: dark) {
   [data-contrast="high"]:not([data-theme="light"]) {
-    --papatya-ink: #FFFFFF;
-    --papatya-ink-soft: #FFFFFF;
-    --papatya-rule: #F0EBDC;
+    --papatya-ink: 255 255 255;
+    --papatya-ink-soft: 255 255 255;
+    --papatya-rule: 240 235 220; /* #F0EBDC */
   }
 }
 
 [data-theme="dark"][data-contrast="high"] {
-  --papatya-ink: #FFFFFF;
-  --papatya-ink-soft: #FFFFFF;
-  --papatya-rule: #F0EBDC;
+  --papatya-ink: 255 255 255;
+  --papatya-ink-soft: 255 255 255;
+  --papatya-rule: 240 235 220;
 }
 
 * {

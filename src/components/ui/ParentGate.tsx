@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, X } from 'lucide-react';
+import { Lock, X, LogOut } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { verifyParentPin, changeParentPin } from '@/actions/parentGate';
+import { logout } from '@/actions/auth';
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
 /**
- * Faz 1.3 — ebeveyn kapısı. Header'daki logo/ana sayfa düğmesine uzun
- * basınca açılır (bkz. useLongPress). Şu an yalnızca PIN doğrulama ve PIN
- * değiştirme formu var; çıkış kontrolü ve navigasyon iskeleti Faz 1.18'de
- * bu panelin içine eklenecek.
+ * Faz 1.3/1.18 — ebeveyn kapısı. Header'daki logo/ana sayfa düğmesine uzun
+ * basınca (veya NavGrid'deki "Ebeveyn Alanı" karosuna tıklayınca) açılır.
+ * PIN doğrulama, PIN değiştirme ve çıkış (logout) burada; tam ebeveyn
+ * yönetim paneli (aile bireyleri, içerik, ekran süresi vb.) Faz 2.1'i bekliyor.
  */
 export function ParentGate() {
     const { isPinPromptOpen, isUnlocked, closePinPrompt, unlock, lock } = useParentGateStore();
@@ -26,6 +27,7 @@ export function ParentGate() {
     const [changeError, setChangeError] = useState('');
     const [changeSuccess, setChangeSuccess] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     if (!isPinPromptOpen && !isUnlocked) return null;
 
@@ -64,6 +66,11 @@ export function ParentGate() {
         } else {
             setPinError('Yanlış PIN. Tekrar deneyin.');
         }
+    };
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        await logout(); // redirect('/giris') içeride fırlatılır, burada yakalanmaz
     };
 
     const handleChangePin = async (e: React.FormEvent) => {
@@ -178,7 +185,21 @@ export function ParentGate() {
                             </button>
                         </form>
 
-                        {/* Faz 1.18: çıkış kontrolü ve navigasyon iskeleti buraya eklenecek */}
+                        <div className="border-t border-papatya-rule pt-4">
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                disabled={isLoggingOut}
+                                className="w-full min-h-tap flex items-center justify-center gap-2 bg-papatya-rose/15 text-papatya-rose font-bold rounded-p-md disabled:opacity-50"
+                            >
+                                <LogOut size={18} />
+                                {isLoggingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
+                            </button>
+                        </div>
+
+                        {/* Faz 1.18: navigasyon iskeleti şimdilik ana sayfadaki NavGrid'de
+                            (bkz. src/components/ui/NavGrid.tsx). Ebeveyn paneline özel
+                            ayarlar linkleri Faz 2.1 panel yazıldıkça buraya eklenecek. */}
                     </div>
                 )}
             </div>

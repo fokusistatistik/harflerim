@@ -18,17 +18,20 @@ module.exports = {
                 skyBlue: '#87CEEB',
                 // Papatya tasarım tokenleri — src/app/globals.css içindeki CSS
                 // değişkenlerinden beslenir; açık/koyu mod otomatik geçer.
+                // rgb(var(--x) / <alpha-value>) kalıbı, bg-papatya-petal/15 gibi
+                // opacity modifikatörlerinin çalışabilmesi için gereklidir —
+                // bu yüzden değişkenler globals.css'te hex değil "R G B" olarak saklanır.
                 papatya: {
-                    cream: 'var(--papatya-cream)',
-                    surface: 'var(--papatya-surface)',
-                    ink: 'var(--papatya-ink)',
-                    'ink-soft': 'var(--papatya-ink-soft)',
-                    petal: 'var(--papatya-petal)',
-                    'petal-deep': 'var(--papatya-petal-deep)',
-                    leaf: 'var(--papatya-leaf)',
-                    sky: 'var(--papatya-sky)',
-                    rose: 'var(--papatya-rose)',
-                    rule: 'var(--papatya-rule)',
+                    cream: 'rgb(var(--papatya-cream) / <alpha-value>)',
+                    surface: 'rgb(var(--papatya-surface) / <alpha-value>)',
+                    ink: 'rgb(var(--papatya-ink) / <alpha-value>)',
+                    'ink-soft': 'rgb(var(--papatya-ink-soft) / <alpha-value>)',
+                    petal: 'rgb(var(--papatya-petal) / <alpha-value>)',
+                    'petal-deep': 'rgb(var(--papatya-petal-deep) / <alpha-value>)',
+                    leaf: 'rgb(var(--papatya-leaf) / <alpha-value>)',
+                    sky: 'rgb(var(--papatya-sky) / <alpha-value>)',
+                    rose: 'rgb(var(--papatya-rose) / <alpha-value>)',
+                    rule: 'rgb(var(--papatya-rule) / <alpha-value>)',
                 },
             },
             spacing: {
