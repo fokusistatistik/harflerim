@@ -53,6 +53,32 @@ model UserSettings {
   speechEnabled    Boolean @default(true)
   cameraEnabled    Boolean @default(false)
 
+  /// --- Çocuk profili (Faz 1.4b) ---
+  /// Bir tanı aracı değildir, yalnızca kişiselleştirme verisidir (Klinik
+  /// Sınır Sözleşmesi'ne tabi). Tüm alanlar opsiyoneldir. Henüz hiçbir UI'dan
+  /// doldurulmuyor — Faz 2.1 ebeveyn yönetim paneli bekliyor.
+  ///
+  /// SQLite/Prisma dizi (String[]) veya native enum desteklemediği için
+  /// (bkz. AuditLog.eventType gerekçesi) liste alanları JSON-string, sabit
+  /// seçenekli alanlar ise düz String olarak saklanır; tip güvencesi
+  /// src/lib/childProfile.ts'deki union tipler ve parse/serialize
+  /// yardımcılarıyla uygulama katmanında sağlanır.
+  age                Int?
+  gender             String?
+  favoriteColor      String?
+  /// JSON string dizi, örn. '["kedi","gezegenler"]'
+  interests          String?
+  /// "reading" | "listening" | "visual"
+  learningChannel    String?
+  /// JSON obje, örn. '{"sound":"high","light":"low","touch":"medium"}'
+  sensoryProfile     String?
+  /// JSON string dizi
+  triggers           String?
+  /// JSON string dizi
+  calmers            String?
+  /// "verbal" | "aac" | "mixed"
+  communicationLevel String?
+
   updatedAt DateTime @updatedAt
 }
 
