@@ -28,11 +28,18 @@ function ToastItem({ toast }: { toast: Toast }) {
 }
 
 export function ToastHost() {
+    // Store'dan HAM diziyi seçiyoruz (yalnızca gerçek bir set() çağrısında referansı
+    // değişir). Filtreyi burada, normal render içinde yapıyoruz — selector'ün
+    // kendisi her çağrıldığında yeni bir dizi döndürseydi (ör. .filter() burada
+    // olsaydı), useSyncExternalStore bunu "değişti" sanıp sonsuz render döngüsüne
+    // girerdi ("Maximum update depth exceeded").
+    //
     // Yalnızca çocuğa yönelik (scope: 'child') toast'lar burada görünür.
     // 'parent' kapsamlı bildirimler henüz tüketicisi olmayan bir kuyrukta bekler
     // (bkz. src/store/notificationStore.ts) — sakinleştirme modu / rozet gibi
     // özellikler yazıldığında ayrı bir görünüm bu kuyruğa bağlanacak.
-    const childToasts = useNotificationStore((s) => s.toasts.filter((t) => t.scope === 'child'));
+    const toasts = useNotificationStore((s) => s.toasts);
+    const childToasts = toasts.filter((t) => t.scope === 'child');
 
     return (
         <div className="fixed top-20 inset-x-0 z-[60] flex flex-col items-center gap-2 pointer-events-none px-4">
