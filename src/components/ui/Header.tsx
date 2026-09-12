@@ -23,37 +23,37 @@ export function Header() {
     }, []);
 
     return (
-        <header className="fixed top-0 left-0 w-full h-16 bg-white/90 backdrop-blur-md shadow-sm z-40 flex items-center justify-between px-4 md:px-8 border-b border-indigo-100">
+        <header className="fixed top-0 left-0 w-full h-16 lg:h-20 bg-white/90 backdrop-blur-md shadow-sm z-40 flex items-center justify-between px-4 md:px-8 lg:px-12 xl:px-16 border-b border-indigo-100">
 
             {/* Left: Home & Clock */}
             <div className="flex items-center gap-3 md:gap-4">
                 <Link
                     href="/"
-                    className="p-2 bg-orange-100 rounded-xl text-orange-500 hover:bg-orange-200 hover:scale-105 transition-all shadow-sm border border-orange-200"
+                    className="inline-flex items-center justify-center min-w-tap min-h-tap p-2 bg-orange-100 rounded-xl text-orange-500 hover:bg-orange-200 hover:scale-105 transition-all shadow-sm border border-orange-200"
                     title="Ana Sayfa"
                 >
-                    <Home size={24} strokeWidth={2.5} />
+                    <Home size={24} strokeWidth={2.5} className="lg:w-7 lg:h-7" />
                 </Link>
 
                 <div className="flex flex-col">
-                    <span className="text-2xl font-bold text-softIndigo font-mono leading-none">{time}</span>
+                    <span className="text-2xl lg:text-3xl font-bold text-softIndigo font-mono leading-none">{time}</span>
                     <span className="text-xs text-gray-400 font-bold hidden md:block">CANLI</span>
                 </div>
             </div>
 
             {/* Center: Date */}
-            <div className="text-lg md:text-xl font-hand font-bold text-gray-600">
+            <div className="text-lg md:text-xl lg:text-2xl font-hand font-bold text-gray-600">
                 {dateStr}
             </div>
 
             {/* Right: Settings / Profile / DayNight */}
-            <div className="flex items-center gap-4">
-                <div className="px-3 py-1 bg-indigo-50 rounded-full text-indigo-500 font-bold text-sm shadow-sm border border-indigo-100">
+            <div className="flex items-center gap-4 lg:gap-6">
+                <div className="px-3 py-1 lg:px-4 lg:py-2 bg-indigo-50 rounded-full text-indigo-500 font-bold text-sm lg:text-base shadow-sm border border-indigo-100">
                     {currentLevel > 1 ? `${currentLevel - 1} Oyun Bitti` : 'Başlangıç'}
                 </div>
 
                 <div className="text-indigo-500">
-                    {isDayComplete ? <Moon size={24} className="fill-indigo-500" /> : <Sun size={24} className="text-orange-400" />}
+                    {isDayComplete ? <Moon size={24} className="fill-indigo-500 lg:w-7 lg:h-7" /> : <Sun size={24} className="text-orange-400 lg:w-7 lg:h-7" />}
                 </div>
             </div>
         </header>

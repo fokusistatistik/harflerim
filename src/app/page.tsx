@@ -11,7 +11,7 @@ export default async function Home() {
     const firstName = user?.firstName ?? '';
 
     return (
-        <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-24 md:pt-32 relative overflow-hidden">
+        <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-24 md:pt-32 lg:pt-40 relative overflow-hidden">
             <GameInitializer state={session} />
 
             {/* Background Decor */}
@@ -22,10 +22,10 @@ export default async function Home() {
             </div>
 
             {/* Hero Section */}
-            <div className="z-10 flex flex-col items-center gap-6 max-w-6xl w-full px-4">
+            <div className="z-10 flex flex-col items-center gap-6 lg:gap-8 max-w-6xl xl:max-w-7xl w-full px-4">
 
                 {/* Melike Avatar */}
-                <div className="relative w-32 h-32 md:w-40 md:h-40 animate-float">
+                <div className="relative w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 animate-float">
                     <img
                         src="https://static.fokusistatistik.com/melike/melike.png"
                         alt={firstName}
@@ -36,14 +36,14 @@ export default async function Home() {
                     </div>
                 </div>
 
-                <h1 className="text-4xl md:text-6xl font-hand font-bold text-softIndigo text-center leading-tight">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-hand font-bold text-softIndigo text-center leading-tight">
                     {worldName(firstName)}
                     <br />
-                    <span className="text-2xl md:text-3xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
+                    <span className="text-2xl md:text-3xl lg:text-4xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
                 </h1>
 
                 {/* Menu Grid Container */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 w-full">
 
                     {/* Daily Game Card */}
                     <Link
@@ -51,7 +51,7 @@ export default async function Home() {
                         className="group relative bg-white p-1 rounded-3xl transition-transform hover:scale-105 active:scale-95 aspect-square"
                     >
                         <div className="relative bg-white border-4 border-indigo-100 rounded-3xl p-4 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-indigo-300 group-hover:shadow-2xl transition-all h-full">
-                            <div className="w-20 h-20 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-20 h-20 lg:w-24 lg:h-24 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                                 <img
                                     src="https://static.fokusistatistik.com/melike/harfler/harf_m.png"
                                     alt="Harf Avı Icon"
@@ -59,7 +59,7 @@ export default async function Home() {
                                 />
                             </div>
                             <div className="flex flex-col items-center text-center w-full px-2">
-                                <span className="text-lg md:text-xl font-bold text-gray-800 leading-tight">Harf Avı</span>
+                                <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 leading-tight">Harf Avı</span>
                                 <span className="text-xs text-gray-400">Günlük Görev</span>
                             </div>
                         </div>
@@ -72,14 +72,14 @@ export default async function Home() {
                         className="group relative bg-white p-1 rounded-3xl transition-transform hover:scale-105 active:scale-95 aspect-square"
                     >
                         <div className="relative bg-white border-4 border-purple-100 rounded-3xl p-4 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-purple-300 group-hover:shadow-2xl transition-all h-full">
-                            <div className="w-20 h-20 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-20 h-20 lg:w-24 lg:h-24 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                                 {/* Using Mic icon since no image provided for game icon yet, or use general game asset */}
                                 <div className="bg-purple-100 p-4 rounded-full text-purple-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
                                 </div>
                             </div>
                             <div className="flex flex-col items-center text-center w-full px-2">
-                                <span className="text-lg md:text-xl font-bold text-gray-800 leading-tight">Sihirli Kelimeler</span>
+                                <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 leading-tight">Sihirli Kelimeler</span>
                                 <span className="text-xs text-purple-400">Sesli Oyun</span>
                             </div>
                         </div>
@@ -91,13 +91,13 @@ export default async function Home() {
                         className="group relative bg-white p-1 rounded-3xl transition-transform hover:scale-105 active:scale-95 aspect-square"
                     >
                         <div className="relative bg-white border-4 border-teal-100 rounded-3xl p-4 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-teal-300 group-hover:shadow-2xl transition-all h-full">
-                            <div className="w-20 h-20 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-20 h-20 lg:w-24 lg:h-24 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                                 <div className="bg-teal-100 p-4 rounded-full text-teal-600">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><rect width="8" height="8" x="7" y="7" rx="1" /></svg>
                                 </div>
                             </div>
                             <div className="flex flex-col items-center text-center w-full px-2">
-                                <span className="text-lg md:text-xl font-bold text-gray-800 leading-tight">Hafıza Kartları</span>
+                                <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 leading-tight">Hafıza Kartları</span>
                                 <span className="text-xs text-teal-400">Eşleştirme</span>
                             </div>
                         </div>

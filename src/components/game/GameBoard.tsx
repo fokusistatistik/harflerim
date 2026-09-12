@@ -246,7 +246,7 @@ export default function GameBoard() {
                 <p className="text-gray-500 mb-12 font-medium">Melike ile Harfleri Keşfet</p>
 
                 {/* Vertical Winding Map Container */}
-                <div className="relative w-full max-w-md pb-32">
+                <div className="relative w-full max-w-md lg:max-w-lg pb-32">
 
                     {/* SVG Path - Connecting Line */}
                     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 opacity-30" style={{ minHeight: '100%' }}>
@@ -368,7 +368,7 @@ export default function GameBoard() {
                 onDragEnd={handleDragEnd}
                 modifiers={[restrictToWindowEdges]}
             >
-                <div className="flex-[4] md:flex-1 flex flex-col items-center justify-center gap-2 md:gap-6 p-4 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-indigo-100 bg-white/40 pt-4 md:pt-20">
+                <div className="flex-[4] md:flex-1 flex flex-col items-center justify-center gap-2 md:gap-6 lg:gap-8 p-4 lg:p-8 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-indigo-100 bg-white/40 pt-4 md:pt-20">
                     <HintImage
                         src={currentObject?.img || ''}
                         alt={currentObject?.word || ''}
@@ -382,7 +382,7 @@ export default function GameBoard() {
                     <p className="text-xl md:text-2xl text-softIndigo font-bold">{currentObject?.word}</p>
                 </div>
 
-                <div className="flex-[6] md:flex-1 flex flex-wrap content-start md:content-center items-center justify-center gap-2 sm:gap-4 md:gap-8 p-2 md:p-4 bg-cream relative pt-4 md:pt-20 overflow-y-auto w-full">
+                <div className="flex-[6] md:flex-1 flex flex-wrap content-start md:content-center items-center justify-center gap-2 sm:gap-4 md:gap-8 lg:gap-10 p-2 md:p-4 lg:p-8 bg-cream relative pt-4 md:pt-20 overflow-y-auto w-full">
                     <AnimatePresence>
                         {options.map((opt, index) => (
                             <div key={`${currentLevel}-${opt}-${index}`} className="relative p-2">

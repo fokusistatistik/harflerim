@@ -52,6 +52,23 @@ module.exports = {
                 sans: ['var(--font-andika)', 'sans-serif'],
                 hand: ['var(--font-patrick)', 'cursive'],
             },
+            // Akışkan tipografi (Faz 1.7): telefon-tablet-PC arasında clamp()
+            // ile sürekli ölçeklenir — md:/lg:/xl: basamak basamak yerine.
+            fontSize: {
+                'p-sm': 'var(--papatya-text-sm)',
+                'p-base': 'var(--papatya-text-base)',
+                'p-lg': 'var(--papatya-text-lg)',
+                'p-xl': 'var(--papatya-text-xl)',
+                'p-2xl': 'var(--papatya-text-2xl)',
+                'p-3xl': 'var(--papatya-text-3xl)',
+            },
+            // Dokunma hedefi asgari boyutu (Faz 1.7 / GENEL-KURALLAR md.4).
+            minWidth: {
+                tap: 'var(--papatya-tap-min)',
+            },
+            minHeight: {
+                tap: 'var(--papatya-tap-min)',
+            },
         },
     },
     plugins: [],

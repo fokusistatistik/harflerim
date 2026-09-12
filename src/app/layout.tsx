@@ -61,7 +61,7 @@ export default async function RootLayout({
             data-reduce-motion={settings?.reduceMotion ? 'true' : undefined}
             data-contrast={settings?.highContrast ? 'high' : undefined}
         >
-            <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16' : ''}`}>
+            <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16 lg:pt-20' : ''}`}>
                 <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
                     {user && <Header />}
                     {user && <ToastHost />}
