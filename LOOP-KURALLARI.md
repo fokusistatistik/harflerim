@@ -1,6 +1,6 @@
 # Papatya — Loop Çalışma Kuralları
 
-**Sürüm 1.2 · 12 Eylül 2026 — Mühürlenmiş**
+**Sürüm 1.3 · 12 Eylül 2026 — Mühürlenmiş**
 
 Bu belge, Papatya geliştirmesinde `/loop` aracının nasıl kullanılacağını tarif eder. [YOL-HARITASI.md](YOL-HARITASI.md)'nin altında çalışır — burada yazan hiçbir kural yol haritasındaki Yönetişim bölümünü geçersiz kılmaz, onu uygulamanın operasyonel biçimidir.
 
@@ -53,6 +53,8 @@ Loop içinde anlamlı her adımda **yerel commit** atılır — açıklayıcı b
 ## 3c. Çalışma ortamı işlemleri
 
 Dev sunucusu başlatma/durdurma, port çakışması çözme, bağımlılık kurma gibi yerel geliştirme ortamını çalışır tutan işlemler her zaman **kapsam içi ve serbesttir** — bunlar veri veya kalıcı kod değiştirmez, yalnızca ortamı ayakta tutar. Loop bunları onay beklemeden yapar.
+
+**Port ayrımı:** `3041` kullanıcının kendi test portudur (`npm run dev`) — loop/ajan bu portu işgal etmez. Ajan kendi doğrulamaları için `npm run dev:agent` (port `3042`) kullanır. Bir doğrulama biter bitmez ajan kendi sunucusunu durdurur; kullanıcının 3041'deki sunucusuna asla dokunulmaz.
 
 ## 3d. Hata ve istisna protokolü
 
