@@ -4,6 +4,8 @@ import { Andika, Patrick_Hand } from 'next/font/google';
 import { ParentFooter } from '@/components/ui/ParentFooter';
 import { Header } from '@/components/ui/Header';
 import { DayComplete } from '@/components/ui/DayComplete';
+import { APP_NAME } from '@/config/brand';
+import { getCurrentUser } from '@/lib/auth';
 import './globals.css';
 
 const andika = Andika({
@@ -21,7 +23,7 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-    title: 'Harf Yuvası',
+    title: APP_NAME,
     description: 'ASD odaklı Türkçe harf tanıma ve işitsel-görsel eşleştirme uygulaması',
     manifest: '/manifest.json',
     icons: {
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
-        title: 'Harf Yuvası',
+        title: APP_NAME,
     },
 };
 
@@ -43,20 +45,22 @@ export const viewport: Viewport = {
     themeColor: '#FFFDD0',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const user = await getCurrentUser();
+
     return (
         <html lang="tr" className={`${andika.variable} ${patrickHand.variable}`}>
-            <body className="font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 pb-16 pt-16">
+            <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16' : ''}`}>
                 {/* <AudioProvider> */}
-                <Header />
+                {user && <Header />}
                 {children}
-                <DayComplete />
+                {user && <DayComplete />}
                 {/* </AudioProvider> */}
-                <ParentFooter />
+                {user && <ParentFooter />}
             </body>
         </html>
     );

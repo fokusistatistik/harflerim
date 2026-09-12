@@ -1,7 +1,8 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
 
 export interface GameState {
     sessionId: string;
@@ -12,19 +13,8 @@ export interface GameState {
 }
 
 export async function getDailySession(gameId: string = 'letter-hunt'): Promise<GameState> {
-    const cookieStore = cookies();
-    let deviceId = cookieStore.get('deviceId')?.value;
-
-    if (!deviceId) {
-        console.warn("Device ID missing. Using ephemeral.");
-        deviceId = 'guest-' + crypto.randomUUID();
-    }
-
-    // Ensure User exists
-    let user = await db.user.findUnique({ where: { id: deviceId } });
-    if (!user) {
-        user = await db.user.create({ data: { id: deviceId } });
-    }
+    const user = await getCurrentUser();
+    if (!user) redirect('/giris');
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -32,7 +22,7 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
     let session = await db.session.findUnique({
         where: {
             userId_date_gameId: {
-                userId: deviceId,
+                userId: user.id,
                 date: today,
                 gameId: gameId
             }
@@ -42,7 +32,7 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
     if (!session) {
         session = await db.session.create({
             data: {
-                userId: deviceId,
+                userId: user.id,
                 date: today,
                 gameId: gameId,
                 levelReached: 1,

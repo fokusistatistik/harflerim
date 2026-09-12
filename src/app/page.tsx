@@ -2,9 +2,13 @@ import Link from 'next/link';
 import { Play, BookOpen, Star } from 'lucide-react';
 import { getDailySession } from '@/actions/game';
 import { GameInitializer } from '@/components/game/GameInitializer';
+import { getCurrentUser } from '@/lib/auth';
+import { worldName } from '@/config/brand';
 
 export default async function Home() {
     const session = await getDailySession('letter-hunt');
+    const user = await getCurrentUser();
+    const firstName = user?.firstName ?? '';
 
     return (
         <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-24 md:pt-32 relative overflow-hidden">
@@ -24,7 +28,7 @@ export default async function Home() {
                 <div className="relative w-32 h-32 md:w-40 md:h-40 animate-float">
                     <img
                         src="https://static.fokusistatistik.com/melike/melike.png"
-                        alt="Melike"
+                        alt={firstName}
                         className="w-full h-full object-cover rounded-full border-8 border-white shadow-2xl"
                     />
                     <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg">
@@ -33,9 +37,9 @@ export default async function Home() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl font-hand font-bold text-softIndigo text-center leading-tight">
-                    Melike'nin Oyun Sandığı
+                    {worldName(firstName)}
                     <br />
-                    <span className="text-2xl md:text-3xl text-gray-500 font-sans font-normal">Hoş Geldin Melike!</span>
+                    <span className="text-2xl md:text-3xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
                 </h1>
 
                 {/* Menu Grid Container */}

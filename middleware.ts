@@ -1,39 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const AUTH_COOKIE = 'papatyaSession';
+const PUBLIC_PATHS = ['/giris'];
+
 export function middleware(request: NextRequest) {
-    // Check for deviceId cookie
-    let deviceId = request.cookies.get('deviceId')?.value;
-    let response = NextResponse.next();
+    const { pathname } = request.nextUrl;
+    const hasSession = Boolean(request.cookies.get(AUTH_COOKIE)?.value);
 
-    if (!deviceId) {
-        const newId = crypto.randomUUID();
-
-        // 1. Update request cookies so Server Components see it immediately
-        request.cookies.set('deviceId', newId);
-
-        // Create new response with updated request
-        response = NextResponse.next({
-            request: {
-                headers: request.headers,
-            },
-        });
-
-        // 2. Set cookie on response so Browser stores it
-        response.cookies.set('deviceId', newId, {
-            expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 Year
-            httpOnly: true,
-            path: '/',
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-        });
+    if (!hasSession && !PUBLIC_PATHS.includes(pathname)) {
+        return NextResponse.redirect(new URL('/giris', request.url));
     }
 
-    return response;
+    return NextResponse.next();
 }
 
 export const config = {
-    matcher: [
-        '/((?!api|_next/static|_next/image|favicon.ico|sounds).*)',
-    ],
+    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sounds|icon-|apple-icon|manifest.json).*)'],
 };

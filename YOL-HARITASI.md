@@ -1,0 +1,337 @@
+# Papatya — Ürün Yol Haritası
+
+**Sürüm 2.6 · 12 Eylül 2026 — Mühürlenmiş**
+
+Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması.
+**Melike için inşa ediliyor, herkes için tasarlanıyor.** Bu belge, bugünkü koddan yola çıkıp
+LLM destekli bir otizm eğitim platformuna giden dört fazlık yolu ve ötesindeki vizyonu tarif eder.
+
+| | |
+|---|---|
+| **Kod Tabanı** | Next.js 14 · Prisma · Zustand |
+| **İlk Kullanıcı** | Melike Bostanoğlu, 6–7 yaş |
+| **Hedef Cihazlar** | Telefon · Tablet · PC |
+| **Mevcut Oyun** | 3 çalışır + 1 prototip |
+| **Ufuk** | Çocukluk → ergenlik → erken yetişkinlik |
+
+---
+
+## Yönetişim: Pazarlık konusu olmayan kurallar
+
+Bu bölüm fazlardan önce gelir çünkü fazların hepsini bağlar. Bir özellik bu kurallardan birini çiğniyorsa, ne kadar değerli olursa olsun yapılmaz.
+
+### Veri güvenliği anayasası — Katı yerel işleme
+
+Kamera görüntüsü, ses kaydı ve konum verisi **cihazdan veya ev sunucusundan asla çıkmaz.** Python servisleri yerel ağda çalışır. Buluta yalnızca sayısal sonuç gider (`{hareket: "kollar_yukarı", skor: 0.91}`), ham medya asla. LLM'e gönderilen her şey anonimleştirilmiş metindir.
+
+```
+Kamera ──┐
+Mikrofon ─┼─→ [Yerel işleme] ──→ sadece sonuç ──→ [Bulut / DB]
+Konum ────┘         │
+                    └─→ ham medya burada kalır ve silinir
+```
+
+Bu bir ayar değil, mimari kuraldır. Ham medyayı buluta gönderen bir kod yolu var olmamalıdır.
+
+### Klinik sınır sözleşmesi
+
+Uygulama **tanı koymaz, otizm şiddeti/seviyesi ölçmez, gelişim geriliği tespit etmez.** İçerik politikası kademelidir:
+
+| Aşama | Kim onaylar | Ne sunulabilir |
+|---|---|---|
+| **Bugün (Faz 1–3)** | Ebeveyn | Aktivite verisi, nötr istatistik, ebeveynin kendi seçtiği/onayladığı içerik. Yorum ve değerlendirme yok. |
+| **Uzman bağlıyken (Faz 4)** | Çocuk gelişimci / psikolog / psikiyatrist | Yapılandırılmış program ve gelişim değerlendirmesi açılır; her içerik kimin onayladığı kaydıyla saklanır. |
+
+Uzman bağlı değilken değerlendirme ve program modülleri **kodda hazır ama kapalı** durur. Varsayılan her zaman güvenli taraftır.
+
+> **Uzman denetim kapısı:** Her fazın çıkışında yol haritasının tamamı çocuk psikiyatristi, çocuk gelişimci ve çocuk psikoloğu bakış açısıyla gözden geçirilir. Bu bir öneri değil, faz kapısının parçasıdır.
+
+### Ekran sağlığı — Anti-bağımlılık mimarisi
+
+Otizmli çocuklarda ekran takıntısı bilinen bir risktir. Uygulama çocuğu ekranda tutmaya değil, **ekrandan sağlıklı biçimde ayırmaya** çalışır.
+
+| Yasak | Zorunlu |
+|---|---|
+| Sonsuz kaydırma / akış | Net günlük süre limiti |
+| Otomatik sonraki video | Doğal bitiş: papatya dolar, gün biter |
+| "X gün üst üste!" serisi | Sakin kapanış ritüeli |
+| Push bildirimi / geri çağırma | Ekran dışı görev önerisi ("resmini annene göster") |
+| Rastgele ödül (kumar mekaniği) | Ebeveyne şeffaf kullanım raporu |
+| "Biraz daha" pazarlığı | Limit aşımında yumuşak ama kesin son |
+
+### Kullanıcı katmanları
+
+Şu an **tüm kullanıcılar temel (`basic`) katmandadır** ve aralarında hiçbir kısıtlama farkı yoktur. Uygulama ticari amaç taşımaz. Yalnızca gerçek maliyet üreten özellikler (LLM çağrıları, video depolama) için ileride bir **token havuzu + bağış** modeli değerlendirilecektir: her aileye aylık ücretsiz kota, isteyen aile bağışla havuza katkı. Kâr amacı yoktur; hedef yalnızca altyapı maliyetinin karşılanmasıdır.
+
+### Aile yapısı: bir ebeveyn → çoklu çocuk
+
+`User` modeli bugün tek çocuğu (Melike) temsil eder, ancak **ileride kardeşler aynı ebeveyn yönetimi altında ayrı profiller olarak bağlanabilecek** şekilde tasarlanır. Giriş ekranına ilerde bir "kim giriyor?" profil seçimi eklenir; tek bir ebeveyn PIN'i tüm çocuk profillerini yönetir, ancak her çocuğun verisi ve ilerlemesi birbirinden bağımsız kalır. Bu, Faz 1'deki şemanın bugünden kaçınması gereken bir varsayımdır: `User` ile ebeveyn kimliği asla birebir eşlenmemelidir.
+
+### Kriz anı — Sakinleştirme modu
+
+Ardışık yanlış cevap veya hızlı/rastgele dokunma gibi sıkıntı belirtisi paternleri algılandığında uygulama kendiliğinden **Sakin Mod**'a geçer: ses ve müzik durur, ekran sadeleşir, nefes alma daveti gösterilir ve ebeveyne bildirim gider. Bu bir klinik müdahale değildir — yalnızca durdurma ve haber vermedir; yorum veya tanı içermez. Ayrıntılı algılama kuralları Faz 3'te (uyarlanabilir zorluk motoruyla birlikte) tasarlanır, ancak ilke şimdiden mühürlenir.
+
+### Veri devri — Yetişkinliğe geçiş ilkesi
+
+Şema, çocuğun **kendi hesabının sahipliğini yetişkinlik eşiğinde devralabileceği** varsayımıyla kurulur. Bugünden itibaren ebeveyn ile çocuk arasındaki ilişki, `User` tablosunda sonradan sökülmesi gereken sabit bir bağımlılık olarak değil, zamanla yön değiştirebilecek bir yetki ilişkisi olarak modellenir. Devrin tam mekanizması Faz 5'in açık sorularından biridir; burada mühürlenen yalnızca ilkedir: sahiplik devredilebilir olmalıdır, baştan kilitlenmemelidir.
+
+### Yedekleme ve felaket kurtarma
+
+Katı yerel işleme ilkesi bozulmadan veri kaybı riskine karşı: düzenli aralıklarla **uçtan uca şifreli bir yedek dosyası** oluşturulur. Ebeveyn bu dosyayı kendi seçtiği bir yere (USB, kendi bulut hesabı) taşıyabilir; şifreleme anahtarı yalnızca ebeveyndedir, Papatya'nın kendi sunucusu yedeğin içeriğini hiçbir zaman görmez. Cihaz kaybı/arızası durumunda geri yükleme bu dosya + parola ile yapılır.
+
+### İçerik moderasyonu sorumluluğu
+
+Sistem otomatik içerik filtresi uygulamaz — yanlış pozitif/negatif riski, otomatik kararın getirdiği güvenden daha zararlıdır. Bunun yerine, ebeveyn bir video/şarkı/hikâye eklerken kısa bir **kontrol listesi** gösterilir (ani/yüksek ses var mı, yıpıcı görsel var mı, çocuğa uygun mu) ve ebeveyn açıkça onaylar. Sorumluluk her zaman ebeveyne aittir; sistem yalnızca hatırlatır.
+
+### Test ve kalite güvencesi
+
+Otizmli bir çocuk için rutin bozulması sıradan bir yazılım hatasından daha ciddi bir sonuçtur — yanlış çalan bir ses veya beklenmedik bir geçiş kaygı tetikleyebilir. Bu yüzden her yeni özellik canlıya geçmeden önce hem **otomatik testten** hem **gerçek kullanımla deneme**den geçer; çubuk sıradan bir uygulamadan daha sıkıdır. Bu Faz 1'in temel bir maddesidir.
+
+---
+
+## Bu yol haritası neyi çözüyor
+
+Mevcut kodda çalışan üç oyun var ve Melike bunları bugün oynayabiliyor. Ancak altyapıda üç yapısal düğüm bulunuyor: **bir kullanıcı bir cihaza eşit** (çoklu profil imkânsız), **tüm içerik TypeScript dosyalarına gömülü** (yeni kelime eklemek deploy gerektiriyor) ve **yazılmış ama bağlanmamış bir sistem katmanı** var — Türkçe seslendirme, tema tokenleri ve dil dosyası kodda duruyor fakat hiçbiri devrede değil.
+
+Fazlar bu gerçeğe göre sıralandı. Faz 1 düğümleri çözer ve kapalı duran sistemleri açar; bunlar yapılmadan sonraki her özellik iki kez yazılmak zorunda kalır. Faz 2 Melike'nin günlük kullanacağı içerikleri getirir. Faz 3 yapay zekâyı ve ses tanımayı ekler. Faz 4 uygulamayı başka ailelere ve geliştiricilere açar.
+
+---
+
+## Mevcut durum denetimi
+
+Faz planı bu tabloya dayanıyor. "Yazılmış ama kapalı" satırları özellikle önemli — bunlar en düşük maliyetli, en yüksek getirili ilk işler.
+
+| Durum | Alan | Değerlendirme |
+|---|---|---|
+| **Kısmen** | Oyunlar | Harf Avı (24 seviye, DB'ye kayıt), Hafıza Kartları ve Sihirli Kelimeler çalışıyor. Ancak üçü de birbirinden bağımsız yazılmış; ortak bir oyun soyutlaması yok ve ikisi ilerlemesini `localStorage`'a, biri veritabanına yazıyor. Visual Match bir prototip — ses dosyası adları eşleşmediği için sesleri hiç çalmıyor. |
+| **Darboğaz** | Kullanıcı modeli | `User.id` doğrudan çerezdeki `deviceId`. Aynı tablette iki çocuk ayrı profil olamıyor, çerez silinince tüm ilerleme kurtarılamadan kayboluyor. Ebeveyn kavramı şemada hiç yok. |
+| **Darboğaz** | İçerik | 28 harf ve yüzlerce kelime `gameData.ts` içinde sabit. Melike'nin sevdiği yeni bir kelimeyi eklemek için kod değiştirip yeniden yayınlamak gerekiyor. Ayrıca `Ğ` harfi tip tanımında var ama veride yok. |
+| **Yazılmış, kapalı** | Türkçe seslendirme | `useTurkishSpeech.ts` tamamen hazır (tr-TR, yavaşlatılmış konuşma hızı) fakat `AudioProvider` ana şablonda yorum satırında. Uygulama şu an tek kelime konuşmuyor. |
+| **Yazılmış, kapalı** | Tema sistemi | `config/theme.ts` içindeki renk paleti ve animasyon süreleri hiçbir yerden çağrılmıyor. Renkler bunun yerine her bileşene tek tek yazılmış; duyusal hassasiyete göre tema değiştirmek şu an mümkün değil. |
+| **Hazır** | Konuşma tanıma | Sihirli Kelimeler oyununda gerçekten çalışıyor: sürekli dinleme, "pas/geç" atlama komutları, toleranslı eşleştirme. Faz 3'teki ses tabanlı onay sisteminin temeli burada mevcut. |
+| **Hazır** | PWA | Servis çalışanı, manifest ve ikonlar yerinde. Ancak resim ve sesler harici bir CDN'den çekildiği için gerçek çevrimdışı kullanım henüz çalışmaz. |
+| **Yok** | Masaüstü düzeni | Yalnızca `md:` kırılma noktası kullanılmış; `lg:` ve üzeri hiç yok. PC'de arayüz tablet görünümünde sıkışık kalıyor. Ölçek faktörü veya akışkan tipografi altyapısı bulunmuyor. |
+
+---
+
+## Marka kimliği
+
+İsim **Papatya**. Sakin, doğal ve yaş-cinsiyet nötr — Melike için sıcak, başka çocuklara açıldığında da yabancı durmayan bir ad. Sekiz yapraklı papatya hem logo hem ilerleme göstergesi olarak çalışıyor: her tamamlanan etkinlik bir yaprağı doldurur, tam çiçek günün tamamlandığını anlatır.
+
+- **Açılış animasyonu:** yapraklar sırayla açılır, göbek yerine oturur. Toplam 400 ms — bekletmeyecek kadar kısa, fark edilecek kadar belirgin. `prefers-reduced-motion` açıkken tek karede belirir.
+- **İlerleme metaforu:** sekiz yaprak = günün sekiz etkinliği. Yaprak dolmak, ilerleme çubuğundan çok daha somut ve sözel olmayan bir geri bildirim.
+- **Palet:** krem zemin gözü yormaz, papatya sarısı yalnızca ödül ve vurgu anlarında kullanılır — otizm dostu arayüzde renk, dikkat yönlendirme aracıdır, dekorasyon değil.
+
+**Renkler**
+
+| Rol | Hex |
+|---|---|
+| Zemin (krem) | `#FBF8EF` |
+| Papatya sarısı (vurgu) | `#E8B33C` |
+| Yaprak yeşili | `#5F7A52` |
+| Gök mavisi | `#6B87A8` |
+| Gül | `#C4756A` |
+| Mürekkep | `#2A2722` |
+
+> İsim kodda tek bir `brand.ts` dosyasından okunur. Bugün "Papatya", yarın başka bir aile için başka bir ad — arayüz metinleri, manifest, açılış ekranı ve seslendirme cümleleri hep o tek kaynaktan beslenir.
+
+**Çatı + aksan ilkesi:** Papatya logosu, ana renk paleti ve sekiz yapraklı ilerleme metaforu **marka kimliğinin sabit çatısıdır** ve hiçbir kişiselleştirmeyle değişmez. Çocuğun ilgi alanına göre kişiselleştirme (bkz. Faz 2.10) yalnızca ikon, motif ve aksesuar seviyesinde bir **aksan katmanı** olarak çalışır — çatının üstüne giyilir, çatının yerini almaz.
+
+---
+
+## Faz 1 — Temel & Kimlik
+
+> **Ön koşul fazı.** Melike'nin gözünde çok az şey değişir; altta neredeyse her şey değişir. Bu fazın amacı, sonraki üç fazın yeniden yazım gerektirmeden inşa edilebileceği bir temel kurmaktır.
+
+| # | İş | Açıklama | Yük |
+|---|---|---|---|
+| 1.1 | **Kullanıcı ve kimlik altyapısı** ✅ *Tamamlandı* | `User` + `UserSettings` + `AuthSession` şeması kuruldu. Kullanıcı adı/şifre ile giriş, bcrypt hash'li parola, 30 günlük oturum çerezi. Seed kullanıcısı: **Melike Bostanoğlu** (`Melike` / `1234`). Tüm kullanıcılar `basic` katmanda. Kayıt ekranı **yok** — ileride e-posta/telefon/Gmail doğrulamalı kayıt eklenecek, şema bunu kaldırır. | Yüksek |
+| 1.2 | **Dinamik kimlik: "Adının Dünyası"** ✅ *Tamamlandı* | `brand.ts` Türkçe ünlü uyumuna göre isimden başlık türetir: Melike → *Melike'nin Dünyası*, Emre → *Emre'nin Dünyası*, Yusuf → *Yusuf'un Dünyası*. Uygulama adı (`Papatya`) ve tüm kişi adları tek kaynaktan okunur; kodda sabit isim kalmaz. | Düşük |
+| 1.3 | **Tek giriş, korumalı yönetim alanı** | Melike `1234` ile girer ve uygulamanın **tamamını** kullanır — ayrı hesap yok. Ayarlar/yönetim alanı ise çocuğun bulamayacağı bir jestle (logoya uzun basma) açılır ve **ebeveyn şifresi** ister. Ekran limiti, içerik onayı ve aile bilgileri bu kapının arkasındadır. | Orta |
+| 1.4 | **İçeriği veritabanına taşı** *(Kritik)* | `gameData.ts` içindeki kelime ve görseller `ContentItem` / `ContentSet` tablolarına aktarılır. Mevcut veri bir kerelik tohumlama betiğiyle taşınır. Bundan sonra içerik eklemek kod değişikliği değil, veri girişi. | Yüksek |
+| 1.4b | **Çocuk profili şeması: ilgi alanı ve duyusal profil** *(Kritik)* | `UserSettings`'e yapılandırılmış ama tamamen opsiyonel alanlar eklenir: yaş, cinsiyet, favori renk, ilgi alanları listesi (`["kedi","gezegenler"]`), **öğrenme kanalı tercihi** (okuma-ağırlıklı/dinleme-ağırlıklı/görsel-ağırlıklı), duyusal profil (ses/ışık/dokunsal hassasiyet), tetikleyiciler ve sakinleştiriciler listesi, iletişim düzeyi (sözel/AAC/karma). **Bu bir tanı aracı değildir** — yalnızca kişiselleştirme verisidir, klinik sınır sözleşmesine tabidir. Her alan boş bırakılabilir. | Yüksek |
+| 1.5 | **Seslendirmeyi aç** | `AudioProvider` yorum satırından çıkarılır, oyunlara bağlanır. Harf adı, kelime, doğru/yanlış geri bildirimi ve yönerge cümleleri Türkçe seslendirilir. *Kod zaten yazılmış — bu bir bağlama işi.* | Düşük |
+| 1.6 | **Tasarım tokeni katmanı** | Renk, boşluk, yarıçap ve animasyon süreleri CSS değişkenlerine taşınır; Tailwind bu tokenlerden beslenir. Duyusal tema anahtarının (yüksek kontrast, sakin mod, animasyon kapalı) bağlanacağı yer burası. | Orta |
+| 1.7 | **Üç cihaz ölçeklemesi** | Akışkan tipografi (`clamp()`), `lg:` ve `xl:` kırılma noktaları, dokunma hedefleri için asgari 44 px kuralı. Telefon, tablet ve PC'de aynı düzen mantığı — üç ayrı arayüz değil, tek ölçeklenebilir arayüz. | Orta |
+| 1.8 | **Ortak oyun soyutlaması** | Tek bir `GameShell`: seviye ilerlemesi, ilerleme kaydı, ipucu zamanlayıcısı ve ödül anı tek yerde. Üç mevcut oyun buna taşınır, Visual Match ya düzeltilir ya kaldırılır. *Beşinci oyunu yazmanın maliyetini yarıya indirir.* | Yüksek |
+| 1.9 | **Papatya görsel kimliği** | Açılış ekranı ve yaprak açılma animasyonu, yeni logo ve PWA ikonları, sekiz yapraklı günlük ilerleme göstergesi. Kodda gömülü "melike" varlık yolları profil verisine devredilir. | Orta |
+| 1.10 | **Ekran sağlığı temeli** | Günlük süre limitinin fiilen uygulanması, doğal bitiş ekranı, otomatik oynatma ve seri ödüllerinin mimari olarak dışlanması. *Anti-bağımlılık kuralları sonradan eklenen bir filtre değil, oyun kabuğunun parçasıdır.* | Orta |
+| 1.11 | **Gerçek çevrimdışı çalışma** | Görseller ve sesler harici CDN'den proje varlıklarına taşınır, servis çalışanı bunları önbelleğe alır. Uçakta, arabada, internetsiz evde çalışan bir uygulama — otizmde rutin kesintisi ciddi bir sorundur. | Orta |
+| 1.12 | **Test ve deneme protokolü** | Kritik akışlar (giriş, seviye ilerlemesi, ses/görsel eşleşmesi) için otomatik testler; her yeni özellik canlıya geçmeden önce ayrıca gerçek kullanımla denenir. Beklenmedik bir ses veya geçiş otizmde rutin bozulması demektir — çubuk sıradan bir uygulamadan daha sıkı tutulur. | Orta |
+| 1.13 | **Audit log altyapısı** | Kim, ne zaman, neyi değiştirdi kaydı: ebeveyn/yönetim işlemleri (ayar değişikliği, içerik ekleme/silme, PIN değişimi, aile bireyi ekleme/silme), güvenlik olayları (başarısız giriş denemesi, oturum açma/kapama) ve çocuğun aktivite kayıtları (Faz 3.1'deki beceri katmanıyla aynı çatı altında) tek bir `AuditLog` tablosunda birikir. Geri dönüşsüz işlemler (hesap silme, veri temizleme) için özellikle kritik. | Orta |
+| 1.14 | **Merkezi bildirim altyapısı** | Toast (oyun içi anlık geri bildirim: doğru/yanlış, seviye tamamlama) ve sistem bildirimleri (ebeveyne yönelik: sakinleştirme modu tetiklendi, ekran süresi doldu, rozet kazanıldı) tek bir merkezi bildirim servisinden geçer. Hiçbir bileşen kendi başına toast/bildirim üretmez — hepsi aynı kuyruktan, aynı görsel/işitsel kurallarla (ani/yüksek ses yok, öngörülebilir) çıkar. | Orta |
+| 1.15 | **Hesap silme ve veri temizleme akışı** *(Kritik)* | Ebeveyn hesabı kapatmayı talep ettiğinde: önce zorunlu bir şifreli yedek alınır (Faz 3.11 mekanizmasıyla), ardından "bu işlem geri alınamaz" uyarısı gösterilir, sonra 24–48 saatlik bir **vazgeçme penceresi** başlar. Pencere dolunca gerçek silme yapılır ve audit log'a işlenir. Bu, Loop Kuralları'ndaki "geri dönüşsüz işlem" risk eşiğinin uygulamadaki karşılığıdır. | Orta |
+| 1.16 | **Arka plan geçiş bildirimi** | Çocuk uygulamayı arka plana atıp başka bir uygulamaya/ekrana geçtiğinde ebeveyne bir bildirim gider. **Amaç gözetim değil, rutin farkındalığıdır** — çocuk cihaz başından kalktı mı, oturum nerede yarım kaldı bilgisi. Anlık konum/aktivite takibi yapılmaz, yalnızca "oturum durdu/devam etti" bilgisi merkezi bildirim sisteminden (1.14) geçer. | Düşük |
+
+**Faz Çıkışı** — Melike kendi adıyla giriş yapar, *Melike'nin Dünyası* onu karşılar, uygulama onunla Türkçe konuşur, üç oyun da telefonda ve PC'de düzgün ölçeklenir, ilerlemesi hesabına kaydedilir, günlük süre limiti fiilen çalışır ve internet olmadan da her şey açılır. Yeni bir kelime eklemek artık kod değişikliği gerektirmez. Ebeveyn, çocuğun ilgi alanlarını ve duyusal profilini kaydedebilir — bu veri henüz kullanılmasa da (Faz 2.10'u bekler) şemada hazır durur. Her ebeveyn işlemi audit log'a düşer, bildirimler tek merkezi kaynaktan çıkar, hesap silme talep edilirse zorunlu yedek + vazgeçme penceresiyle güvence altına alınır, çocuk uygulamayı arka plana attığında ebeveyn haberdar olur.
+
+**Uzman denetimi** — Faz kapanmadan önce arayüz sadeliği, giriş ritüelinin bilişsel yükü ve süre limitinin uygulanış biçimi çocuk gelişimi bakış açısıyla gözden geçirilir.
+
+---
+
+## Faz 2 — Zenginleşme
+
+> **Günlük kullanım fazı.** Faz 1 temeli kurdu; bu faz üzerine Melike'nin gerçekten sevdiği şeyleri koyar. Müzik, kendi çizgi film karakteri, çizim ve yazı — uygulamayı bir alıştırma aracından günlük bir arkadaşa dönüştüren faz.
+
+| # | İş | Açıklama | Yük |
+|---|---|---|---|
+| 2.1 | **Ebeveyn yönetim alanı** *(Önce bu)* | Ebeveyn şifresiyle açılan bölüm: aile bireyi tanımlama, içerik ekleme, şarkı listesi, ekran süresi sınırı, duyusal tema tercihleri ve ilerleme özeti. **Kullanım istatistikleri** (gün içi süre, toplam süre, günlük ortalama) da burada gösterilir — yalnızca ebeveyne, çocuğa değil; bu bir başarı ölçüsü değil, ekran sağlığı takibinin bir parçasıdır. **Bu fazın diğer maddeleri buraya veri girilmeden çalışmaz** — o yüzden ilk sırada. | Yüksek |
+| 2.2 | **Aile bireyleri kaydı** | Anne, baba, kardeş, öğretmen... **Yalnızca ebeveyn tanımlar:** fotoğraf, ad, yakınlık derecesi ve isteğe bağlı ses kaydı. Çocuk hiçbir aile bilgisini giremez, düzenleyemez veya silemez. Fotoğraflar yerel olarak saklanır. *Hem Aile Albümü oyununun hem Faz 3'teki ses tanımanın veri temeli budur.* | Yüksek |
+| 2.3 | **Müzik köşesi** *(Öne çıkan)* | YouTube IFrame API ile kontrollü oynatma. Ebeveyn bir **YouTube linki yapıştırarak** şarkı ekler; başlık ve kapak otomatik çekilir. Her şarkı için ayrı bir **günlük tekrar (loop) sayısı** belirlenir (ör. "en fazla 3 kez") — genel günlük çalma limitine ek, şarkı bazlı ayrıntılı bir sınır. Büyük kapak görselleriyle listelenir; reklamsız, önerisiz, gezinmesiz kapalı bir arayüz. Şarkı bitiminde yumuşak geçiş — otomatik sonraki şarkı yoktur. Şarkı eklenirken ebeveyne kısa bir içerik kontrol listesi (ani ses, yoğun görsel) gösterilir; onay ebeveyne aittir, sistem karar vermez. Spotify entegrasyonu (Premium hesap + OAuth + Web Playback SDK gerektirdiği için) ayrı ve daha ileri bir faz maddesidir. | Yüksek |
+| 2.4 | **Melike'nin çizgi filmi** | Yapay zekâ ile üretilmiş, çocuğun kendi karakterini taşıyan kısa videolar ve resimli hikâyeler. Video oynatıcı müzik köşesiyle aynı kontrollü kabuğu kullanır — otomatik oynatma ve öneri akışı yok. İçerik ebeveyn tarafından yüklenir, aynı kontrol listesiyle onaylanır; uygulama yalnızca sunar. | Orta |
+| 2.5 | **Aile albümü oyunu** | 2.2'de tanımlanan gerçek aile fotoğraflarıyla "bu kim?" eşleştirmesi. Sesli ipucu, yanlışta ceza yok. Sosyal tanıma becerisini destekler. | Orta |
+| 2.6 | **Çizim tahtası** | Parmakla ve fareyle çalışan basit tuval: kalın uçlar, sınırlı ve sakin renk paleti, tek adımlık geri alma. Serbest çizim ve harf üzerinden geçme modu. Çizimler hesaba kaydedilir — ebeveyn için zaman içindeki gelişimin görünür kaydı. | Orta |
+| 2.7 | **Yazı alıştırması** | Harf ve isim yazma: noktalı kılavuz üzerinden geçme, ardından serbest yazma. Dokunmatikte parmak, PC'de fare veya klavye. Bilgisayara adaptasyon hedefinin ilk somut adımı. | Orta |
+| 2.8 | **Günlük rutin ve oyunlaştırma** | Sekiz yapraklı papatya günün etkinlik planı olur: görsel takvim, sırada ne olduğunu gösteren sakin geçişler, tamamlanan gün için çiçeğin açması. Puan, rekabet veya seri ödülü yok — otizmde öngörülebilirlik, ödülden daha güçlü bir motivasyondur. | Orta |
+| 2.8b | **Beceri rozetleri** | Bir beceri (Faz 3.1) ilk kez tamamlandığında sabit ve öngörülebilir bir rozet kazanılır (ör. "1'den 10'a Saymayı Öğrendin"). **Puan, sıralama, lider tablosu veya "X gün üst üste" serisi yoktur** — bunlar anti-bağımlılık ilkesini ihlal eder. Rozet bir başarı kaydıdır, rekabet aracı değil; her zaman aynı koşulda aynı şekilde kazanılır, rastgele değildir. | Düşük |
+| 2.9 | **Sözlü onay mekanizması** | Tarayıcı tabanlı konuşma tanımayla "sihirli kelimeyi söyle" adımı. Kimin konuştuğunu *ayırt etmez* — bu bilinçli bir ara adım; gerçek konuşmacı tanıma Faz 3'te gelir. Mevcut Sihirli Kelimeler altyapısı yeniden kullanılır. | Düşük |
+| 2.10 | **İlgi alanı aksan katmanı** | 1.4b'de kaydedilen ilgi alanına göre (kedi, gezegenler, dinozorlar...) oyun içi ödül ikonları, arka plan motifleri ve karakter aksesuarları değişir. **Papatya logosu, ana renk paleti ve sekiz yapraklı ilerleme metaforu her zaman sabit kalır** — aksan katmanı bunların üstüne giyilen değiştirilebilir bir dekordur, marka kimliğinin yerini almaz. | Orta |
+
+**Faz Çıkışı** — Melike sabah uygulamayı açıp günlük papatyasını görüyor; sevdiği şarkıyı sınırlı sayıda dinliyor, kendi çizgi filmini izliyor, resim yapıyor, ailesini tanıma oyununu oynuyor. Ebeveyn tüm bunları koda dokunmadan yönetim alanından tanımlıyor.
+
+**Uzman denetimi** — Müzik ve video limitlerinin çocuk üzerindeki etkisi, aile tanıma oyununun sosyal-duygusal uygunluğu ve oyunlaştırmanın takıntı riski değerlendirilir.
+
+---
+
+## Faz 3 — Zeka Katmanı
+
+> **Uyarlanabilirlik fazı.** Uygulama artık Melike'yi tanımaya başlar: neyi zor bulduğunu, ne zaman yorulduğunu, hangi ipucunun işe yaradığını. Ses tanıma ve dil modelleri bu fazda devreye girer.
+
+| # | İş | Açıklama | Yük |
+|---|---|---|---|
+| 3.1 | **Beceri/kazanım katmanı ve anlamlı ölçüm altyapısı** *(Kritik)* | Oyun-bağımsız bir `Skill` kavramı tanımlanır (ör. "1'den 10'a sayma", "b/d ayrımı", "yüz tanıma"). Her deneme (doğru/yanlış, tepki süresi, kaçıncı ipucu) hangi oyunda yapıldığı metadata'sıyla birlikte ilgili beceriye bağlanır. Bu, "aynı beceri farklı tarihlerde nasıl gitti" sorgusunu ve farklı oyunların aynı beceriyi çapraz doğrulamasını mümkün kılar. **Hata deseni** bilgisi olmadan uyarlanabilir zorluk mümkün değil — bu fazın ön koşulu. | Yüksek |
+| 3.2 | **Uyarlanabilir zorluk** | Sabit 24 seviyeli merdiven yerine, çocuğun performansına göre çeldirici sayısını ve benzerliğini ayarlayan bir motor. Zorlandığı harfler daha sık, ustalaştıkları seyrek döner. Kurallar şeffaf ve ebeveyn tarafından geçersiz kılınabilir. | Yüksek |
+| 3.2b | **Sakinleştirme modu** | Ardışık yanlış cevap veya hızlı/rastgele dokunma paterni algılandığında ses ve müzik durur, ekran sadeleşir, nefes alma daveti gösterilir ve ebeveyne bildirim gider. Klinik müdahale değildir — yalnızca durdurma ve haber vermedir, yorum içermez. Aynı hata-deseni altyapısını (3.1) kullanır. | Yüksek |
+| 3.3 | **Konuşmacı tanıma servisi** *(Öne çıkan)* | Ayrı bir Python servisi ses parmak izi üretir; aile bireyleri 2.2'de kaydedilen örneklerle tanıtılır. "Babanın sesini duyunca sonraki aşamaya geç" senaryosu burada gerçekleşir. Ses örnekleri **yalnızca cihazda/ev sunucusunda** işlenir. Her sesli onayın dokunmatik alternatifi vardır — sistem çocuğu tanımadığı bir seste asla kilitlemez. | Yüksek |
+| 3.4 | **Kamera → karakter animasyonu** *(Öne çıkan)* | Yerel poz ve yüz ifadesi takibi (MediaPipe) çocuğun hareketini ve mimiğini **kendi çizgi film karakterine** aktarır. Ekranda çocuğun görüntüsü **hiç gösterilmez** — yalnızca karakteri hareket eder; kendi görüntüsünü izlemek otizmde kaygı tetikleyebilir. Kamera varsayılan **kapalı**, ebeveyn açar. Görüntü asla kaydedilmez, ağdan çıkmaz — sadece koordinatlar işlenir ve anında silinir. Fiziksel hareketi teşvik eder, ekran başında oturmayı değil. | Yüksek |
+| 3.5 | **Doğal Türkçe seslendirme** | Tarayıcının robotik sesi yerine Python tabanlı yüksek kaliteli TTS. Cümleler önceden üretilip önbelleğe alınır — hem çevrimdışı çalışır hem gecikme olmaz. Karakter sesi tutarlı olur; otizmde ses tutarlılığı güven kurar. | Orta |
+| 3.6 | **LLM destekli içerik üretimi** | Yönetim alanında: çocuğun ilgi alanlarına göre kelime setleri, kişiselleştirilmiş kısa hikâyeler, sosyal öykü metinleri. **Üretilen her içerik ebeveyn onayından geçmeden çocuğa gösterilmez** — insan denetimi mimari bir kural, isteğe bağlı bir ayar değil. LLM'e yalnızca anonim metin gider; çocuğun adı, fotoğrafı veya sesi asla. | Yüksek |
+| 3.6b | **Ebeveyn destek sohbet hattı** | Ebeveynin "çocuğum şunu yaptı, ne yapmalıyım?" türü sorular sorabileceği bir LLM sohbet arayüzü. **Kişiye özel davranış tavsiyesi vermez** — yalnızca genel/eğitici bilgi paylaşır ("otizmli çocuklarda bu tür davranışlar genelde şunun belirtisi olabilir, genel literatürde şu yaklaşımlar konuşulur") ve ciddi/tekrarlayan konularda uzmana yönlendirmeyi öne çıkarır. Her yanıtın altında sabit bir uyarı bulunur: *"Bu bir yapay zekâ yanıtıdır, klinik veya pedagojik olarak onaylanmamıştır. Lütfen bir uzmana danışın."* | Orta |
+| 3.7 | **İletişim tahtası (AAC)** | Sözel iletişimi destekleyen simge tabanlı anlatım: "istiyorum", "acıktım", "canım sıkkın". Seçilen simgeler seslendirilir. Otizm alanında en yüksek gerçek etkili özellik — bu yüzden ses altyapısı olgunlaştıktan sonra, tahmin oyunu olmadan yapılır. | Yüksek |
+| 3.8 | **Ebeveyn ve terapist içgörü raporu** | Ham grafik yığını değil, nötr ve okunabilir özet: "Bu hafta `b` ve `d` ayrımında 8 kez zorlandı, sabah seansları akşamdan daha uzun sürdü", "1'den 10'a sayma becerisinde 1 Ocak'ta başarısız, 2 Şubat'ta ilk kez başarılı, sonraki denemelerde pekişti." Beceri bazlı boylamsal (zaman içi) grafikler içerir. **Yorum ve değerlendirme içermez** — veriyi sunar, anlamlandırmayı uzmana bırakır. İsteğe bağlı olarak terapistle paylaşılabilir PDF çıktısı. | Orta |
+| 3.9 | **Doğrulamalı kayıt ve hesap kurtarma** | E-posta, telefon veya Gmail ile doğrulamalı kayıt akışı; cihazlar arası senkronizasyon ve dışa aktarma. Faz 1'deki şema sayesinde bu bir ekleme işi olur, göç işi değil. Çocuk tarafındaki giriş deneyimi sade kalır. | Orta |
+| 3.10 | **Token havuzu altyapısı** | LLM ve depolama maliyetlerini ölçen sayaç, aile başına aylık ücretsiz kota ve isteğe bağlı bağış akışı. Kâr amacı yok; hedef altyapı maliyetinin karşılanması. Kota dolduğunda özellik kapanır, çocuğun deneyimi bozulmaz. | Orta |
+| 3.11 | **Şifreli yerel yedekleme** | Düzenli aralıklarla uçtan uca şifreli yedek dosyası oluşturulur; ebeveyn bunu kendi seçtiği bir ortama (USB, kendi bulut hesabı) taşır. Anahtar yalnızca ebeveyndedir, Papatya'nın kendi sunucusu yedek içeriğini görmez. Cihaz kaybında geri yükleme bu dosya + parolayla yapılır. | Orta |
+| 3.12 | **Kardeş profilleri** | Faz 1'de bırakılan boşluk doldurulur: giriş ekranına "kim giriyor?" profil seçimi eklenir, tek bir ebeveyn PIN'i birden fazla çocuk profilini yönetir. Her çocuğun verisi ve ilerlemesi bağımsız kalır. | Orta |
+| 3.13 | **Metodoloji uyumluluk modları** | Uygulama hiçbir zaman "ABA/TEACCH/PECS uyguluyorum" gibi bir klinik metodoloji iddiasında bulunmaz — bu ruhsat/sertifika gerektiren bir klinik iddiadır ve klinik sınır sözleşmesini ihlal eder. Bunun yerine, **arayüz tercihleri** dünyada ve Türkiye'de kabul görmüş yaklaşımların felsefesiyle uyumlu sunulur: TEACCH'in görsel yapılandırma felsefesiyle uyumlu bir "Görsel Takvim Modu" (rutin ve etkinlik alanları arasında görsel-zamansal sınırlar — "bu alan oyun zamanı, bu alan yeme zamanı"), PECS'in simge-tabanlı iletişim felsefesiyle uyumlu AAC tahtası (3.7), davranışçı yaklaşımlarla uyumlu "Yapılandırılmış Adım Modu". Zaten bir terapi/BEP süreci içindeki çocuk için ebeveyn veya terapist, çocuğun kullandığı yönteme yakın modu seçer. | Yüksek |
+| 3.14 | **İçerik risk skoru (bilgilendirici)** | Python analiz servisi eklenen müzik/video için tempo (BPM) ve söz içeriği üzerinden bir **duyusal yoğunluk tahmini** üretir ("yüksek tempo, yüksek uyarılma riski olabilir") ve bunu ebeveynin içerik kontrol listesine (2.3) ek bilgi olarak ekler. **Hiçbir içerik otomatik engellenmez** — bu, mevcut "sorumluluk ebeveyne aittir" ilkesini bozmayan bir yardımcı araçtır, karar her zaman ebeveyne kalır. Tahminin belirsiz/yanlış olabileceği açıkça belirtilir. | Orta |
+| 3.15 | **Sosyal sınırlar içeriği** | Kişisel alan, "hayır" diyebilme, paylaşma sınırları, dokunma izni gibi sosyal-duygusal sınır kavramlarını öğreten senaryolar — mevcut sosyal öykü ve AAC içeriklerine yakın yeni bir kategori. Otizmde sınır kavramının anlaşılması sıkça çalışılan bir alan; içerik akademik kaynaklara dayanır, klinik sınır sözleşmesine tabidir. | Orta |
+
+**Faz Çıkışı** — Uygulama Melike'nin zorlandığı yerleri tanıyıp kendini ayarlıyor, babasının sesini gerçekten tanıyor, kamera karşısında hareket ettiğinde kendi çizgi film karakteri onunla birlikte hareket ediyor, doğal bir Türkçeyle konuşuyor ve ihtiyaç duyduğunda Melike'nin kendini ifade etmesine yardım ediyor. Her beceri kazanımı tarihli olarak izleniyor — "1'den 10'a sayma" gibi bir beceri hangi tarihte denendi, ne zaman ilk kez başarılı oldu, ne zaman pekişti görülebiliyor. Ebeveyn ve terapist haftalık, yorumsuz ve anlaşılır bir rapor alıyor; merak ettiği anlık sorular için sınırları net çizilmiş bir destek sohbet hattına başvurabiliyor. Müzik/video eklerken bilgilendirici bir içerik risk tahmini görüyor, çocuk sosyal sınır kavramlarını öğreten içerikle çalışıyor.
+
+**Uzman denetimi** — Kamera modunun kaygı etkisi, uyarlanabilir zorluğun frustrasyon eşiği, AAC simge setinin dilsel uygunluğu ve raporun klinik sınırı aşmadığı denetlenir.
+
+---
+
+## Faz 4 — Platform
+
+> **Genelleşme fazı.** Bir çocuk için çalıştığı kanıtlanmış sistemi diğer ailelere açmak. Bu faz yalnızca önceki üç faz sahada gerçekten işe yaradıktan sonra anlamlıdır — erken genelleştirme, kimseye tam uymayan bir ürün üretir.
+
+| # | İş | Açıklama | Yük |
+|---|---|---|---|
+| 4.1 | **Profil şablonları** | Yaş, gelişim düzeyi, ilgi alanı ve duyusal hassasiyete göre hazır başlangıç setleri. Yeni bir aile boş ekranla değil, çocuğuna yakın bir yapılandırmayla başlar ve oradan kişiselleştirir. | Orta |
+| 4.2 | **İçerik stüdyosu** | Ebeveynin kendi fotoğraflarından, seslerinden ve videolarından oyun üretebildiği araç. Her ailenin kendi "Melike'nin çizgi filmi"ni yapabilmesi — kişiselleştirmenin en güçlü hâli. | Yüksek |
+| 4.3 | **Çoklu dil** | Faz 1'de bağlanan dil altyapısı ikinci dille sınanır. Seslendirme ve konuşma tanıma dile göre değişir; içerik setleri dilden bağımsız kalır. | Orta |
+| 4.4 | **Uzman iş birliği ve klinik kapının açılması** *(Kritik)* | Çocuk gelişimci, psikolog veya psikiyatristin hedef belirleyip ilerlemeyi izleyebildiği paylaşımlı görünüm. **Klinik sınır sözleşmesindeki ikinci aşama burada açılır:** uzman bağlandığında yapılandırılmış program ve değerlendirme modülleri etkinleşir, her içerik kimin onayladığı kaydıyla saklanır. Uygulama **resmi bir eğitim programı veya MEB/RAM onaylı BEP aracı değildir** — çocuğun zaten devam ettiği terapi/eğitim sürecinin yanında, yasal ve etik sınırlar içinde çalışan bir **destek aracı** olarak konumlanır; hedefleri terapist belirler, uygulama yalnızca uygular ve veri toplar. Bir klinik veya özel eğitim kurumu için görünüm **çoklu çocuğa** genişletilebilir — kurumun takip ettiği tüm çocukları beceri bazlı, karşılaştırmalı bir panelden izlemesi. Ev ile terapi arasındaki kopukluk, alanın en bilinen sorunlarından biri. | Yüksek |
+| 4.5 | **Geliştirici SDK'sı** | Faz 1'deki oyun soyutlamasının dışa açılmış hâli: üçüncü taraflar kendi otizm dostu etkinliklerini yazıp platforma ekleyebilir. Erişilebilirlik ve içerik güvenliği kuralları paketin bir parçası. | Yüksek |
+| 4.6 | **Yerel uygulama paketleri** | App Store ve Google Play dağıtımı, PC için masaüstü paketi. Çevrimdışı-öncelikli yapı Faz 1'de kurulduğu için bu bir paketleme işi olur, yeniden yazım değil. | Orta |
+| 4.7 | **Gizlilik ve yasal uyum** | KVKK ve ilgili çocuk verisi koruma düzenlemelerine uyum: aydınlatılmış rıza metni, veri saklama politikası, şeffaf izin akışları, yerel işleme garantisinin hukuki dayanağı. **Veri sahibinin hakları** ayrıca ele alınır — çocuk yetişkinliğe eriştiğinde kendi verisine erişim, taşıma ve silme talebinde bulunabilmelidir (bkz. Yönetişim: Veri devri ilkesi). *Başka ailelerin verisini almadan önce tamamlanması zorunlu.* | Yüksek |
+
+**Faz Çıkışı** — Papatya, Melike'nin uygulaması olmaktan çıkıp her ailenin kendi çocuğuna göre şekillendirebildiği bir platforma dönüşür — geliştiricilerin yeni etkinlikler ekleyebildiği, uzmanların sürece katılabildiği açık bir yapı.
+
+**Uzman denetimi** — Profil şablonlarının gelişimsel doğruluğu, SDK'ya konulacak erişilebilirlik ve içerik güvenliği kurallarının yeterliliği bir uzman kurulunca onaylanır.
+
+---
+
+## Faz 5 — Ufuk
+
+> **Plan değil, yön beyanı.** Bu bölüm bağlayıcı bir takvim içermez; Papatya'nın hangi yöne büyüyeceğini kaydeder ki bugünün mimari kararları yarının önünü kapatmasın. Buradaki hiçbir madde önceki fazlar sahada kanıtlanmadan başlatılmaz.
+
+### Çok modlu etkileşim
+
+Ses ve kameranın ötesinde: jest tanıma, nesne tanıma (gerçek bir elmayı kameraya gösterip "elma" kelimesiyle eşleştirme), fiziksel oyuncaklarla etkileşim. Her modda aynı kural geçerlidir — işleme yerel, ham medya cihazdan çıkmaz, her etkileşimin dokunmatik alternatifi vardır.
+
+### Akademik araştırmaya katkı — ilke, henüz mekanizma değil
+
+İleride, başka aileler katıldığında, kimliksizleştirilmiş ve toplulaştırılmış **istatistiksel özetler** (ham veri, kamera, ses veya fotoğraf değil) otizm eğitimi araştırmasına katkı sağlayacak şekilde paylaşılabilir hâle getirilebilir — örneğin "beceri X'te öğrenme eğrisi nasıl seyrediyor" türü toplu sorulara katkı. Bu, mevcut **katı yerel işleme** ilkesiyle doğrudan gerilir; bu yüzden şimdi hiçbir kod veya altyapı açılmaz. Böyle bir katkı yalnızca: (1) ayrı ve açık bir aydınlatılmış rıza süreciyle, (2) ayrı bir yasal zeminle, (3) yalnızca sayısal/istatistiksel özetler düzeyinde, mümkün olduğunda yürürlüğe girebilir. Bu bölüm bir taahhüt değil, kapıyı gelecekte kapatmamak için bırakılan bir not.
+
+### Üçüncü parti cihaz entegrasyonu
+
+Akıllı saat ve giyilebilir cihazlarla: konum takibi, acil durum butonu, düzensizlik/stres göstergelerinin ebeveyne bildirimi. **Bu alan en yüksek mahremiyet riskini taşır** — konum ve biyometrik veri, kamera kadar hassastır ve aynı katı yerel işleme kuralına tabidir. Ayrıca sürekli izlemenin çocuğun özerkliğini nasıl etkilediği, yaş ilerledikçe yeniden değerlendirilmesi gereken etik bir sorudur.
+
+### Yaşam boyu eşlik: çocukluktan erken yetişkinliğe
+
+Papatya'nın uzun vadeli hedefi, çocukla birlikte büyüyen bir arkadaş olmaktır. Bu, arayüz ve içeriğin yaşla birlikte dönüşmesi demektir:
+
+| Dönem | Odak |
+|---|---|
+| **Çocukluk** (bugün) | Harf, kelime, tanıma, oyun, rutin |
+| **Ergenlik** | Sosyal senaryolar, duygu düzenleme, öz-savunuculuk, mahremiyet kavramı, artan özerklik |
+| **Erken yetişkinlik** | Günlük yaşam becerileri, ulaşım, iş hazırlığı, bağımsız iletişim |
+
+Bu geçişin en kritik tasarım sorunu **çocuksuluktan arınma**dır: 17 yaşındaki bir genç, 7 yaşındaki hâlinin arayüzüyle karşılaşmamalıdır. Papatya metaforu ve ses tonu yaşla birlikte olgunlaşmalı, ebeveyn kontrolü kademeli olarak gence devredilmelidir.
+
+### Açık sorular
+
+Bu başlıklar bilinçli olarak cevapsızdır; zamanı geldiğinde uzman görüşüyle karara bağlanacaktır.
+
+- Ergenlikte ebeveyn erişimi nasıl ve ne hızda azalmalı? *(İlke belirlendi — bkz. Yönetişim: Veri devri; mekanizma ve zamanlama hâlâ açık.)*
+- Sürekli konum takibi hangi yaşta özerkliğe müdahale hâline gelir?
+- Uygulamanın "arkadaş" olarak konumlanması, gerçek sosyal ilişkilerin yerini alma riski taşır mı? Nasıl ölçülür?
+- Uzun süreli gelişim verisi ne kadar saklanmalı, hangi noktada otomatik silinmeli?
+- Kardeş profilleri çoğaldığında (3+ çocuk) tek ebeveyn PIN'i yeterli mi, yoksa çocuk başına ayrı yetkilendirme mi gerekir?
+
+---
+
+## Riskler ve karşı önlemler
+
+| Risk | Seviye | Karşı önlem |
+|---|---|---|
+| **Kapsam genişlemesi** | Yüksek | Vizyon geniş, geliştirici tek. Her fazın çıkış kriteri bir kapıdır: karşılanmadan sonraki faza geçilmez. Faz 2'deki bir özelliği Faz 1'e çekmek cazip gelecektir — bu, temeli yarım bırakmanın en yaygın yolu. |
+| **Tek kullanıcıya aşırı uyum** | Orta | Melike için yapılan her özelleştirme kodda değil veride yaşar. "Bunu doğrudan koda yazsam daha hızlı olur" her seferinde Faz 4'ü biraz daha imkânsızlaştırır. |
+| **Ses tanıma doğruluğu** | Orta | Konuşmacı tanıma gürültülü ev ortamında yanılabilir. Her ses onayının dokunmatik bir alternatifi olur — sistem çocuğu asla tanımadığı bir seste kilitlemez. |
+| **Harici servis bağımlılığı** | Orta | YouTube politikaları ve LLM API'leri değişebilir. Müzik katmanı, yerel dosyalara düşebilecek bir arayüzün arkasına alınır; üretilen içerik her zaman önbelleğe kaydedilir. |
+| **Çocuk verisinin mahremiyeti** | Yüksek | Ses kayıtları, fotoğraflar, kamera ve gelişim verisi son derece hassas. Katı yerel işleme mimari kuraldır — ham medyayı buluta gönderen bir kod yolu bulunmamalıdır. Faz 4'ün uyum maddesi pazarlık konusu değil. |
+| **Ekran bağımlılığı** | Yüksek | Otizmli çocuklarda ekran takıntısı bilinen bir risk. Anti-bağımlılık kuralları oyun kabuğunun mimari parçasıdır, sonradan eklenen bir filtre değil. Sonsuz akış, otomatik oynatma, seri ödülü ve bildirim kodda hiç var olmaz. |
+| **Klinik sınırın aşılması** | Yüksek | "Melike'de dikkat eksikliği var" gibi bir cümle uygulamanın ağzından asla çıkmamalı. Uzman bağlı değilken değerlendirme modülleri kapalı kalır; raporlar veri sunar, yorum yapmaz. Her faz kapısında uzman denetimi zorunludur. |
+| **Duyusal aşırı yükleme** | Orta | Oyunlaştırma ve animasyon, otizmli bir çocuk için motive edici değil rahatsız edici olabilir. Her efekt kapatılabilir; sakin mod varsayılana yakın bir seçenek olarak hep erişilebilir kalır. |
+| **Kamera kaygısı** | Orta | Kamera karşısında olmak kaygı tetikleyebilir. Varsayılan kapalı, çocuğun görüntüsü ekranda hiç gösterilmez — yalnızca kendi karakteri hareket eder. Her kameralı etkinliğin kamerasız alternatifi bulunur. |
+| **Tek geliştirici sürdürülebilirliği** | Orta | Proje tek kişiye bağlı. Kararların ve gerekçelerin bu belgede yazılı olması, kodun standart araçlarla yazılması ve verinin dışa aktarılabilir kalması, projenin devredilebilir olmasını sağlar. |
+| **Tek cihazda veri kaybı** | Yüksek | Katı yerel işleme, verinin tek bir cihazda/sunucuda durması demektir. Cihaz arızası/kaybı aylarca ilerlemeyi ve aile fotoğraflarını yok edebilir. Şifreli yerel yedekleme (Faz 3.11) bu riski, verinin buluta çıkmasına gerek kalmadan azaltır. |
+| **İçerik moderasyonu boşluğu** | Orta | Sistem otomatik filtre yapmadığı için uygunsuz/yıpıcı içerik yalnızca ebeveynin dikkatine bağlıdır. Kontrol listesi (Faz 2.3) riski azaltır ama tamamen ortadan kaldırmaz — sorumluluk açıkça ebeveyne aittir ve bu belgede öyle kalır. |
+| **Kriz algılamada yanlış pozitif** | Orta | Sakinleştirme modu (Faz 3.2b) normal oyun duraksamasını krizle karıştırıp gereksiz yere araya girebilir. Eşik değerleri ihtiyatlı seçilmeli ve ebeveyn geri bildirimiyle ayarlanabilir olmalıdır; asla otomatik kilitlemeye dönüşmemelidir. |
+| **Oyunlaştırmanın rekabete kayması** | Orta | Beceri rozetleri (2.8b) zamanla puan/sıralama/seri baskısına evrilme riski taşır. Her yeni oyunlaştırma önerisi önce anti-bağımlılık ilkesinden süzülür; rekabet unsuru içeren hiçbir ekleme kabul edilmez. |
+| **Metodoloji iddiasının klinik sınırı aşması** | Yüksek | "Uyumluluk modu" (Faz 3.13) zamanla yanlışlıkla "bu yöntemi uyguluyoruz" iddiasına kayabilir. Arayüz metinleri hiçbir zaman bir metodolojinin adını kendi başarısıyla ilişkilendirmez; yalnızca "bu mod şu felsefeyle uyumlu tercih edilebilir" der. |
+| **Geri dönüşsüz silmede veri kaybı** | Yüksek | Hesap silme (1.15) zorunlu yedek almadan tamamlanırsa telafisi imkânsız veri kaybı olur. Vazgeçme penceresi ve zorunlu yedek adımı atlanamaz bir ön koşuldur. |
+| **Destek sohbet hattının tavsiyeye kayması** | Yüksek | Ebeveyn destek sohbeti (3.6b) zamanla kişiye özel davranış/tedavi tavsiyesi verir hâle gelebilir — bu klinik sınırı doğrudan ihlal eder. Yanıt şablonu ve sistem talimatı düzenli olarak "genel bilgi mi, kişiye özel tavsiye mi" testinden geçirilir; her yanıtta sabit uyarı zorunludur. |
+| **İçerik risk skorunun yanlış güven vermesi** | Orta | BPM/söz analizi (3.14) yanlış veya eksik bir "güvenli" izlenimi verip ebeveynin dikkatini gevşetebilir. Skor her zaman "tahmin, kesin değil" ibaresiyle sunulur; asla otomatik onay/red mekanizmasına dönüşmez. |
+| **Arka plan bildiriminin gözetim hissi yaratması** | Orta | Arka plan geçiş bildirimi (1.16) dikkatsiz uygulanırsa çocuğun her hareketinin izlendiği hissini yaratabilir. Kapsam yalnızca "oturum durdu/devam etti" ile sınırlı tutulur; konum, süre detayı veya hangi uygulamaya geçildiği gibi ayrıntılar toplanmaz. |
+
+---
+
+## Değişmeyen tasarım ilkeleri
+
+Fazlar boyunca her kararın sınandığı ölçüt bunlardır. Bir özellik bu ilkelerden birini çiğniyorsa, ne kadar etkileyici olursa olsun yapılmaz.
+
+| İlke | Anlamı |
+|---|---|
+| **Öngörülebilirlik > sürpriz** | Aynı eylem her zaman aynı sonucu verir. Beklenmedik açılır pencere, rastgele ödül, ani ses yok. |
+| **Sakin varsayılan** | Renk, ses ve hareket dikkat yönlendirme aracıdır. Her efekt kapatılabilir; hiçbiri bilgi taşımanın tek yolu değildir. |
+| **Başarısızlık yok** | Yanlış cevap ceza değil, yeniden deneme davetidir. Geri sayım, kaybetme ekranı, kırmızı çarpı yok. |
+| **Kişiselleştirme veridir** | Bir çocuğa özgü hiçbir şey kaynak koda yazılmaz. Bu kural Faz 4'ü mümkün kılan tek şeydir. |
+| **Ebeveyn kontroldedir** | Yapay zekâ üretir, ebeveyn onaylar. Çocuğa gösterilen hiçbir içerik insan denetiminden geçmeden görünmez. Aile bilgileri yalnızca ebeveyn tarafından tanımlanır. |
+| **Çevrimdışı çalışır** | İnternet kesintisi rutini bozmaz. Ağ, temel işlevin ön koşulu değil, ek yeteneklerin taşıyıcısıdır. |
+| **Tek arayüz, üç cihaz** | Telefon, tablet ve PC için ayrı tasarımlar değil; tek bir ölçeklenebilir düzen ve ortak etkileşim dili. |
+| **Ham medya cihazdan çıkmaz** | Kamera, mikrofon ve konum verisi yerelde işlenir ve silinir. Buluta yalnızca sayısal sonuç gider. Bu bir ayar değil, mimari kuraldır. |
+| **Uygulama ekrandan uzaklaştırır** | Amaç çocuğu ekranda tutmak değil, öğrendiğini ekran dışına taşımaktır. Sonsuz akış, otomatik oynatma, seri ödülü ve bildirim yoktur. |
+| **Tanı koymaz, yorum yapmaz** | Uygulama veri sunar; anlamlandırma insana aittir. Klinik değerlendirme yalnızca bir uzman bağlıyken ve onun imzasıyla açılır. |
+| **Her otomatik onayın elle alternatifi var** | Ses veya görüntü tanıma yanılabilir. Sistem çocuğu tanımadığı bir seste veya harekette asla kilitlemez. |
+| **Çocukla birlikte büyür** | Arayüz, dil ve içerik yaşla olgunlaşır. 17 yaşındaki bir genç, 7 yaşındaki hâlinin arayüzüyle karşılaşmaz. |
+| **Kriz anında durdurur, tanı koymaz** | Sıkıntı belirtisi algılandığında uygulama sakinleşir ve ebeveyni haberdar eder — asla kendi başına yorumlamaz veya müdahale etmez. |
+| **Sahiplik devredilebilir** | Ebeveyn-çocuk yetki ilişkisi baştan esnek kurulur; yetişkinlik eşiğinde hesap sahipliği çocuğa geçebilecek şekilde tasarlanır, sonradan sökülmesi gereken bir bağımlılık olarak değil. |
+| **Sorumluluk her zaman insanda kalır** | İçerik seçimi, moderasyon ve onay her aşamada ebeveyne veya uzmana aittir. Sistem hatırlatır ve kaydeder, karar vermez. |
+| **Rozet var, rekabet yok** | Beceri kazanımı sabit ve öngörülebilir bir rozetle onurlandırılır. Puan, sıralama, lider tablosu, seri ödülü asla olmaz. |
+| **Metodoloji adlandırmaz, uyum sunar** | Uygulama hiçbir zaman bir klinik yöntemi (ABA, TEACCH, PECS vb.) uyguladığını iddia etmez. Yalnızca o felsefeyle uyumlu arayüz tercihleri sunar; karar ve uygulama uzmana aittir. |
+| **Her önemli işlem iz bırakır** | Ebeveyn işlemleri, güvenlik olayları ve geri dönüşsüz talepler audit log'a kaydedilir — kim, ne zaman, ne yaptı her zaman geriye dönük görülebilir. |
+| **Farkındalık verir, gözetim yapmaz** | Ebeveyn bildirimleri (arka plan geçişi, kullanım istatistiği) rutin yönetimi için asgari bilgiyle sınırlıdır — konum, süreklilik veya davranış izleme değildir. |
+| **Yapay zeka skoru tahmindir, karar değil** | İçerik risk analizi gibi otomatik değerlendirmeler her zaman "tahmin, kesin değil" olarak sunulur ve hiçbir zaman otomatik engelleme veya onaya dönüşmez — karar insanda kalır. |

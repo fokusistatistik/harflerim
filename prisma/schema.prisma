@@ -8,15 +8,50 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid()) // Matches Device ID cookie
-  createdAt DateTime  @default(now())
-  sessions  Session[]
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  tier         String   @default("basic")
+  createdAt    DateTime @default(now())
+
+  settings     UserSettings?
+  sessions     Session[]
+  authSessions AuthSession[]
+}
+
+/// Guardian-controlled settings. Reachable only through the parent gate.
+model UserSettings {
+  id       String @id @default(uuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  parentPin String @default("0000")
+
+  dailyScreenLimit Int     @default(1800)
+  reduceMotion     Boolean @default(false)
+  highContrast     Boolean @default(false)
+  speechEnabled    Boolean @default(true)
+  cameraEnabled    Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+}
+
+model AuthSession {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Session {
   id          String    @id @default(uuid())
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date        String    // Format: "YYYY-MM-DD"
   startedAt   DateTime  @default(now())
   completedAt DateTime?
