@@ -4,6 +4,7 @@ import { GameInitializer } from '@/components/game/GameInitializer';
 import { getCurrentUser } from '@/lib/auth';
 import { worldName } from '@/config/brand';
 import { NavGrid } from '@/components/ui/NavGrid';
+import { TodaySummary } from '@/components/ui/TodaySummary';
 
 export default async function Home() {
     const session = await getDailySession('letter-hunt');
@@ -41,6 +42,8 @@ export default async function Home() {
                     <br />
                     <span className="text-2xl md:text-3xl lg:text-4xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
                 </h1>
+
+                <TodaySummary />
 
                 {/* Faz 1.18 — navigasyon iskeleti: Faz 1-3'te planlanan tüm alanlar
                     en az bir yuva olarak burada görünür (bkz. src/config/navAreas.ts). */}
