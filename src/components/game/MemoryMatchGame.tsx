@@ -12,6 +12,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useGameContent } from '@/hooks/useGameContent';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
+import { recordSkillAttempt } from '@/actions/skills';
 import { GameHud } from './GameHud';
 // import { getDailySession } from '@/actions/game';
 
@@ -119,7 +120,11 @@ export default function MemoryMatchGame() {
             const card1 = newCards[newFlipped[0]];
             const card2 = newCards[newFlipped[1]];
 
-            if (card1.letter === card2.letter) {
+            const isMatch = card1.letter === card2.letter;
+            // Faz 1.20 — ölçüm katmanı, oyun akışını asla bloklamaz/bozmaz.
+            recordSkillAttempt('gorsel-hafiza', 'memory-match', isMatch).catch(() => {});
+
+            if (isMatch) {
                 // MATCH
                 setTimeout(() => {
                     playMatch();

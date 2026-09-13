@@ -10,6 +10,7 @@
         "lint": "next lint",
         "seed": "tsx prisma/seed.ts",
         "seed:content": "tsx prisma/seedContent.ts",
+        "seed:skills": "tsx prisma/seedSkills.ts",
         "backfill:parent-pin": "tsx prisma/backfillParentPin.ts",
         "test": "vitest run",
         "test:watch": "vitest"

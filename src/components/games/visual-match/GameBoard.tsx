@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
+import { recordSkillAttempt } from '@/actions/skills';
 import { GameHud } from '@/components/game/GameHud';
 
 const LETTERS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'Y', 'Z'];
@@ -83,6 +84,7 @@ export function GameBoard() {
             setIsMatched(true);
             playSuccess();
             // logEvent('success', { target: targetLetter, chosen: active.id as string });
+            recordSkillAttempt('golge-eslestirme', 'visual-match', true).catch(() => {});
 
             // Next Level Delay
             setTimeout(() => {
@@ -91,6 +93,7 @@ export function GameBoard() {
         } else {
             // Fail Logic
             // logEvent('attempt', { target: targetLetter, chosen: active.id as string });
+            recordSkillAttempt('golge-eslestirme', 'visual-match', false).catch(() => {});
         }
     };
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { submitLevelResult } from '@/actions/game';
+import { recordSkillAttempt } from '@/actions/skills';
 
 export type DayPhase = 'Morning' | 'Noon' | 'Afternoon' | 'Evening' | 'Sleep';
 
@@ -97,6 +98,8 @@ export const useLevelStore = create<LevelState>((set, get) => ({
                     dailyScreenLimit: result.dailyScreenLimit,
                 });
             }
+            // Faz 1.20 — ölçüm katmanı, oyun akışını asla bloklamaz/bozmaz.
+            recordSkillAttempt('harf-tanima', 'letter-hunt', true, reactionTime).catch(() => {});
         } else {
             set({ totalDuration: newTotal });
             const result = await submitLevelResult(sessionId, currentLevel, false, reactionTime, targetLetter);
@@ -107,6 +110,7 @@ export const useLevelStore = create<LevelState>((set, get) => ({
                     dailyScreenLimit: result.dailyScreenLimit,
                 });
             }
+            recordSkillAttempt('harf-tanima', 'letter-hunt', false, reactionTime).catch(() => {});
         }
     },
 

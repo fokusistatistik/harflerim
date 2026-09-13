@@ -13,6 +13,7 @@ import { useAudio } from '@/components/AudioProvider';
 import { useGameContent } from '@/hooks/useGameContent';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
+import { recordSkillAttempt } from '@/actions/skills';
 import { GameHud } from './GameHud';
 
 // --- PERSISTENCE HELPER ---
@@ -192,6 +193,7 @@ export default function MagicWordsGame() {
 
         updateProgress(true);
         triggerReward({ playSound: playCorrect, confettiOptions: { particleCount: 200, spread: 120 } });
+        recordSkillAttempt('sesli-kelime-tanima', 'magic-words', true).catch(() => {});
 
         moveToNextCard();
     }, [playCorrect, triggerReward, updateProgress, moveToNextCard]);
@@ -205,6 +207,7 @@ export default function MagicWordsGame() {
         playSad();
         encourageRetry().catch(() => {});
         updateProgress(false);
+        recordSkillAttempt('sesli-kelime-tanima', 'magic-words', false).catch(() => {});
 
         moveToNextCard();
     }, [playSad, encourageRetry, updateProgress, moveToNextCard]);

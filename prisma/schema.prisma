@@ -21,11 +21,12 @@ model User {
   guardianId String?
   guardian   Guardian? @relation(fields: [guardianId], references: [id])
 
-  settings     UserSettings?
-  sessions     Session[]
-  authSessions AuthSession[]
-  auditLogs    AuditLog[]
-  dailyUsage   DailyUsage[]
+  settings      UserSettings?
+  sessions      Session[]
+  authSessions  AuthSession[]
+  auditLogs     AuditLog[]
+  dailyUsage    DailyUsage[]
+  skillAttempts SkillAttempt[]
 }
 
 /// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).
@@ -186,4 +187,35 @@ model Event {
   isCorrect    Boolean
   reactionTime Int      // Milliseconds
   createdAt    DateTime @default(now())
+}
+
+/// Faz 1.20 — oyun-bağımsız beceri kataloğu. Faz 3.1'in "Beceri/kazanım
+/// katmanı"nın erken temeli: dört oyun da kendi denemesini burada
+/// tanımlanan bir beceriye karşı loglar (bkz. SkillAttempt). Zorluk
+/// ayarlama mantığının kendisi hâlâ Faz 3.1/3.2'nin işi — burada yalnızca
+/// ölçüm/kayıt var. `prisma/seedSkills.ts` ile tohumlanır.
+model Skill {
+  id    String @id @default(uuid())
+  key   String @unique // "harf-tanima", "gorsel-hafiza", "sesli-kelime-tanima", "golge-eslestirme"
+  label String
+
+  attempts SkillAttempt[]
+}
+
+/// Her oyunun her denemesi (doğru/yanlış, tepki süresi varsa) buraya düşer.
+/// GENEL-KURALLAR md.3'teki "istatistiksel veri temelli yaklaşım" ilkesinin
+/// ve Faz 3.1 (uyarlanabilir zorluk)/3.8 (rapor)/2.8b (rozet) maddelerinin
+/// dayanacağı ölçüm temeli.
+model SkillAttempt {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId      String
+  skill        Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  gameId       String // "letter-hunt" | "memory-match" | "magic-words" | "visual-match"
+  isCorrect    Boolean
+  reactionTime Int? // Milisaniye — her oyunda ölçülemeyebilir (ör. konuşma tanıma)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, skillId])
 }
