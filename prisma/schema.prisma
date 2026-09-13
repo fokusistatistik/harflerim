@@ -16,11 +16,33 @@ model User {
   tier         String   @default("basic")
   createdAt    DateTime @default(now())
 
+  /// Faz 1.19 — yalnızca şema, henüz kullanılmıyor. Bkz. Guardian modelinin
+  /// doc-comment'i.
+  guardianId String?
+  guardian   Guardian? @relation(fields: [guardianId], references: [id])
+
   settings     UserSettings?
   sessions     Session[]
   authSessions AuthSession[]
   auditLogs    AuditLog[]
   dailyUsage   DailyUsage[]
+}
+
+/// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).
+/// Yönetişim ilkesi: "User ile ebeveyn kimliği asla birebir eşlenmemelidir."
+/// Şu an ebeveyn hiçbir veri varlığı değil — yalnızca çocuğun kendi
+/// UserSettings.parentPin'i. Bu tablo, Faz 3.12 (kardeş profilleri) "tek bir
+/// ebeveyn PIN'i tüm çocuk profillerini yönetir" gerekliliği için hazır
+/// bekliyor. BİLİNÇLİ OLARAK mevcut parentPin/ParentGate/auth akışına
+/// BAĞLANMADI — o akış UserSettings.parentPin üzerinden çalışmaya devam
+/// ediyor. Kullanılmaya başlanması Faz 3.12'nin işi.
+model Guardian {
+  id        String   @id @default(uuid())
+  /// bcrypt hash — Faz 3.12'de gerçek bir değerle doldurulacak, şimdilik boş.
+  pinHash   String   @default("")
+  createdAt DateTime @default(now())
+
+  users User[]
 }
 
 /// Kim, ne zaman, ne yaptı kaydı. Loop-Kuralları md. "Her önemli işlem iz bırakır".
