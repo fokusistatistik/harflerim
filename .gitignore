@@ -51,3 +51,8 @@ public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js
 public/fallback-*.js
+
+# Ebeveynin yüklediği aile fotoğrafı/ses kaydı/çizim gibi kişisel medya
+# (Faz 2.2+) — katı yerel işleme ilkesi gereği repoya asla girmez.
+public/uploads/*
+!public/uploads/.gitkeep

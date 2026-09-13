@@ -27,6 +27,25 @@ model User {
   auditLogs     AuditLog[]
   dailyUsage    DailyUsage[]
   skillAttempts SkillAttempt[]
+  familyMembers FamilyMember[]
+}
+
+/// Faz 2.2 — aile bireyleri kaydı. Yalnızca ebeveyn ekler/düzenler/siler;
+/// çocuk hiçbir aile bilgisini giremez. Fotoğraf ve isteğe bağlı ses kaydı
+/// yerel dosya sistemine yazılır (public/uploads/family), burada yalnızca
+/// yol saklanır — bkz. src/lib/mediaStorage.ts. Hem Faz 2.5 (aile albümü
+/// oyunu) hem Faz 3.3 (konuşmacı tanıma) bu tabloyu veri temeli olarak kullanır.
+model FamilyMember {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  relation  String
+  photoPath String
+  voicePath String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).
