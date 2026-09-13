@@ -1,6 +1,6 @@
 # Papatya — Ürün Yol Haritası
 
-**Sürüm 2.14 · 13 Eylül 2026 — Mühürlenmiş**
+**Sürüm 2.15 · 13 Eylül 2026 — Mühürlenmiş**
 
 Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması.
 **Melike için inşa ediliyor, herkes için tasarlanıyor.** Bu belge, bugünkü koddan yola çıkıp
@@ -11,7 +11,7 @@ LLM destekli bir otizm eğitim platformuna giden dört fazlık yolu ve ötesinde
 | **Kod Tabanı** | Next.js 14 · Prisma · Zustand |
 | **İlk Kullanıcı** | Melike Bostanoğlu, 6–7 yaş |
 | **Hedef Cihazlar** | Telefon · Tablet · PC |
-| **Mevcut Oyun** | 3 çalışır + 1 prototip |
+| **Mevcut Oyun/Etkinlik** | 8 (4 oyun + müzik + video + çizim + yazı), tümü çalışır durumda |
 | **Ufuk** | Çocukluk → ergenlik → erken yetişkinlik |
 
 ---
@@ -193,19 +193,21 @@ Faz planı bu tabloya dayanıyor. "Yazılmış ama kapalı" satırları özellik
 
 | # | İş | Açıklama | Yük |
 |---|---|---|---|
-| 2.1 | **Ebeveyn yönetim alanı** *(Önce bu)* | Ebeveyn şifresiyle açılan bölüm: aile bireyi tanımlama, içerik ekleme, şarkı listesi, ekran süresi sınırı, duyusal tema tercihleri ve ilerleme özeti. **Kullanım istatistikleri** (gün içi süre, toplam süre, günlük ortalama) da burada gösterilir — yalnızca ebeveyne, çocuğa değil; bu bir başarı ölçüsü değil, ekran sağlığı takibinin bir parçasıdır. **Bu fazın diğer maddeleri buraya veri girilmeden çalışmaz** — o yüzden ilk sırada. | Yüksek |
-| 2.2 | **Aile bireyleri kaydı** | Anne, baba, kardeş, öğretmen... **Yalnızca ebeveyn tanımlar:** fotoğraf, ad, yakınlık derecesi ve isteğe bağlı ses kaydı. Çocuk hiçbir aile bilgisini giremez, düzenleyemez veya silemez. Fotoğraflar yerel olarak saklanır. *Hem Aile Albümü oyununun hem Faz 3'teki ses tanımanın veri temeli budur.* | Yüksek |
-| 2.3 | **Müzik köşesi** *(Öne çıkan)* | YouTube IFrame API ile kontrollü oynatma. Ebeveyn bir **YouTube linki yapıştırarak** şarkı ekler; başlık ve kapak otomatik çekilir. Her şarkı için ayrı bir **günlük tekrar (loop) sayısı** belirlenir (ör. "en fazla 3 kez") — genel günlük çalma limitine ek, şarkı bazlı ayrıntılı bir sınır. Büyük kapak görselleriyle listelenir; reklamsız, önerisiz, gezinmesiz kapalı bir arayüz. Şarkı bitiminde yumuşak geçiş — otomatik sonraki şarkı yoktur. Şarkı eklenirken ebeveyne kısa bir içerik kontrol listesi (ani ses, yoğun görsel) gösterilir; onay ebeveyne aittir, sistem karar vermez. Spotify entegrasyonu (Premium hesap + OAuth + Web Playback SDK gerektirdiği için) ayrı ve daha ileri bir faz maddesidir. | Yüksek |
-| 2.4 | **Melike'nin çizgi filmi** | Video oynatıcı müzik köşesiyle aynı kontrollü kabuğu kullanır — otomatik oynatma ve öneri akışı yok. İçerik ebeveyn tarafından yüklenir, aynı kontrol listesiyle onaylanır; uygulama yalnızca sunar. **Kapsam kararı (2026-09-13):** Bu maddenin özgün tarifindeki gerçek yapay zekâ ile video/görsel üretimi bu loop'ta yapılmıyor — ücretli bir dış API hesabı ve ayrı bir bütçe kararı gerektiriyor. Bunun yerine ebeveynin kendi hazırladığı/yüklediği hazır videolar ve resimli hikâyeler aynı kontrollü oynatıcıda sunulur. Gerçek AI üretimi Faz 4.2'ye (İçerik stüdyosu) ertelendi. | Orta |
-| 2.5 | **Aile albümü oyunu** | 2.2'de tanımlanan gerçek aile fotoğraflarıyla "bu kim?" eşleştirmesi. Sesli ipucu, yanlışta ceza yok. Sosyal tanıma becerisini destekler. | Orta |
-| 2.6 | **Çizim tahtası** | Parmakla ve fareyle çalışan basit tuval: kalın uçlar, sınırlı ve sakin renk paleti, tek adımlık geri alma. Serbest çizim ve harf üzerinden geçme modu. Çizimler hesaba kaydedilir — ebeveyn için zaman içindeki gelişimin görünür kaydı. | Orta |
-| 2.7 | **Yazı alıştırması** | Harf ve isim yazma: noktalı kılavuz üzerinden geçme, ardından serbest yazma. Dokunmatikte parmak, PC'de fare veya klavye. Bilgisayara adaptasyon hedefinin ilk somut adımı. | Orta |
-| 2.8 | **Günlük rutin ve oyunlaştırma** | Sekiz yapraklı papatya günün etkinlik planı olur: görsel takvim, sırada ne olduğunu gösteren sakin geçişler, tamamlanan gün için çiçeğin açması. Puan, rekabet veya seri ödülü yok — otizmde öngörülebilirlik, ödülden daha güçlü bir motivasyondur. | Orta |
-| 2.8b | **Beceri rozetleri** | Bir beceri (Faz 3.1) ilk kez tamamlandığında sabit ve öngörülebilir bir rozet kazanılır (ör. "1'den 10'a Saymayı Öğrendin"). **Puan, sıralama, lider tablosu veya "X gün üst üste" serisi yoktur** — bunlar anti-bağımlılık ilkesini ihlal eder. Rozet bir başarı kaydıdır, rekabet aracı değil; her zaman aynı koşulda aynı şekilde kazanılır, rastgele değildir. | Düşük |
-| 2.9 | **Sözlü onay mekanizması** | Tarayıcı tabanlı konuşma tanımayla "sihirli kelimeyi söyle" adımı. Kimin konuştuğunu *ayırt etmez* — bu bilinçli bir ara adım; gerçek konuşmacı tanıma Faz 3'te gelir. Mevcut Sihirli Kelimeler altyapısı yeniden kullanılır. | Düşük |
-| 2.10 | **İlgi alanı aksan katmanı** | 1.4b'de kaydedilen ilgi alanına göre (kedi, gezegenler, dinozorlar...) oyun içi ödül ikonları, arka plan motifleri ve karakter aksesuarları değişir. **Papatya logosu, ana renk paleti ve sekiz yapraklı ilerleme metaforu her zaman sabit kalır** — aksan katmanı bunların üstüne giyilen değiştirilebilir bir dekordur, marka kimliğinin yerini almaz. | Orta |
+| 2.1 | **Ebeveyn yönetim alanı** ✅ *(Önce bu)* | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 2.2 | **Aile bireyleri kaydı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 2.3 | **Müzik köşesi** ✅ *(Öne çıkan)* | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 2.4 | **Melike'nin çizgi filmi** ✅ | *Tamamlandı (kapsamı daraltılmış — gerçek AI üretimi Faz 4.2'ye ertelendi) — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 2.5 | **Aile albümü oyunu** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 2.6 | **Çizim tahtası** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 2.7 | **Yazı alıştırması** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 2.8 | **Günlük rutin ve oyunlaştırma** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 2.8b | **Beceri rozetleri** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Düşük |
+| 2.9 | **Sözlü onay mekanizması** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Düşük |
+| 2.10 | **İlgi alanı aksan katmanı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
 
-**Faz Çıkışı** — Melike sabah uygulamayı açıp günlük papatyasını görüyor; sevdiği şarkıyı sınırlı sayıda dinliyor, kendi çizgi filmini izliyor, resim yapıyor, ailesini tanıma oyununu oynuyor. Ebeveyn tüm bunları koda dokunmadan yönetim alanından tanımlıyor.
+**Faz Çıkışı** — Melike sabah uygulamayı açıp günlük papatyasını ve "Bugün" özetini görüyor; sevdiği şarkıyı sınırlı sayıda dinliyor, ebeveynin yüklediği videoları/resimli hikâyeleri izliyor, resim yapıyor, ailesini tanıma oyununu (sesle de onaylayabildiği) oynuyor, harf yazma alıştırması yapıyor ve ilk kez başardığı becerilerde sabit bir rozet kazanıyor. Ebeveyn tüm bunları koda dokunmadan yönetim alanından tanımlıyor. *(Gerçek yapay zekâ ile üretilmiş çizgi film/görsel henüz yok — Faz 4.2'yi bekliyor, bu yüzden 2.4 kapsamı daraltılmış olarak kapandı.)*
+
+**Faz 2 kapanış notu (2026-09-13)** — 2.1-2.10'un tamamı bir loop'ta tamamlandı. Faz 2'de hiçbir Python servisi kurulmadı (kesin sınır olarak baştan belirlendi); tüm özellikler mevcut Next.js/tarayıcı katmanıyla inşa edildi. Yeni Prisma modelleri: `FamilyMember`, `Song`/`SongPlayCount`, `Video`, `Drawing`, `Badge`. Yeni bir yerel dosya depolama katmanı (`src/lib/mediaStorage.ts`, `public/uploads/`) kuruldu — Faz 2.2'den itibaren tüm medya buradan geçiyor.
 
 **Uzman denetimi** — Müzik ve video limitlerinin çocuk üzerindeki etkisi, aile tanıma oyununun sosyal-duygusal uygunluğu ve oyunlaştırmanın takıntı riski değerlendirilir.
 
