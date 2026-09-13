@@ -16,11 +16,11 @@ import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import Confetti from 'react-confetti';
 import useSound from 'use-sound';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
 
 import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
+import { GameHud } from '@/components/game/GameHud';
 
 const LETTERS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'Y', 'Z'];
 
@@ -105,15 +105,13 @@ export function GameBoard() {
     };
 
     return (
-        <div className="flex flex-col h-screen w-full bg-cream overflow-hidden relative">
+        <div className="flex flex-col h-screen w-full bg-papatya-cream overflow-hidden relative">
             {/* Success Confetti */}
-            {isMatched && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={200} />}
+            {isMatched && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={200} colors={['#E8B33C', '#5F7A52', '#6B87A8', '#C4756A']} />}
 
-            {/* Header / Nav */}
-            <div className="absolute top-4 left-4 z-10">
-                <Link href="/" className="bg-white/80 p-3 rounded-full shadow-md text-2xl hover:bg-white transition-colors">
-                    🏠
-                </Link>
+            {/* Header / Nav — Faz 1.8: paylaşılan GameHud */}
+            <div className="absolute top-4 left-4 right-4 lg:top-8 lg:left-8 lg:right-8 z-10">
+                <GameHud />
             </div>
 
             <DndContext
@@ -122,13 +120,13 @@ export function GameBoard() {
                 onDragEnd={handleDragEnd}
                 modifiers={[restrictToWindowEdges]}
             >
-                <div className="h-full flex flex-col items-center justify-center p-4 gap-12">
+                <div className="h-full flex flex-col items-center justify-center p-4 gap-12 lg:gap-16">
 
                     {/* Target Zone (Shadow) */}
                     <div className="relative">
                         <Droppable id="target-zone" isMatched={isMatched}>
                             <div
-                                className="w-48 h-48 md:w-64 md:h-64 flex items-center justify-center text-9xl font-bold text-gray-300 select-none"
+                                className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 flex items-center justify-center text-9xl font-bold text-papatya-rule select-none"
                                 style={{ fontFamily: 'var(--font-andika)' }}
                             >
                                 {targetLetter}
@@ -155,7 +153,7 @@ export function GameBoard() {
                         <div className="mt-8">
                             <Draggable id={targetLetter} disabled={dayBudget?.isDayComplete}>
                                 <div
-                                    className="w-40 h-40 md:w-56 md:h-56 bg-softIndigo rounded-3xl flex items-center justify-center text-8xl font-bold text-white shadow-xl cursor-grab active:cursor-grabbing border-4 border-white select-none"
+                                    className="w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-papatya-sky rounded-3xl flex items-center justify-center text-8xl font-bold text-white shadow-xl cursor-grab active:cursor-grabbing border-4 border-white select-none"
                                     style={{ fontFamily: 'var(--font-andika)' }}
                                 >
                                     {targetLetter}
@@ -169,7 +167,7 @@ export function GameBoard() {
                 <DragOverlay dropAnimation={dropAnimation}>
                     {activeId ? (
                         <div
-                            className="w-40 h-40 md:w-56 md:h-56 bg-softIndigo rounded-3xl flex items-center justify-center text-8xl font-bold text-white shadow-2xl opacity-90 border-4 border-white select-none scale-110 rotate-3"
+                            className="w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-papatya-sky rounded-3xl flex items-center justify-center text-8xl font-bold text-white shadow-2xl opacity-90 border-4 border-white select-none scale-110 rotate-3"
                             style={{ fontFamily: 'var(--font-andika)' }}
                         >
                             {activeId}

@@ -4,17 +4,16 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, RefreshCw, Home } from 'lucide-react';
+import { Mic, MicOff, RefreshCw } from 'lucide-react';
 import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
-import confetti from 'canvas-confetti';
-import Link from 'next/link';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useAudio } from '@/components/AudioProvider';
-import { useNotificationStore } from '@/store/notificationStore';
 import { useGameContent } from '@/hooks/useGameContent';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
+import { useRewardMoment } from '@/hooks/useRewardMoment';
+import { GameHud } from './GameHud';
 
 // --- PERSISTENCE HELPER ---
 const useMagicWordsProgress = () => {
@@ -114,8 +113,8 @@ export default function MagicWordsGame() {
     const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
-    const { celebrateSuccess, encourageRetry } = useAudio();
-    const pushToast = useNotificationStore((s) => s.pushToast);
+    const { encourageRetry } = useAudio();
+    const triggerReward = useRewardMoment();
 
     // Recognition
     const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
@@ -191,14 +190,11 @@ export default function MagicWordsGame() {
         if (isProcessingRef.current) return;
         isProcessingRef.current = true; // LOCK
 
-        playCorrect();
-        celebrateSuccess().catch(() => {});
-        pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
         updateProgress(true);
-        confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 }, colors: ['#FFC0CB', '#FFD700', '#00BFFF', '#32CD32'] });
+        triggerReward({ playSound: playCorrect, confettiOptions: { particleCount: 200, spread: 120 } });
 
         moveToNextCard();
-    }, [playCorrect, celebrateSuccess, pushToast, updateProgress, moveToNextCard]);
+    }, [playCorrect, triggerReward, updateProgress, moveToNextCard]);
 
 
     const handleSkip = useCallback(() => {
@@ -247,25 +243,26 @@ export default function MagicWordsGame() {
     if (gameStatus === 'idle' || gameStatus === 'checking') return <WelcomeScreen onStart={handleStartGame} status={gameStatus} />;
 
     return (
-        <div className="min-h-screen bg-[#FFFDF0] flex flex-col items-center relative overflow-hidden">
+        <div className="min-h-screen bg-papatya-cream flex flex-col items-center relative overflow-hidden">
 
-            {/* HUD */}
-            <div className="w-full flex justify-between items-center p-4 pt-6 z-20 absolute top-0">
-                <Link href="/" className="bg-white/80 backdrop-blur p-3 rounded-full shadow-sm hover:shadow-md transition">
-                    <Home className="text-gray-600" size={24} />
-                </Link>
-                {/* Faz 1.10: puan/skor göstergesi kaldırıldı — Yönetişim'deki
-                    anti-bağımlılık ilkesi (puan/sıralama yok) bu oyun için de geçerli.
-                    progress.success dahili olarak izlenmeye devam ediyor (ör. gelecekte
-                    ebeveyn raporu için) ama çocuğa "skor" olarak gösterilmiyor. */}
-                <div className={clsx("hidden md:flex px-4 py-2 rounded-full font-bold text-sm items-center gap-2", listening ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-                    <div className={clsx("w-2.5 h-2.5 rounded-full", listening ? "bg-green-600 animate-pulse" : "bg-red-500")} />
-                    {listening ? "Dinliyor" : "Bekliyor"}
-                </div>
+            {/* HUD — Faz 1.8: paylaşılan GameHud */}
+            <div className="w-full p-4 pt-6 lg:p-8 z-20 absolute top-0">
+                <GameHud
+                    right={
+                        <div className={clsx("hidden md:flex px-4 py-2 lg:px-5 lg:py-3 rounded-full font-bold text-sm lg:text-base items-center gap-2", listening ? "bg-papatya-leaf/15 text-papatya-leaf" : "bg-papatya-rose/15 text-papatya-rose")}>
+                            <div className={clsx("w-2.5 h-2.5 rounded-full", listening ? "bg-papatya-leaf animate-pulse" : "bg-papatya-rose")} />
+                            {listening ? "Dinliyor" : "Bekliyor"}
+                        </div>
+                    }
+                />
             </div>
+            {/* Faz 1.10: puan/skor göstergesi kaldırıldı — Yönetişim'deki
+                anti-bağımlılık ilkesi (puan/sıralama yok) bu oyun için de geçerli.
+                progress.success dahili olarak izlenmeye devam ediyor (ör. gelecekte
+                ebeveyn raporu için) ama çocuğa "skor" olarak gösterilmiyor. */}
 
             {/* CARD AREA */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mt-4 mb-40">
+            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md lg:max-w-lg mt-4 mb-40">
                 <AnimatePresence mode="wait">
                     {!skipTriggered ? (
                         <motion.div
@@ -276,10 +273,10 @@ export default function MagicWordsGame() {
                             transition={{ duration: 0.5 }}
                             className="relative z-10"
                         >
-                            <div className="absolute inset-0 bg-green-400 rounded-[3rem] z-0 transition-transform duration-75"
+                            <div className="absolute inset-0 bg-papatya-leaf rounded-[3rem] z-0 transition-transform duration-75"
                                 style={{ transform: `scale(${1 + (volume / 255) * 0.4})`, opacity: volume > 5 ? 0.3 : 0 }}
                             ></div>
-                            <div className="w-64 h-64 md:w-80 md:h-80 bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex items-center justify-center p-4 md:p-6 relative border-4 border-white z-10">
+                            <div className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-papatya-surface rounded-[2rem] md:rounded-[3rem] shadow-2xl flex items-center justify-center p-4 md:p-6 lg:p-8 relative border-4 border-papatya-surface z-10">
                                 <img src={currentWordObj.img} alt={currentWordObj.word} className="w-full h-full object-contain" />
                             </div>
                         </motion.div>
@@ -292,23 +289,23 @@ export default function MagicWordsGame() {
                             className="flex flex-col items-center justify-center"
                         >
                             <div className="text-6xl mb-4">😢</div>
-                            <span className="text-2xl font-bold text-gray-500">Pas Geçildi</span>
+                            <span className="text-2xl font-bold text-papatya-ink-soft">Pas Geçildi</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                <motion.h2 className="mt-6 md:mt-10 text-3xl md:text-5xl font-black text-slate-800 tracking-wide text-center uppercase">
+                <motion.h2 className="mt-6 md:mt-10 text-3xl md:text-5xl lg:text-6xl font-black text-papatya-ink tracking-wide text-center uppercase">
                     {skipTriggered ? "" : currentWordObj.word}
                 </motion.h2>
             </div>
 
             {/* FOOTER */}
-            <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t-2 border-indigo-50 rounded-t-[2.5rem] p-6 pb-8 z-30 flex flex-col items-center min-h-[160px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            <div className="fixed bottom-0 left-0 w-full bg-papatya-surface/95 backdrop-blur-xl border-t-2 border-papatya-rule rounded-t-[2.5rem] p-6 pb-8 lg:p-8 z-30 flex flex-col items-center min-h-[160px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 {transcript ? (
-                    <span className="text-3xl font-extrabold text-indigo-600 break-words leading-tight">&quot;{transcript}&quot;</span>
+                    <span className="text-3xl lg:text-4xl font-extrabold text-papatya-sky break-words leading-tight">&quot;{transcript}&quot;</span>
                 ) : (
                     !listening ? (
-                        <button onClick={() => SpeechRecognition.startListening({ continuous: true, language: 'tr-TR' })} className="mt-4 px-6 py-3 bg-red-100 text-red-600 rounded-full font-bold animate-bounce flex gap-2">
+                        <button onClick={() => SpeechRecognition.startListening({ continuous: true, language: 'tr-TR' })} className="mt-4 min-h-tap px-6 py-3 bg-papatya-rose/15 text-papatya-rose rounded-full font-bold animate-bounce flex gap-2 items-center">
                             <RefreshCw size={18} /> Bağlan
                         </button>
                     ) : (
@@ -326,24 +323,24 @@ export default function MagicWordsGame() {
 // Sub-components for cleaner file
 function ErrorScreen({ onRetry }: { onRetry: () => void }) {
     return (
-        <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center p-6 text-center">
-            <MicOff size={48} className="text-orange-500 mb-4" />
-            <h1 className="text-2xl font-bold mb-2">İzin Gerekli</h1>
-            <button onClick={onRetry} className="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold">Tekrar Dene</button>
+        <div className="min-h-screen bg-papatya-rose/10 flex flex-col items-center justify-center p-6 text-center">
+            <MicOff size={48} className="text-papatya-rose mb-4" />
+            <h1 className="text-2xl lg:text-3xl font-bold mb-2 text-papatya-ink">İzin Gerekli</h1>
+            <button onClick={onRetry} className="min-h-tap bg-papatya-sky text-white px-8 py-3 rounded-full font-bold">Tekrar Dene</button>
         </div>
     );
 }
 
 function WelcomeScreen({ onStart, status }: { onStart: () => void, status: string }) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-400 to-purple-500 flex flex-col items-center justify-center p-4 text-white">
-            <div className="bg-white p-6 rounded-full shadow-2xl mb-8 relative animate-float">
-                <Mic size={64} className="text-indigo-600" />
-                {status === 'checking' && <div className="absolute inset-0 border-4 border-indigo-300 rounded-full animate-spin border-t-transparent"></div>}
+        <div className="min-h-screen bg-gradient-to-br from-papatya-sky to-papatya-leaf flex flex-col items-center justify-center p-4 text-white">
+            <div className="bg-papatya-surface p-6 lg:p-8 rounded-full shadow-2xl mb-8 relative animate-float">
+                <Mic size={64} className="text-papatya-sky" />
+                {status === 'checking' && <div className="absolute inset-0 border-4 border-papatya-sky/40 rounded-full animate-spin border-t-transparent"></div>}
             </div>
-            <h1 className="text-4xl font-hand font-bold mb-4">Sihirli Kelimeler</h1>
+            <h1 className="text-4xl lg:text-5xl font-hand font-bold mb-4">Sihirli Kelimeler</h1>
             <p className="text-center opacity-90 mb-8 max-w-xs">Sınırsız eğlenceye hazır mısın?</p>
-            <button onClick={onStart} disabled={status === 'checking'} className="bg-white text-indigo-600 px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-70">
+            <button onClick={onStart} disabled={status === 'checking'} className="min-h-tap bg-papatya-surface text-papatya-sky px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-70">
                 {status === 'checking' ? "Başlatılıyor..." : "Oyuna Başla"}
             </button>
         </div>

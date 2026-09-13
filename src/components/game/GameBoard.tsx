@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, defaultDropAnimationSideEffects, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
-import confetti from 'canvas-confetti';
 import useSound from 'use-sound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Star } from 'lucide-react';
@@ -14,9 +13,12 @@ import { useLevelStore } from '@/store/levelStore';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useGameContent } from '@/hooks/useGameContent';
+import { useHintTimer } from '@/hooks/useHintTimer';
+import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { DraggableToken } from './DraggableToken';
 import { TargetFrame } from './TargetFrame';
 import { HintImage } from './HintImage';
+import { GameHud } from './GameHud';
 
 const SIMILAR_MAPPING: Record<string, string[]> = {
     'E': ['F', 'L', 'I'],
@@ -47,9 +49,10 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 export default function GameBoard() {
     const { currentLevel, advanceLevel, getLevelConfig, isGameComplete, isDayComplete, sessionId } = useLevelStore();
     const isLocked = isGameComplete || isDayComplete;
-    const { askLetter, celebrateSuccess, encourageRetry } = useAudio();
+    const { askLetter, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
     const { data: content } = useGameContent();
+    const triggerReward = useRewardMoment();
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [levelConfig, setLevelConfig] = useState(getLevelConfig(currentLevel));
@@ -94,18 +97,8 @@ export default function GameBoard() {
         }
     }, [isPlaying, currentLevel]);
 
-    // Hint Logic
-    const [showHint, setShowHint] = useState(false);
-
-    useEffect(() => {
-        // Reset hint when level starts
-        setShowHint(false);
-        const timer = setTimeout(() => {
-            setShowHint(true);
-        }, 5000); // 5 seconds idle -> Show Hint
-
-        return () => clearTimeout(timer);
-    }, [targetLetter, status]); // Reset on new letter or status change
+    // Hint Logic — Faz 1.8: paylaşılan useHintTimer (GameShell altyapısı)
+    const [showHint, dismissHint] = useHintTimer([targetLetter, status]);
 
     // Loading state — hem oturum hem içerik (Faz 1.4: veritabanından) hazır olmalı
     if (!sessionId || !content) return <div className="flex h-screen items-center justify-center text-softIndigo">Yükleniyor...</div>;
@@ -178,7 +171,7 @@ export default function GameBoard() {
 
     const handleDragStart = (event: any) => {
         setActiveId(event.active.id);
-        setShowHint(false); // Interaction resets hint
+        dismissHint(); // Interaction resets hint
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -198,14 +191,7 @@ export default function GameBoard() {
         if (isCorrect) {
             setStatus('success');
             playSuccess();
-            celebrateSuccess().catch(() => {});
-            pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#10B981', '#F59E0B']
-            });
+            triggerReward();
 
             // Delay for animation then close or next
             setTimeout(() => {
@@ -355,12 +341,9 @@ export default function GameBoard() {
     // GAME BOARD (Same as before)
     return (
         <div className="h-full w-full bg-cream flex flex-col md:flex-row overflow-hidden relative">
-            <button
-                onClick={() => setIsPlaying(false)}
-                className="absolute top-20 left-4 z-50 p-2 bg-white rounded-full shadow-md text-gray-500 hover:bg-gray-100"
-            >
-                ⬅
-            </button>
+            <div className="absolute top-20 left-4 right-4 z-50">
+                <GameHud onBack={() => setIsPlaying(false)} />
+            </div>
 
             <DndContext
                 sensors={sensors}
