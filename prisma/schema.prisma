@@ -29,6 +29,7 @@ model User {
   skillAttempts SkillAttempt[]
   familyMembers FamilyMember[]
   songs         Song[]
+  videos        Video[]
 }
 
 /// Faz 2.2 — aile bireyleri kaydı. Yalnızca ebeveyn ekler/düzenler/siler;
@@ -78,6 +79,21 @@ model SongPlayCount {
   playCount Int    @default(0)
 
   @@unique([songId, date])
+}
+
+/// Faz 2.4 — "Melike'nin çizgi filmi" (kapsamı daraltılmış, bkz.
+/// YOL-HARITASI.md 2.4 notu): gerçek yapay zekâ üretimi yok, ebeveynin
+/// yüklediği hazır video/resimli hikâyeyi aynı kontrollü kabukta oynatan
+/// bir kayıt. Dosya yerel dosya sistemine yazılır (bkz. mediaStorage.ts).
+model Video {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  filePath  String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music } from 'lucide-react';
+import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music, Film } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { verifyParentPin, changeParentPin } from '@/actions/parentGate';
 import { logout } from '@/actions/auth';
@@ -11,6 +11,7 @@ import { ChildProfileTab } from './parentPanel/ChildProfileTab';
 import { ProgressTab } from './parentPanel/ProgressTab';
 import { FamilyMembersTab } from './parentPanel/FamilyMembersTab';
 import { MusicTab } from './parentPanel/MusicTab';
+import { CartoonTab } from './parentPanel/CartoonTab';
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
@@ -22,6 +23,7 @@ const TABS = [
     { key: 'genel', label: 'Genel', icon: Lock },
     { key: 'aile', label: 'Aile Bireyleri', icon: Users },
     { key: 'muzik', label: 'Müzik', icon: Music },
+    { key: 'video', label: 'Videolar', icon: Film },
     { key: 'profil', label: 'Çocuk Profili', icon: Sparkles },
     { key: 'duyusal', label: 'Duyusal', icon: HeartPulse },
     { key: 'sure', label: 'Ekran Süresi', icon: Clock },
@@ -251,6 +253,7 @@ export function ParentGate() {
                             )}
                             {activeTab === 'aile' && <FamilyMembersTab />}
                             {activeTab === 'muzik' && <MusicTab />}
+                            {activeTab === 'video' && <CartoonTab />}
                             {activeTab === 'profil' && <ChildProfileTab />}
                             {activeTab === 'duyusal' && <SensoryTab />}
                             {activeTab === 'sure' && <ScreenTimeTab />}

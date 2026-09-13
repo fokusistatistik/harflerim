@@ -62,7 +62,7 @@ export const NAV_AREAS: NavArea[] = [
         status: 'active',
         accent: 'rose',
     },
-    { id: 'cartoon', label: 'Çizgi Filmim', subtitle: 'Yakında', status: 'soon', accent: 'sky' },
+    { id: 'cartoon', label: 'Çizgi Filmim', subtitle: 'Videolar', href: '/cartoon', status: 'active', accent: 'sky' },
     { id: 'family-album', label: 'Aile Albümü', subtitle: 'Yakında', status: 'soon', accent: 'leaf' },
     { id: 'drawing-board', label: 'Çizim Tahtası', subtitle: 'Yakında', status: 'soon', accent: 'petal' },
     { id: 'writing-practice', label: 'Yazı Alıştırması', subtitle: 'Yakında', status: 'soon', accent: 'rose' },
