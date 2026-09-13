@@ -5,11 +5,20 @@ import { getCurrentUser } from '@/lib/auth';
 import { worldName } from '@/config/brand';
 import { NavGrid } from '@/components/ui/NavGrid';
 import { TodaySummary } from '@/components/ui/TodaySummary';
+import { getChildProfile } from '@/actions/childProfile';
+import { getInterestIcon } from '@/lib/interestAccent';
 
 export default async function Home() {
     const session = await getDailySession('letter-hunt');
     const user = await getCurrentUser();
     const firstName = user?.firstName ?? '';
+
+    // Faz 2.10 — ilgi alanı aksan katmanı: yalnızca 1.4b'de en az bir ilgi
+    // alanı kaydedilmişse gösterilir. Papatya logosu/renk paleti/sekiz
+    // yapraklı metafor sabit kalır — bu yalnızca küçük bir dekoratif rozet.
+    const profile = await getChildProfile();
+    const hasInterest = !!profile?.interests.length;
+    const InterestIcon = getInterestIcon(profile?.interests ?? []);
 
     return (
         <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-24 md:pt-32 lg:pt-40 relative overflow-hidden">
@@ -35,6 +44,11 @@ export default async function Home() {
                     <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg">
                         <Star className="text-white fill-white" size={32} />
                     </div>
+                    {hasInterest && (
+                        <div className="absolute -top-2 -left-2 bg-papatya-sky p-2 rounded-full shadow-lg">
+                            <InterestIcon className="text-white" size={24} />
+                        </div>
+                    )}
                 </div>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-hand font-bold text-softIndigo text-center leading-tight">
