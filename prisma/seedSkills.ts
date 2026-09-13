@@ -15,6 +15,10 @@ const SKILLS = [
     { key: 'golge-eslestirme', label: 'Gölge Eşleştirme' },
     // Faz 2.5 — aile albümü oyunu.
     { key: 'sosyal-tanima', label: 'Sosyal Tanıma' },
+    // Faz 2.7 — yazı alıştırması. Doğru/yanlış yok (kılavuz üzerinden geçme,
+    // ceza yok ilkesi), isCorrect her zaman true — yalnızca "bu harf
+    // çalışıldı" varlığını kaydeder.
+    { key: 'el-yazisi', label: 'El Yazısı' },
 ];
 
 async function main() {
