@@ -6,9 +6,17 @@ import { Moon, Sun, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useParentGateStore } from '@/store/parentGateStore';
+import { DaisyProgress } from '@/components/ui/DaisyProgress';
+
+const TOTAL_PETALS = 8;
 
 export function Header() {
-    const { currentLevel, isDayComplete } = useLevelStore();
+    const { currentLevel, isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
+    // Faz 1.9 — geçici çözüm: yapraklar zaman oranına göre dolar. Faz 2.8
+    // gerçek "günün sekiz etkinliği" mantığını getirdiğinde bu hesap yerini bırakır.
+    const filledPetals = isDayComplete
+        ? TOTAL_PETALS
+        : Math.max(0, Math.min(TOTAL_PETALS, Math.floor((dailyScreenSeconds / Math.max(1, dailyScreenLimit)) * TOTAL_PETALS)));
     const openPinPrompt = useParentGateStore((s) => s.openPinPrompt);
     const longPress = useLongPress(openPinPrompt);
     const [time, setTime] = useState('');
@@ -52,9 +60,11 @@ export function Header() {
                 {dateStr}
             </div>
 
-            {/* Right: Settings / Profile / DayNight */}
-            <div className="flex items-center gap-4 lg:gap-6">
-                <div className="px-3 py-1 lg:px-4 lg:py-2 bg-papatya-sky/15 rounded-full text-papatya-sky font-bold text-sm lg:text-base shadow-sm border border-papatya-sky/30">
+            {/* Right: Daisy progress / Level / DayNight */}
+            <div className="flex items-center gap-3 lg:gap-6">
+                <DaisyProgress filledCount={filledPetals} size={36} className="lg:w-11 lg:h-11" />
+
+                <div className="hidden sm:block px-3 py-1 lg:px-4 lg:py-2 bg-papatya-sky/15 rounded-full text-papatya-sky font-bold text-sm lg:text-base shadow-sm border border-papatya-sky/30">
                     {currentLevel > 1 ? `${currentLevel - 1} Oyun Bitti` : 'Başlangıç'}
                 </div>
 

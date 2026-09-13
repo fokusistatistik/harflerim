@@ -1,22 +1,22 @@
 {
-    "name": "Harf Yuvası - Harf Öğrenme",
-    "short_name": "Harf Yuvası",
-    "description": "ASD odaklı Türkçe harf tanıma ve işitsel-görsel eşleştirme uygulaması",
+    "name": "Papatya",
+    "short_name": "Papatya",
+    "description": "Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#FFFDD0",
-    "theme_color": "#FFFDD0",
+    "background_color": "#FBF8EF",
+    "theme_color": "#FBF8EF",
     "orientation": "any",
     "icons": [
         {
             "src": "/icon-192.png",
-            "sizes": "192x192",
+            "sizes": "864x864",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
             "src": "/icon-512.png",
-            "sizes": "512x512",
+            "sizes": "864x864",
             "type": "image/png",
             "purpose": "any maskable"
         }
