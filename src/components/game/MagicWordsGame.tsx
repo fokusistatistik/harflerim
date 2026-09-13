@@ -16,40 +16,10 @@ import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
 import { GameHud } from './GameHud';
 
-// --- PERSISTENCE HELPER ---
-const useMagicWordsProgress = () => {
-    const [progress, setProgress] = useState({ played: 0, success: 0, date: '' });
-    const [loaded, setLoaded] = useState(false);
-
-    useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        const saved = localStorage.getItem('magic_words_progress');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed.date === today) {
-                setProgress(parsed);
-            } else {
-                setProgress({ played: 0, success: 0, date: today });
-            }
-        } else {
-            setProgress({ played: 0, success: 0, date: today });
-        }
-        setLoaded(true);
-    }, []);
-
-    const updateProgress = (isSuccess: boolean) => {
-        setProgress(prev => {
-            const next = {
-                ...prev,
-                played: prev.played + 1,
-                success: isSuccess ? prev.success + 1 : prev.success
-            };
-            localStorage.setItem('magic_words_progress', JSON.stringify(next));
-            return next;
-        });
-    };
-    return { progress, updateProgress, loaded };
-};
+// Faz 1.22 — burada daha önce bir useMagicWordsProgress/localStorage
+// mekanizması vardı (günlük oynanan/başarı sayısı). Kaldırıldı: SkillAttempt
+// (Faz 1.20, skillKey='sesli-kelime-tanima') her denemeyi zaten veritabanında
+// kalıcı tutuyor ve hiçbir UI bu sayıyı göstermiyordu (1.10'da SKOR kaldırılmıştı).
 
 // --- MIC VOLUME HOOK ---
 const useMicVolume = (listening: boolean) => {
@@ -108,8 +78,7 @@ export default function MagicWordsGame() {
     // Data
     const [gameWords, setGameWords] = useState<{ word: string; img: string }[]>([]);
 
-    // Progress & Sound
-    const { updateProgress, loaded } = useMagicWordsProgress();
+    // Sound
     const { data: content } = useGameContent();
     const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
@@ -191,12 +160,11 @@ export default function MagicWordsGame() {
         if (isProcessingRef.current) return;
         isProcessingRef.current = true; // LOCK
 
-        updateProgress(true);
         triggerReward({ playSound: playCorrect, confettiOptions: { particleCount: 200, spread: 120 } });
         recordSkillAttempt('sesli-kelime-tanima', 'magic-words', true).catch(() => {});
 
         moveToNextCard();
-    }, [playCorrect, triggerReward, updateProgress, moveToNextCard]);
+    }, [playCorrect, triggerReward, moveToNextCard]);
 
 
     const handleSkip = useCallback(() => {
@@ -206,11 +174,10 @@ export default function MagicWordsGame() {
         setSkipTriggered(true);
         playSad();
         encourageRetry().catch(() => {});
-        updateProgress(false);
         recordSkillAttempt('sesli-kelime-tanima', 'magic-words', false).catch(() => {});
 
         moveToNextCard();
-    }, [playSad, encourageRetry, updateProgress, moveToNextCard]);
+    }, [playSad, encourageRetry, moveToNextCard]);
 
 
     // --- MATCH LISTENER ---
@@ -240,7 +207,7 @@ export default function MagicWordsGame() {
 
 
     // Render
-    if (!isClient || !loaded || !content || gameWords.length === 0) return null;
+    if (!isClient || !content || gameWords.length === 0) return null;
     if (!browserSupportsSpeechRecognition) return <div className="p-10 text-center">Chrome kullanın.</div>;
     if (gameStatus === 'error') return <ErrorScreen onRetry={handleStartGame} />;
     if (gameStatus === 'idle' || gameStatus === 'checking') return <WelcomeScreen onStart={handleStartGame} status={gameStatus} />;
@@ -261,8 +228,9 @@ export default function MagicWordsGame() {
             </div>
             {/* Faz 1.10: puan/skor göstergesi kaldırıldı — Yönetişim'deki
                 anti-bağımlılık ilkesi (puan/sıralama yok) bu oyun için de geçerli.
-                progress.success dahili olarak izlenmeye devam ediyor (ör. gelecekte
-                ebeveyn raporu için) ama çocuğa "skor" olarak gösterilmiyor. */}
+                Faz 1.20/1.22: her deneme artık SkillAttempt'te (DB) kalıcı
+                tutuluyor (ör. gelecekte ebeveyn raporu için) — çocuğa
+                gösterilmiyor, yerel bir sayaç da tutulmuyor. */}
 
             {/* CARD AREA */}
             <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md lg:max-w-lg mt-4 mb-40">

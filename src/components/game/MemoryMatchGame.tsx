@@ -13,8 +13,9 @@ import { useGameContent } from '@/hooks/useGameContent';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
+import { getDailySession } from '@/actions/game';
+import { advanceGameLevel } from '@/actions/gameProgress';
 import { GameHud } from './GameHud';
-// import { getDailySession } from '@/actions/game';
 
 // Card Interface
 interface Card {
@@ -33,9 +34,10 @@ export default function MemoryMatchGame() {
     const [level, setLevel] = useState(1);
     const [isPlaying, setIsPlaying] = useState(false); // Controls Map vs Game view
 
-    // Level Logic
-    // Simplified progress tracking for this session (could use localStorage in future)
+    // Level Logic — Faz 1.22: ilerleme artık veritabanında (Session), localStorage'da değil.
     const [maxReachedLevel, setMaxReachedLevel] = useState(1);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [roundStartTime, setRoundStartTime] = useState<number>(0);
 
     const [cards, setCards] = useState<Card[]>([]);
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
@@ -53,12 +55,18 @@ export default function MemoryMatchGame() {
     const [playMatch] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playLevelUp] = useSound(AUDIOS.complete, { volume: 0.6 });
 
-    // Load progress from local storage on mount
+    // Faz 1.22 — ilerlemeyi veritabanından (Session, gameId='memory-match') yükle.
     useEffect(() => {
-        const saved = localStorage.getItem('memory_match_level');
-        if (saved) {
-            setMaxReachedLevel(parseInt(saved, 10));
-        }
+        let cancelled = false;
+        getDailySession('memory-match').then((state) => {
+            if (cancelled) return;
+            setSessionId(state.sessionId);
+            setMaxReachedLevel(Math.min(state.levelReached, TOTAL_LEVELS));
+            if (state.isGameComplete) setGameCompleted(true);
+        });
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const startLevel = (lvl: number) => {
@@ -98,6 +106,7 @@ export default function MemoryMatchGame() {
         setIsProcessing(false);
         setLevel(lvl);
         setIsPlaying(true); // Switch to game view
+        setRoundStartTime(Date.now());
     };
 
     const handleCardClick = (index: number) => {
@@ -156,28 +165,35 @@ export default function MemoryMatchGame() {
             // Level Complete — Faz 1.8: paylaşılan ödül anı (papatya renkli konfeti)
             triggerReward({ message: 'Seviye tamamlandı!' });
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 const nextLevel = level + 1;
+                const leveledUp = nextLevel > maxReachedLevel;
+                const elapsedSeconds = Math.max(1, Math.round((Date.now() - roundStartTime) / 1000));
 
-                // Update Progress
-                if (nextLevel > maxReachedLevel) {
-                    setMaxReachedLevel(nextLevel);
-                    localStorage.setItem('memory_match_level', nextLevel.toString());
+                // Faz 1.22 — ilerleme veritabanına (Session) yazılır, localStorage'a değil.
+                const result = sessionId
+                    ? await advanceGameLevel(sessionId, leveledUp, elapsedSeconds)
+                    : null;
+
+                if (result) {
+                    setMaxReachedLevel(Math.min(result.levelReached, TOTAL_LEVELS));
+                    if (result.isGameComplete) {
+                        setGameCompleted(true);
+                        playLevelUp();
+                        return;
+                    }
+                    startLevel(result.levelReached);
+                    return;
                 }
 
+                // Sunucu çağrısı başarısız olursa (ör. sessionId henüz gelmedi) —
+                // yerel mantıkla devam et, ilerleme bir sonraki senkronizasyona kadar
+                // yalnızca bu oturumda tutulur.
+                if (nextLevel > maxReachedLevel) setMaxReachedLevel(nextLevel);
                 if (nextLevel > TOTAL_LEVELS) {
                     setGameCompleted(true);
                     playLevelUp();
                 } else {
-                    // Go back to map or next level? 
-                    // User requested "Bugünün macerası düzeni" (Adventure Map) between games generally means returning to map or auto advancing?
-                    // In Letter Hunt it auto advances visually but shows map logic.
-                    // For now, let's return to Map to show progress, or simple auto advance.
-                    // Let's Auto Advance for flow, but update the 'level' state so map is updated next time they visit.
-
-                    // Actually, "between games" implies seeing the map. Let's briefly show success then map?
-                    // Or just start next level immediately for flow? 
-                    // Let's start next level immediately for better UX, but the map is always accessible via "Back".
                     startLevel(nextLevel);
                 }
             }, 1500);
