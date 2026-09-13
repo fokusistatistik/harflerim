@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AudioConfig } from '@/types/game';
+import { tArray, interpolate } from '@/lib/i18n';
 
 interface UseTurkishSpeechReturn {
     speak: (text: string) => Promise<void>;
@@ -91,13 +92,12 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
         [config, isSupported, enabled]
     );
 
+    // Faz 1.21 — bu cümleler artık src/locales/tr.json'dan okunuyor (tek
+    // kaynak); daha önce burada hardcoded ve tr.json'dakiyle kısmen çakışan
+    // ayrı diziler vardı.
     const askLetter = useCallback(
         async (letter: string): Promise<void> => {
-            const phrases = [
-                `Hadi ${letter} harfini bulalım!`,
-                `${letter} harfi nerede?`,
-                `Bakalım, ${letter} harfini bulabilecek misin?`,
-            ];
+            const phrases = tArray('game.findLetter').map((phrase) => interpolate(phrase, { letter }));
             const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
             await speak(randomPhrase);
         },
@@ -105,26 +105,14 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
     );
 
     const celebrateSuccess = useCallback(async (): Promise<void> => {
-        const celebrations = [
-            'Harika!',
-            'Çok güzel!',
-            'Aferin!',
-            'Mükemmel!',
-            'Süpersin!',
-            'Bravo!',
-        ];
+        const celebrations = tArray('feedback.success');
         const randomCelebration =
             celebrations[Math.floor(Math.random() * celebrations.length)];
         await speak(randomCelebration);
     }, [speak]);
 
     const encourageRetry = useCallback(async (): Promise<void> => {
-        const encouragements = [
-            'Tekrar deneyelim mi?',
-            'Bir daha bakalım',
-            'Birlikte bulalım',
-            'Çok yaklaştın!',
-        ];
+        const encouragements = tArray('feedback.retry');
         const randomEncouragement =
             encouragements[Math.floor(Math.random() * encouragements.length)];
         await speak(randomEncouragement);

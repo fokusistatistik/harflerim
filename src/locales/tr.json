@@ -1,10 +1,14 @@
 {
     "app": {
-        "title": "HarfArkadaşım",
+        "title": "Papatya",
         "subtitle": "Harflerle Eğlenceli Öğrenme"
     },
     "game": {
-        "findLetter": "Hadi {{letter}} harfini bulalım!",
+        "findLetter": [
+            "Hadi {{letter}} harfini bulalım!",
+            "{{letter}} harfi nerede?",
+            "Bakalım, {{letter}} harfini bulabilecek misin?"
+        ],
         "listening": "Dinliyorum...",
         "tapToStart": "Başlamak için dokun"
     },
@@ -14,7 +18,8 @@
             "Çok güzel!",
             "Aferin!",
             "Mükemmel!",
-            "Süpersin!"
+            "Süpersin!",
+            "Bravo!"
         ],
         "retry": [
             "Tekrar deneyelim mi?",
