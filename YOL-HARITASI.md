@@ -1,6 +1,6 @@
 # Papatya — Ürün Yol Haritası
 
-**Sürüm 2.10 · 13 Eylül 2026 — Mühürlenmiş**
+**Sürüm 2.11 · 13 Eylül 2026 — Mühürlenmiş**
 
 Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması.
 **Melike için inşa ediliyor, herkes için tasarlanıyor.** Bu belge, bugünkü koddan yola çıkıp
@@ -20,7 +20,7 @@ LLM destekli bir otizm eğitim platformuna giden dört fazlık yolu ve ötesinde
 
 Bu bölüm fazlardan önce gelir çünkü fazların hepsini bağlar. Bir özellik bu kurallardan birini çiğniyorsa, ne kadar değerli olursa olsun yapılmaz.
 
-Bu bölüm **ürünün** ne yapıp ne yapmayacağını tarif eder. Geliştirmenin **nasıl** yürütüldüğü (kapsam onayı, commit disiplini, kod standardı, port ayrımı vb.) [GENEL-KURALLAR.md](GENEL-KURALLAR.md)'de ayrıca mühürlenmiştir; `/loop` aracının özel işleyişi ise [LOOP-KURALLARI.md](LOOP-KURALLARI.md)'de.
+Bu bölüm **ürünün** ne yapıp ne yapmayacağını tarif eder. Geliştirmenin **nasıl** yürütüldüğü (kapsam onayı, commit disiplini, kod standardı, port ayrımı vb.) [GENEL-KURALLAR.md](GENEL-KURALLAR.md)'de ayrıca mühürlenmiştir; `/loop` aracının özel işleyişi ise [LOOP-KURALLARI.md](LOOP-KURALLARI.md)'de. Tamamlanan maddelerin ayrıntılı özeti (bu belgeyi şişirmesin diye) [YOL-HARITASI-YAPILANLAR.md](YOL-HARITASI-YAPILANLAR.md)'dedir.
 
 ### Veri güvenliği anayasası — Katı yerel işleme
 
@@ -145,27 +145,29 @@ Faz planı bu tabloya dayanıyor. "Yazılmış ama kapalı" satırları özellik
 
 > **Ön koşul fazı.** Melike'nin gözünde çok az şey değişir; altta neredeyse her şey değişir. Bu fazın amacı, sonraki üç fazın yeniden yazım gerektirmeden inşa edilebileceği bir temel kurmaktır.
 
+> ✅ ile işaretli maddeler tamamlanmıştır — uzun açıklamaları roadmap'i şişirmesin diye [YOL-HARITASI-YAPILANLAR.md](YOL-HARITASI-YAPILANLAR.md)'ye taşınmıştır (kopyalanmamıştır). Aşağıdaki tablo yalnızca kısa bir özet ve o belgeye yönlendirme içerir.
+
 | # | İş | Açıklama | Yük |
 |---|---|---|---|
-| 1.1 | **Kullanıcı ve kimlik altyapısı** ✅ *Tamamlandı* | `User` + `UserSettings` + `AuthSession` şeması kuruldu. Kullanıcı adı/şifre ile giriş, bcrypt hash'li parola, 30 günlük oturum çerezi. Seed kullanıcısı: **Melike Bostanoğlu** (`Melike` / `1234`). Tüm kullanıcılar `basic` katmanda. Kayıt ekranı **yok** — ileride e-posta/telefon/Gmail doğrulamalı kayıt eklenecek, şema bunu kaldırır. | Yüksek |
-| 1.2 | **Dinamik kimlik: "Adının Dünyası"** ✅ *Tamamlandı* | `brand.ts` Türkçe ünlü uyumuna göre isimden başlık türetir: Melike → *Melike'nin Dünyası*, Emre → *Emre'nin Dünyası*, Yusuf → *Yusuf'un Dünyası*. Uygulama adı (`Papatya`) ve tüm kişi adları tek kaynaktan okunur; kodda sabit isim kalmaz. | Düşük |
-| 1.3 | **Tek giriş, korumalı yönetim alanı** ✅ *Tamamlandı* | Header'daki logoya ~700ms uzun basma (kısa dokunuşun normal gezinmesini bozmadan) ebeveyn PIN istemini açar. `UserSettings.parentPin` artık bcrypt hash (önceden düz metin "0000"'dı — geriye dönük satırlar taşındı). Kilit açıldığında PIN değiştirme formu ve çıkış kontrolü (bkz. 1.18) aynı panelde. | Orta |
-| 1.4 | **İçeriği veritabanına taşı** ✅ *Tamamlandı* *(Kritik)* | `gameData.ts`'teki 28 harf grubu / 230 kelime `ContentSet`/`ContentItem` tablolarına taşındı (idempotent tohumlama betiği, taşınan kayıt sayısı doğrulanarak). Üç oyun da artık `getGameContent()` üzerinden veritabanından besleniyor. Yeni kelime eklemek artık kod değişikliği değil, veri girişi. | Yüksek |
-| 1.4b | **Çocuk profili şeması: ilgi alanı ve duyusal profil** ✅ *Tamamlandı (yalnızca şema)* *(Kritik)* | `UserSettings`'e opsiyonel alanlar eklendi: yaş, cinsiyet, favori renk, ilgi alanları, öğrenme kanalı tercihi, duyusal profil, tetikleyiciler/sakinleştiriciler, iletişim düzeyi — tip güvenceli parse/serialize yardımcılarıyla (`childProfile.ts`). **Tanı aracı değildir.** *Hiçbir UI'dan doldurulmuyor henüz — Faz 2.1 ebeveyn paneli bekliyor.* | Yüksek |
-| 1.5 | **Seslendirmeyi aç** ✅ *Tamamlandı* | `AudioProvider` yorum satırından çıkarılır, oyunlara bağlanır. Harf adı, kelime, doğru/yanlış geri bildirimi ve yönerge cümleleri Türkçe seslendirilir. İlk kullanıcı etkileşimine kadar sessizce beklenir (tarayıcı autoplay politikası). | Düşük |
-| 1.6 | **Tasarım tokeni katmanı** ✅ *Tamamlandı (kısmi)* | Renk/boşluk/yarıçap/animasyon süresi CSS değişkenlerine taşındı, açık+koyu mod birlikte tanımlandı, Tailwind `papatya.*` namespace'iyle besleniyor. *Mevcut 3 oyunun bileşen içi renkleri henüz bu tokenlere taşınmadı — bu, Faz 1.9'daki görsel kimlik geçişinde ele alınacak; şimdilik yalnızca altyapı kuruldu, tam migrasyon değil.* | Orta |
-| 1.7 | **Üç cihaz ölçeklemesi** ✅ *Tamamlandı* | Akışkan tipografi (`clamp()`) ve dokunma hedefi (44px) tokenleri; `lg:`/`xl:` kırılma noktaları artık Header, ana sayfa ve **dört oyunun tamamında** (Harf Avı, Hafıza Kartları, Sihirli Kelimeler, Görsel Eşleştirme). | Orta |
-| 1.8 | **Ortak oyun soyutlaması** ✅ *Tamamlandı ("ortak kabuk, ayrı ilerleme modelleri" olarak)* | Dört oyunun ilerleme modelleri (Harf Avı/Hafıza Kartları: seviye merdiveni; Sihirli Kelimeler/Görsel Eşleştirme: sonsuz pratik) kasıtlı olarak korundu — tek bir seviye-merdiveni sistemine zorlanmadı. Bunun yerine paylaşılan üç parça kuruldu: `GameHud` (geri/durum/aksiyon satırı), `useRewardMoment` (konfeti+ses+konuşma+toast, papatya renkli), `useHintTimer` (Harf Avı'nın ipucu mekanizması, başka oyunlar isterse hazır). Ayrıca `useGameDayBudget` ile dördü de günlük süre bütçesine rapor veriyor ve gün bitince kilitleniyor. Visual Match'in bozuk ses dosyaları düzeltildi, 4. oyun olarak menüye eklendi. | Yüksek |
-| 1.9 | **Papatya görsel kimliği** ✅ *Tamamlandı (teknik iskele)* | Açılış animasyonu (yapraklar sırayla açılır, `prefers-reduced-motion` uyumlu) ve sekiz yapraklı günlük ilerleme göstergesi (zaman oranına göre dolar) Header'da. *Gerçek logo/marka görseli üretimi ve çok-çözünürlüklü PWA ikonları kapsam dışı bırakıldı — mevcut placeholder görsel (864×864) hâlâ kullanımda, yalnızca manifest'teki yanlış boyut etiketleri düzeltildi.* | Orta |
-| 1.10 | **Ekran sağlığı temeli** ✅ *Tamamlandı* | Doğal bitiş ekranı (`DayComplete`) temadan bağımsız tokenlere taşındı; otomatik oynatma/seri ödülü kod yolu olmadığı doğrulandı. Denetimde gerçek bir ihlal bulunup düzeltildi: Sihirli Kelimeler'deki "SKOR" göstergesi (puan/sıralama yasağını ihlal ediyordu) kaldırıldı. | Orta |
-| 1.11 | **Gerçek çevrimdışı çalışma** ✅ *Tamamlandı* | `next-pwa`'ya kendi içerik alan adımız (`static.fokusistatistik.com`) ve sabit ses efektleri (`cdn.freesound.org`) için önceliklendirilmiş, yüksek kapasiteli (320/16 kayıt) `runtimeCaching` kuralları eklendi — repoya dosya kopyalanmadı. `npm run build` ile üretilen `sw.js`'te doğrulandı (dev modda next-pwa kapalı olduğu için). | Orta |
-| 1.12 | **Test ve deneme protokolü** ✅ *Tamamlandı (Vitest+RTL)* | Kritik akışlar (şifre hash'leme, seviye ilerlemesi/günlük limit mantığı, Türkçe ünlü uyumu) için 20 otomatik test yazıldı. *Playwright/uçtan-uca UI testi bu loop'un kapsamı dışında tutuldu — 1.8 GameShell refaktörüyle birlikte ayrı bir loop'a bırakıldı.* | Orta |
-| 1.13 | **Audit log altyapısı** ✅ *Tamamlandı* | `AuditLog` tablosu ve `logAudit()` yardımcı fonksiyonu kuruldu; giriş/çıkış/başarısız giriş denemesi olaylarına bağlandı. Ebeveyn paneli olayları (ayar değişikliği, içerik ekleme/silme vb.) Faz 2.1 panel kodlandıkça bu altyapıya eklenecek — olay tipleri şimdiden "provisional" işaretiyle tanımlandı. | Orta |
-| 1.14 | **Merkezi bildirim altyapısı** ✅ *Tamamlandı (kısmi)* | Toast kuyruğu ve `ToastHost` bileşeni kuruldu, mevcut 3 oyunun doğru/yanlış geri bildirimi bu sistemden geçiyor. Ebeveyne yönelik ('parent' kapsamlı) bildirimler için kuyruk hazır ama henüz tüketicisi yok — sakinleştirme modu (3.2b) ve rozet (2.8b) yazıldığında bağlanacak. | Orta |
-| 1.15 | **Hesap silme ve veri temizleme akışı** *(Kritik)* | Ebeveyn hesabı kapatmayı talep ettiğinde: önce zorunlu bir şifreli yedek alınır (Faz 3.11 mekanizmasıyla), ardından "bu işlem geri alınamaz" uyarısı gösterilir, sonra 24–48 saatlik bir **vazgeçme penceresi** başlar. Pencere dolunca gerçek silme yapılır ve audit log'a işlenir. Bu, Loop Kuralları'ndaki "geri dönüşsüz işlem" risk eşiğinin uygulamadaki karşılığıdır. | Orta |
-| 1.16 | **Arka plan geçiş bildirimi** ✅ *Tamamlandı* | Page Visibility API ile ~15sn+ arka planda kalıp geri dönüldüğünde ebeveyne bir toast gider (`useBackgroundAwareness`). Merkezi bildirim kuyruğunun `'parent'` kapsamının **ilk gerçek tüketicisi** — `ToastHost` artık bunu da (ayrı konum/stille) gösteriyor. Anlık konum/aktivite takibi yok. | Düşük |
-| 1.17 | **Duyusal ayarların merkezi bağlanması** ✅ *Tamamlandı* *(1. loop'ta keşfedilen boşluk)* | `dailyScreenLimit` artık tüm oyunlar genelinde tek bir günlük bütçe (yeni `DailyUsage` tablosu); `reduceMotion`/`highContrast` `<html data-*>` özniteliklerine, `speechEnabled` `AudioProvider`'a bağlandı. | Yüksek |
-| 1.18 | **Navigasyon iskeleti ve çıkış kontrolü** ✅ *Tamamlandı* *(2. loop'ta keşfedilen boşluk)* | Çıkış kontrolü ebeveyn kapısının içine eklendi. Kalıcı navigasyon iskeleti (`navAreas.ts` + `NavGrid`): Faz 1-3'te planlanan 10 alanın tamamı en azından bir yuva olarak menüde — yazılmamış olanlar "yakında" rozetiyle sakin/kilitli. `Header`/`ParentFooter` token katmanına taşındı. | Yüksek |
+| 1.1 | **Kullanıcı ve kimlik altyapısı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 1.2 | **Dinamik kimlik: "Adının Dünyası"** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Düşük |
+| 1.3 | **Tek giriş, korumalı yönetim alanı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.4 | **İçeriği veritabanına taşı** ✅ *(Kritik)* | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 1.4b | **Çocuk profili şeması: ilgi alanı ve duyusal profil** ✅ *(Kritik)* | *Tamamlandı (yalnızca şema) — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 1.5 | **Seslendirmeyi aç** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Düşük |
+| 1.6 | **Tasarım tokeni katmanı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.7 | **Üç cihaz ölçeklemesi** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.8 | **Ortak oyun soyutlaması** ✅ | *Tamamlandı ("ortak kabuk, ayrı ilerleme modelleri") — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 1.9 | **Papatya görsel kimliği** ✅ | *Tamamlandı (teknik iskele) — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.10 | **Ekran sağlığı temeli** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.11 | **Gerçek çevrimdışı çalışma** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.12 | **Test ve deneme protokolü** ✅ | *Tamamlandı (Vitest+RTL) — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.13 | **Audit log altyapısı** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.14 | **Merkezi bildirim altyapısı** ✅ | *Tamamlandı (kısmi) — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Orta |
+| 1.15 | **Hesap silme ve veri temizleme akışı** *(Kritik)* | Ebeveyn hesabı kapatmayı talep ettiğinde: önce zorunlu bir şifreli yedek alınır (Faz 3.11 mekanizmasıyla), ardından "bu işlem geri alınamaz" uyarısı gösterilir, sonra 24–48 saatlik bir **vazgeçme penceresi** başlar. Pencere dolunca gerçek silme yapılır ve audit log'a işlenir. Bu, Loop Kuralları'ndaki "geri dönüşsüz işlem" risk eşiğinin uygulamadaki karşılığıdır. **Bilerek ertelendi** — Faz 3.11'in şifreli yedekleme mekanizmasını bekliyor. | Orta |
+| 1.16 | **Arka plan geçiş bildirimi** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Düşük |
+| 1.17 | **Duyusal ayarların merkezi bağlanması** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
+| 1.18 | **Navigasyon iskeleti ve çıkış kontrolü** ✅ | *Tamamlandı — özet: [YAPILANLAR](YOL-HARITASI-YAPILANLAR.md).* | Yüksek |
 
 **Faz Çıkışı** — Melike kendi adıyla giriş yapar, *Melike'nin Dünyası* onu karşılar, uygulama onunla Türkçe konuşur, üç oyun da telefonda ve PC'de düzgün ölçeklenir, ilerlemesi hesabına kaydedilir, günlük süre limiti fiilen çalışır ve internet olmadan da her şey açılır. Yeni bir kelime eklemek artık kod değişikliği gerektirmez. Ebeveyn, çocuğun ilgi alanlarını ve duyusal profilini kaydedebilir — bu veri henüz kullanılmasa da (Faz 2.10'u bekler) şemada hazır durur. Her ebeveyn işlemi audit log'a düşer, bildirimler tek merkezi kaynaktan çıkar, çocuk uygulamayı arka plana attığında ebeveyn haberdar olur. *(1.15 hesap silme akışı henüz yok — Faz 3.11'deki şifreli yedekleme mekanizmasını bekliyor, bu yüzden Faz 1'in geri kalanından ayrı olarak açık bırakıldı.)* Ebeveyn kapısından çıkış yapılabilir, menüde Faz 3'e kadar planlanan tüm alanlar — henüz yazılmamış olsa bile — en azından bir yuva olarak görünür.
 
