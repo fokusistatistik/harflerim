@@ -13,6 +13,8 @@ interface LevelState {
     dailyScreenSeconds: number;
     dailyScreenLimit: number;
     sessionId: string | null;
+    /** Faz 1.23 — kişiselleştirme için (ör. "X ile Harfleri Keşfet"). */
+    firstName: string;
 
     // Actions
     initSession: (
@@ -22,7 +24,8 @@ interface LevelState {
         isGameComplete: boolean,
         isDayComplete: boolean,
         dailyScreenSeconds: number,
-        dailyScreenLimit: number
+        dailyScreenLimit: number,
+        firstName: string
     ) => void;
     advanceLevel: (isCorrect: boolean, targetLetter: string, reactionTime: number) => void;
     /**
@@ -51,8 +54,9 @@ export const useLevelStore = create<LevelState>((set, get) => ({
     dailyScreenSeconds: 0,
     dailyScreenLimit: 1800,
     sessionId: null,
+    firstName: '',
 
-    initSession: (sessionId, level, duration, isGameComplete, isDayComplete, dailyScreenSeconds, dailyScreenLimit) => {
+    initSession: (sessionId, level, duration, isGameComplete, isDayComplete, dailyScreenSeconds, dailyScreenLimit, firstName) => {
         const gameDone = isGameComplete || level > TOTAL_LEVELS;
         set({
             sessionId,
@@ -62,6 +66,7 @@ export const useLevelStore = create<LevelState>((set, get) => ({
             isDayComplete,
             dailyScreenSeconds,
             dailyScreenLimit,
+            firstName,
         });
     },
 

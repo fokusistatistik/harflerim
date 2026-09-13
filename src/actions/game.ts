@@ -16,6 +16,8 @@ export interface GameState {
     dailyScreenSeconds: number;
     dailyScreenLimit: number;
     gameId: string;
+    /** Faz 1.23 — oyun bileşenlerinin kişiselleştirme için (ör. "X ile Harfleri Keşfet"). */
+    firstName: string;
 }
 
 export async function getDailySession(gameId: string = 'letter-hunt'): Promise<GameState> {
@@ -57,7 +59,8 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
         isDayComplete: dailyUsage.isDayComplete,
         dailyScreenSeconds: dailyUsage.totalSeconds,
         dailyScreenLimit: dailyUsage.dailyScreenLimit,
-        gameId: session.gameId
+        gameId: session.gameId,
+        firstName: user.firstName
     };
 }
 

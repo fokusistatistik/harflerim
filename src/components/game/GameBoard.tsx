@@ -47,7 +47,7 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 };
 
 export default function GameBoard() {
-    const { currentLevel, advanceLevel, getLevelConfig, isGameComplete, isDayComplete, sessionId } = useLevelStore();
+    const { currentLevel, advanceLevel, getLevelConfig, isGameComplete, isDayComplete, sessionId, firstName } = useLevelStore();
     const isLocked = isGameComplete || isDayComplete;
     const { askLetter, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
@@ -229,7 +229,9 @@ export default function GameBoard() {
                 <h1 className="text-3xl md:text-5xl font-hand font-bold text-softIndigo mb-2 text-center bg-white/60 px-8 py-2 rounded-full backdrop-blur-sm shadow-sm border border-white/50">
                     Bugünün Macerası
                 </h1>
-                <p className="text-gray-500 mb-12 font-medium">Melike ile Harfleri Keşfet</p>
+                <p className="text-gray-500 mb-12 font-medium">
+                    {firstName ? `${firstName} ile Harfleri Keşfet` : 'Harfleri Keşfet'}
+                </p>
 
                 {/* Vertical Winding Map Container */}
                 <div className="relative w-full max-w-md lg:max-w-lg pb-32">
