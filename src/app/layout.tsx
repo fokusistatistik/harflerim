@@ -6,6 +6,7 @@ import { Header } from '@/components/ui/Header';
 import { DayComplete } from '@/components/ui/DayComplete';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { ParentGate } from '@/components/ui/ParentGate';
+import { BackgroundAwareness } from '@/components/ui/BackgroundAwareness';
 import { APP_NAME } from '@/config/brand';
 import { getCurrentUser } from '@/lib/auth';
 import './globals.css';
@@ -67,6 +68,7 @@ export default async function RootLayout({
                     {user && <Header />}
                     {user && <ToastHost />}
                     {user && <ParentGate />}
+                    {user && <BackgroundAwareness />}
                     {children}
                     {user && <DayComplete />}
                 </AudioProvider>
