@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users } from 'lucide-react';
+import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { verifyParentPin, changeParentPin } from '@/actions/parentGate';
 import { logout } from '@/actions/auth';
@@ -10,16 +10,18 @@ import { SensoryTab } from './parentPanel/SensoryTab';
 import { ChildProfileTab } from './parentPanel/ChildProfileTab';
 import { ProgressTab } from './parentPanel/ProgressTab';
 import { FamilyMembersTab } from './parentPanel/FamilyMembersTab';
+import { MusicTab } from './parentPanel/MusicTab';
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
 /**
- * Faz 2.1 — Ebeveyn Yönetim Alanı'nın sekmeleri. Yeni sekmeler (Müzik
- * Faz 2.3'te) bu diziye eklenerek büyür — panelin kendisi yeniden yazılmaz.
+ * Faz 2.1 — Ebeveyn Yönetim Alanı'nın sekmeleri. Yeni bir özellik eklendikçe
+ * bu diziye bir madde daha eklenir — panelin kendisi yeniden yazılmaz.
  */
 const TABS = [
     { key: 'genel', label: 'Genel', icon: Lock },
     { key: 'aile', label: 'Aile Bireyleri', icon: Users },
+    { key: 'muzik', label: 'Müzik', icon: Music },
     { key: 'profil', label: 'Çocuk Profili', icon: Sparkles },
     { key: 'duyusal', label: 'Duyusal', icon: HeartPulse },
     { key: 'sure', label: 'Ekran Süresi', icon: Clock },
@@ -248,14 +250,13 @@ export function ParentGate() {
                                 </div>
                             )}
                             {activeTab === 'aile' && <FamilyMembersTab />}
+                            {activeTab === 'muzik' && <MusicTab />}
                             {activeTab === 'profil' && <ChildProfileTab />}
                             {activeTab === 'duyusal' && <SensoryTab />}
                             {activeTab === 'sure' && <ScreenTimeTab />}
                             {activeTab === 'ilerleme' && <ProgressTab />}
                         </div>
 
-                        {/* Faz 2.3'te "Müzik" sekmesi TABS dizisine eklenerek buraya
-                            katılacak — panel yeniden yazılmaz. */}
                     </div>
                 )}
             </div>

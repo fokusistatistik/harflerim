@@ -28,6 +28,7 @@ model User {
   dailyUsage    DailyUsage[]
   skillAttempts SkillAttempt[]
   familyMembers FamilyMember[]
+  songs         Song[]
 }
 
 /// Faz 2.2 — aile bireyleri kaydı. Yalnızca ebeveyn ekler/düzenler/siler;
@@ -46,6 +47,37 @@ model FamilyMember {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+/// Faz 2.3 — Müzik köşesi. Ebeveyn bir YouTube linki yapıştırır; başlık ve
+/// kapak YouTube oEmbed uç noktasından (API anahtarı gerekmeden) çekilir
+/// (bkz. src/lib/youtube.ts). `dailyLoopLimit` genel günlük ekran süresi
+/// bütçesine (DailyUsage) EK, şarkı bazlı ayrıntılı bir sınırdır.
+model Song {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  youtubeId      String
+  title          String
+  thumbnailUrl   String
+  dailyLoopLimit Int      @default(3)
+  createdAt      DateTime @default(now())
+
+  playCounts SongPlayCount[]
+
+  @@index([userId])
+}
+
+/// Bir şarkının bir gündeki çalınma sayısı — DailyUsage'ın şarkı bazlı
+/// karşılığı, aynı "her satır bir gün" desenini izler.
+model SongPlayCount {
+  id        String @id @default(uuid())
+  songId    String
+  song      Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  date      String
+  playCount Int    @default(0)
+
+  @@unique([songId, date])
 }
 
 /// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).
