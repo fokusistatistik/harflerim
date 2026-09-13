@@ -31,6 +31,7 @@ model User {
   songs         Song[]
   videos        Video[]
   drawings      Drawing[]
+  badges        Badge[]
 }
 
 /// Faz 2.2 — aile bireyleri kaydı. Yalnızca ebeveyn ekler/düzenler/siler;
@@ -108,6 +109,24 @@ model Drawing {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+/// Faz 2.8b — beceri rozetleri. Bir Skill (1.20 katmanı) bir kullanıcı için
+/// ilk kez `isCorrect: true` ile tamamlandığında otomatik oluşturulur (bkz.
+/// src/actions/skills.ts recordSkillAttempt). Emoji/label o anki Skill.label
+/// ile denormalize edilip satıra gömülür — sabit ve öngörülebilir, PUAN/
+/// SIRALAMA/SERİ DEĞİL (roadmap "Rozet var, rekabet yok" ilkesi).
+model Badge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  emoji     String
+  label     String
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, skillId])
 }
 
 /// Faz 1.19 — "bir ebeveyn → çoklu çocuk" temeli (yalnızca şema, kullanılmıyor).
@@ -281,6 +300,7 @@ model Skill {
   label String
 
   attempts SkillAttempt[]
+  badges   Badge[]
 }
 
 /// Her oyunun her denemesi (doğru/yanlış, tepki süresi varsa) buraya düşer.

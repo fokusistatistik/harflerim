@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getUsageStats, type UsageStats } from '@/actions/usageStats';
+import { listBadges, type BadgeData } from '@/actions/badges';
 
 function formatMinutes(seconds: number): string {
     return `${Math.round(seconds / 60)} dk`;
@@ -9,13 +10,15 @@ function formatMinutes(seconds: number): string {
 
 export function ProgressTab() {
     const [stats, setStats] = useState<UsageStats | null>(null);
+    const [badges, setBadges] = useState<BadgeData[]>([]);
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
-        getUsageStats().then((result) => {
+        Promise.all([getUsageStats(), listBadges()]).then(([usageResult, badgeResult]) => {
             if (!cancelled) {
-                setStats(result);
+                setStats(usageResult);
+                setBadges(badgeResult);
                 setLoaded(true);
             }
         });
@@ -52,6 +55,28 @@ export function ProgressTab() {
                     </div>
                 ))}
             </dl>
+
+            <div className="border-t border-papatya-rule pt-3">
+                <p className="text-p-sm font-bold text-papatya-ink-soft mb-2">
+                    Kazanılan rozetler ({badges.length})
+                </p>
+                {badges.length === 0 ? (
+                    <p className="text-p-sm text-papatya-ink-soft">Henüz rozet kazanılmadı.</p>
+                ) : (
+                    <ul className="flex flex-wrap gap-2">
+                        {badges.map((badge) => (
+                            <li
+                                key={badge.id}
+                                title={new Date(badge.earnedAt).toLocaleDateString('tr-TR')}
+                                className="flex items-center gap-1 bg-papatya-cream rounded-p-md px-3 py-2 text-p-sm font-bold"
+                            >
+                                <span className="text-p-lg" aria-hidden="true">{badge.emoji}</span>
+                                {badge.label}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </div>
     );
 }

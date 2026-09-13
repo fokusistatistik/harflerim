@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockDb = {
     skill: { findUnique: vi.fn() },
     skillAttempt: { create: vi.fn() },
+    badge: { create: vi.fn() },
 };
 
 const mockGetCurrentUser = vi.fn();
@@ -63,6 +64,34 @@ describe('recordSkillAttempt', () => {
     it('swallows unexpected db errors instead of throwing (never breaks the game flow)', async () => {
         mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
         mockDb.skill.findUnique.mockRejectedValue(new Error('db unavailable'));
+
+        await expect(recordSkillAttempt('harf-tanima', 'letter-hunt', true)).resolves.toBeUndefined();
+    });
+
+    it('awards a badge with the mapped emoji when isCorrect is true', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
+        mockDb.skill.findUnique.mockResolvedValue({ id: 'skill-1', key: 'harf-tanima', label: 'Harf Tanıma' });
+
+        await recordSkillAttempt('harf-tanima', 'letter-hunt', true);
+
+        expect(mockDb.badge.create).toHaveBeenCalledWith({
+            data: { userId: 'user-1', skillId: 'skill-1', emoji: '🔤', label: 'Harf Tanıma' },
+        });
+    });
+
+    it('does not attempt to award a badge when isCorrect is false', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
+        mockDb.skill.findUnique.mockResolvedValue({ id: 'skill-1', key: 'harf-tanima', label: 'Harf Tanıma' });
+
+        await recordSkillAttempt('harf-tanima', 'letter-hunt', false);
+
+        expect(mockDb.badge.create).not.toHaveBeenCalled();
+    });
+
+    it('silently ignores an already-earned badge (unique constraint) without throwing', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
+        mockDb.skill.findUnique.mockResolvedValue({ id: 'skill-1', key: 'harf-tanima', label: 'Harf Tanıma' });
+        mockDb.badge.create.mockRejectedValue(new Error('Unique constraint failed'));
 
         await expect(recordSkillAttempt('harf-tanima', 'letter-hunt', true)).resolves.toBeUndefined();
     });
