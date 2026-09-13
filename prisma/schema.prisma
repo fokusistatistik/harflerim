@@ -30,6 +30,7 @@ model User {
   familyMembers FamilyMember[]
   songs         Song[]
   videos        Video[]
+  drawings      Drawing[]
 }
 
 /// Faz 2.2 — aile bireyleri kaydı. Yalnızca ebeveyn ekler/düzenler/siler;
@@ -90,6 +91,19 @@ model Video {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
+  filePath  String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Faz 2.6 — çizim tahtası. Çocuğun çizdiği her tuval PNG olarak yerel
+/// dosya sistemine kaydedilir (bkz. mediaStorage.ts) — ebeveyn için zaman
+/// içindeki gelişimin görünür bir kaydı, bir başarı/puan ölçütü değil.
+model Drawing {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   filePath  String
   createdAt DateTime @default(now())
 
