@@ -32,6 +32,10 @@ module.exports = {
                     sky: 'rgb(var(--papatya-sky) / <alpha-value>)',
                     rose: 'rgb(var(--papatya-rose) / <alpha-value>)',
                     rule: 'rgb(var(--papatya-rule) / <alpha-value>)',
+                    // Temadan bağımsız (bkz. globals.css) — yalnızca DayComplete gibi
+                    // kasıtlı olarak hep-karanlık kalması gereken tekil ekranlar için.
+                    night: 'rgb(var(--papatya-night) / <alpha-value>)',
+                    'night-ink': 'rgb(var(--papatya-night-ink) / <alpha-value>)',
                 },
             },
             spacing: {

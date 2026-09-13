@@ -11,13 +11,13 @@ export function DayComplete() {
     if (!isDayComplete) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] bg-indigo-950 flex flex-col items-center justify-center text-white overflow-hidden">
+        <div className="fixed inset-0 z-[60] bg-papatya-night flex flex-col items-center justify-center text-papatya-night-ink overflow-hidden">
             {/* Stars Background */}
             <div className="absolute inset-0 opacity-50">
                 {[...Array(20)].map((_, i) => (
                     <div
                         key={i}
-                        className="absolute bg-white rounded-full"
+                        className="absolute bg-papatya-night-ink rounded-full"
                         style={{
                             top: `${Math.random() * 100}%`,
                             left: `${Math.random() * 100}%`,
@@ -35,22 +35,24 @@ export function DayComplete() {
                 transition={{ duration: 1 }}
                 className="flex flex-col items-center gap-8 relative z-10"
             >
-                {/* Sleeping Moon */}
+                {/* Sleeping Moon — Papatya doldu, gün sakince kapanıyor. Otomatik
+                    yönlendirme, "sonraki" önerisi veya "biraz daha" seçeneği yok:
+                    bu, ekranın gerçekten bittiği yumuşak ama kesin son ekranıdır. */}
                 <motion.div
                     animate={{ rotate: [0, 5, 0] }}
                     transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                     className="relative"
                 >
-                    <Moon size={120} className="text-yellow-200 fill-yellow-200" />
-                    <div className="absolute top-8 right-6 text-indigo-900 font-bold text-4xl opacity-50">zZz</div>
+                    <Moon size={120} className="text-papatya-petal fill-papatya-petal" />
+                    <div className="absolute top-8 right-6 text-papatya-night font-bold text-4xl opacity-50">zZz</div>
                 </motion.div>
 
                 <h1 className="text-5xl md:text-6xl font-hand font-bold text-center px-4">
                     Harfler Uyudu. <br />
-                    <span className="text-yellow-300">Yarın Görüşürüz!</span>
+                    <span className="text-papatya-petal">Yarın Görüşürüz!</span>
                 </h1>
 
-                <p className="text-xl text-indigo-200 max-w-md text-center">
+                <p className="text-xl text-papatya-night-ink/80 max-w-md text-center">
                     Bugün harika bir iş çıkardın. Şimdi dinlenme zamanı.
                 </p>
             </motion.div>

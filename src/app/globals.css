@@ -22,6 +22,13 @@
   --papatya-rose: 196 117 106; /* #C4756A */
   --papatya-rule: 227 220 201; /* #E3DCC9 */
 
+  /* Kasıtlı olarak TEMADAN BAĞIMSIZ — açık/koyu mod ne olursa olsun hep aynı
+     kalır. Yalnızca "gece" temalı tek amaçlı ekranlar için (bkz. DayComplete):
+     bu, sistem/ebeveyn tema tercihiyle DEĞİŞMEMESİ gereken tek yerdir, bu
+     yüzden bilerek dark-mode bloklarının dışında bırakılmıştır. */
+  --papatya-night: 42 39 34; /* light-mode ink ile aynı */
+  --papatya-night-ink: 251 248 239; /* light-mode cream ile aynı */
+
   --papatya-space-1: 4px;
   --papatya-space-2: 8px;
   --papatya-space-3: 16px;

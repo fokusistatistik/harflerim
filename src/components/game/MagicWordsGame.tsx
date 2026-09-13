@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, RefreshCw, Home, Infinity as InfinityIcon } from 'lucide-react';
+import { Mic, MicOff, RefreshCw, Home } from 'lucide-react';
 import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
 import confetti from 'canvas-confetti';
@@ -108,7 +108,7 @@ export default function MagicWordsGame() {
     const [gameWords, setGameWords] = useState<{ word: string; img: string }[]>([]);
 
     // Progress & Sound
-    const { progress, updateProgress, loaded } = useMagicWordsProgress();
+    const { updateProgress, loaded } = useMagicWordsProgress();
     const { data: content } = useGameContent();
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
@@ -250,13 +250,10 @@ export default function MagicWordsGame() {
                 <Link href="/" className="bg-white/80 backdrop-blur p-3 rounded-full shadow-sm hover:shadow-md transition">
                     <Home className="text-gray-600" size={24} />
                 </Link>
-                <div className="bg-white/80 backdrop-blur px-5 py-2 rounded-full shadow-sm flex items-center gap-3 border border-indigo-50">
-                    <InfinityIcon size={20} className="text-indigo-500" />
-                    <div className="flex flex-col leading-none">
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">SKOR</span>
-                        <span className="text-lg font-black text-indigo-600 font-mono">{progress.success}</span>
-                    </div>
-                </div>
+                {/* Faz 1.10: puan/skor göstergesi kaldırıldı — Yönetişim'deki
+                    anti-bağımlılık ilkesi (puan/sıralama yok) bu oyun için de geçerli.
+                    progress.success dahili olarak izlenmeye devam ediyor (ör. gelecekte
+                    ebeveyn raporu için) ama çocuğa "skor" olarak gösterilmiyor. */}
                 <div className={clsx("hidden md:flex px-4 py-2 rounded-full font-bold text-sm items-center gap-2", listening ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
                     <div className={clsx("w-2.5 h-2.5 rounded-full", listening ? "bg-green-600 animate-pulse" : "bg-red-500")} />
                     {listening ? "Dinliyor" : "Bekliyor"}
