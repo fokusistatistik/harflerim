@@ -5,6 +5,7 @@ import { useAudio } from '@/components/AudioProvider';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useHintTimer } from '@/hooks/useHintTimer';
+import { useVoiceConfirm } from '@/hooks/useVoiceConfirm';
 import { recordSkillAttempt } from '@/actions/skills';
 import { listFamilyMembers, type FamilyMemberData } from '@/actions/familyMembers';
 import { GameHud } from './GameHud';
@@ -89,6 +90,18 @@ export default function FamilyAlbumGame() {
             }, 900);
         }
     };
+
+    // Faz 2.9 — sözlü onay: doğru ismi söylemek de dokunmakla aynı sonucu
+    // verir (kimin konuştuğunu ayırt etmez, bilinçli bir ara adım — bkz.
+    // useVoiceConfirm doc-comment'i). Dokunmatik yol HER ZAMAN çalışmaya
+    // devam eder; bu yalnızca ek bir alternatif, tek yol değil.
+    useVoiceConfirm(
+        target?.name ?? null,
+        () => {
+            if (target) handleSelect(target);
+        },
+        !isLocked && !!target && !dayBudget?.isDayComplete
+    );
 
     if (!loaded) {
         return (
