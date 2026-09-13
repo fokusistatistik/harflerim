@@ -12,6 +12,7 @@ import {
     MessageSquare,
     ShieldCheck,
     Lock,
+    Puzzle,
 } from 'lucide-react';
 import { NAV_AREAS, type NavArea, type NavAccent } from '@/config/navAreas';
 import { useParentGateStore } from '@/store/parentGateStore';
@@ -19,6 +20,7 @@ import { useParentGateStore } from '@/store/parentGateStore';
 const ICONS: Record<string, typeof Mic> = {
     'magic-words': Mic,
     'memory-match': LayoutGrid,
+    'visual-match': Puzzle,
     'music-corner': Music,
     cartoon: Clapperboard,
     'family-album': Images,

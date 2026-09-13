@@ -25,6 +25,14 @@ interface LevelState {
         dailyScreenLimit: number
     ) => void;
     advanceLevel: (isCorrect: boolean, targetLetter: string, reactionTime: number) => void;
+    /**
+     * Faz 1.8 — Harf Avı dışındaki oyunlar (Hafıza Kartları, Sihirli
+     * Kelimeler, Görsel Eşleştirme) kendi süre raporlarını buradan, ortak
+     * useGameDayBudget hook'u üzerinden bu tek kaynağa yazar. Böylece
+     * Header'daki DaisyProgress ve global DayComplete ekranı hangi oyun
+     * oynanırsa oynansın aynı, güncel durumu yansıtır.
+     */
+    syncDailyUsage: (dailyScreenSeconds: number, dailyScreenLimit: number, isDayComplete: boolean) => void;
 
     getLevelConfig: (level: number) => {
         optionCount: number;
@@ -95,6 +103,10 @@ export const useLevelStore = create<LevelState>((set, get) => ({
                 });
             }
         }
+    },
+
+    syncDailyUsage: (dailyScreenSeconds, dailyScreenLimit, isDayComplete) => {
+        set({ dailyScreenSeconds, dailyScreenLimit, isDayComplete });
     },
 
     getLevelConfig: (level) => {

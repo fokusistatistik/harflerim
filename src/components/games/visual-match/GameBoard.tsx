@@ -20,16 +20,16 @@ import Link from 'next/link';
 
 import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
-// import { useGameAnalytics } from '@/hooks/useGameAnalytics';
+import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 
 const LETTERS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'Y', 'Z'];
 
 export function GameBoard() {
-    // const { logEvent, resetTimer } = useGameAnalytics('visual-match');
-
-    // Sounds - assuming these files will exist in public/sounds/
-    const [playSuccess] = useSound('/sounds/ding.mp3', { volume: 0.5 });
-    const [playPop] = useSound('/sounds/pop.mp3', { volume: 0.25 });
+    // Faz 1.8: Ses dosyası adları düzeltildi (ding.mp3/pop.mp3 hiç var olmayan
+    // dosyalardı) — projede zaten mevcut olan public/sounds/*.wav kullanılıyor.
+    const [playSuccess] = useSound('/sounds/success.wav', { volume: 0.5 });
+    const [playPop] = useSound('/sounds/pop.wav', { volume: 0.25 });
+    const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
 
     const [targetLetter, setTargetLetter] = useState('A');
     const [isMatched, setIsMatched] = useState(false);
@@ -68,12 +68,14 @@ export function GameBoard() {
     }, []);
 
     const handleDragStart = (event: DragStartEvent) => {
+        if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
         setActiveId(event.active.id as string);
         playPop();
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         setActiveId(null);
+        if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
         const { over, active } = event;
 
         if (over && over.id === 'target-zone') {
@@ -151,7 +153,7 @@ export function GameBoard() {
                     {/* Draggable Letter */}
                     {!isMatched && (
                         <div className="mt-8">
-                            <Draggable id={targetLetter}>
+                            <Draggable id={targetLetter} disabled={dayBudget?.isDayComplete}>
                                 <div
                                     className="w-40 h-40 md:w-56 md:h-56 bg-softIndigo rounded-3xl flex items-center justify-center text-8xl font-bold text-white shadow-xl cursor-grab active:cursor-grabbing border-4 border-white select-none"
                                     style={{ fontFamily: 'var(--font-andika)' }}

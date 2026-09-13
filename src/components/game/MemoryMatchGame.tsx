@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useGameContent } from '@/hooks/useGameContent';
+import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 // import { getDailySession } from '@/actions/game';
 
 // Card Interface
@@ -42,6 +43,7 @@ export default function MemoryMatchGame() {
     const { celebrateSuccess, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
     const { data: content } = useGameContent();
+    const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
 
     // Sounds
     const [playFlip] = useSound('https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3', { volume: 0.5 });
@@ -58,6 +60,7 @@ export default function MemoryMatchGame() {
 
     const startLevel = (lvl: number) => {
         if (!content) return; // İçerik henüz veritabanından gelmedi (Faz 1.4)
+        if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
 
         // Difficulty Logic:
         // Lvl 1-3: 6 cards (3 pairs)
@@ -238,7 +241,7 @@ export default function MemoryMatchGame() {
                     {/* Nodes */}
                     {[...Array(TOTAL_LEVELS)].map((_, i) => {
                         const id = i + 1;
-                        const isUnlocked = id <= maxReachedLevel;
+                        const isUnlocked = id <= maxReachedLevel && !dayBudget?.isDayComplete;
                         const isCompleted = id < maxReachedLevel;
                         const isCurrent = id === maxReachedLevel;
 

@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useAudio } from '@/components/AudioProvider';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useGameContent } from '@/hooks/useGameContent';
+import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 
 // --- PERSISTENCE HELPER ---
 const useMagicWordsProgress = () => {
@@ -110,6 +111,7 @@ export default function MagicWordsGame() {
     // Progress & Sound
     const { updateProgress, loaded } = useMagicWordsProgress();
     const { data: content } = useGameContent();
+    const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
     const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
     const { celebrateSuccess, encourageRetry } = useAudio();
@@ -137,6 +139,7 @@ export default function MagicWordsGame() {
 
     // Start Handler
     const handleStartGame = async () => {
+        if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
         setGameStatus('checking');
         setPermissionError(false);
         try {
@@ -215,6 +218,7 @@ export default function MagicWordsGame() {
     useEffect(() => {
         // Safety checks
         if (!currentWordObj || !transcript || gameStatus !== 'playing') return;
+        if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
 
         // If locked, ignore everything
         if (isProcessingRef.current) return;
@@ -233,7 +237,7 @@ export default function MagicWordsGame() {
         if (spoken.includes(target)) {
             handleSuccess();
         }
-    }, [transcript, currentWordObj, handleSuccess, handleSkip, gameStatus]);
+    }, [transcript, currentWordObj, handleSuccess, handleSkip, gameStatus, dayBudget?.isDayComplete]);
 
 
     // Render
