@@ -13,6 +13,8 @@ const SKILLS = [
     { key: 'gorsel-hafiza', label: 'Görsel Hafıza' },
     { key: 'sesli-kelime-tanima', label: 'Sesli Kelime Tanıma' },
     { key: 'golge-eslestirme', label: 'Gölge Eşleştirme' },
+    // Faz 2.5 — aile albümü oyunu.
+    { key: 'sosyal-tanima', label: 'Sosyal Tanıma' },
 ];
 
 async function main() {
