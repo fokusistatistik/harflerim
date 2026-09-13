@@ -46,6 +46,7 @@ export function DaisyProgress({ filledCount, size = 40, className }: DaisyProgre
             role="img"
             aria-label={`Bugünün papatyası: ${clamped}/${TOTAL_PETALS} yaprak dolu`}
         >
+            <title>{`Bugünün papatyası: ${clamped}/${TOTAL_PETALS} yaprak dolu`}</title>
             {Array.from({ length: TOTAL_PETALS }).map((_, i) => {
                 const angle = (360 / TOTAL_PETALS) * i;
                 const isFilled = i < clamped;

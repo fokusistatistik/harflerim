@@ -9,6 +9,7 @@ interface AudioContextValue {
     askLetter: (letter: string) => Promise<void>;
     celebrateSuccess: () => Promise<void>;
     encourageRetry: () => Promise<void>;
+    stop: () => void;
     isSpeaking: boolean;
     isSupported: boolean;
     updateConfig: (config: Partial<AudioConfig>) => void;

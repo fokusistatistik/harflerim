@@ -22,7 +22,7 @@ describe('recordSkillAttempt', () => {
         mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
         mockDb.skill.findUnique.mockResolvedValue({ id: 'skill-1', key: 'harf-tanima', label: 'Harf Tanıma' });
 
-        await recordSkillAttempt('harf-tanima', 'letter-hunt', true, 1200);
+        await recordSkillAttempt('harf-tanima', 'letter-hunt', true, 1200, 1);
 
         expect(mockDb.skillAttempt.create).toHaveBeenCalledWith({
             data: {
@@ -31,11 +31,12 @@ describe('recordSkillAttempt', () => {
                 gameId: 'letter-hunt',
                 isCorrect: true,
                 reactionTime: 1200,
+                hintsUsed: 1,
             },
         });
     });
 
-    it('defaults reactionTime to null when not provided', async () => {
+    it('defaults reactionTime and hintsUsed to null when not provided', async () => {
         mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
         mockDb.skill.findUnique.mockResolvedValue({ id: 'skill-2', key: 'gorsel-hafiza', label: 'Görsel Hafıza' });
 
@@ -43,6 +44,7 @@ describe('recordSkillAttempt', () => {
 
         const call = mockDb.skillAttempt.create.mock.calls[0][0];
         expect(call.data.reactionTime).toBeNull();
+        expect(call.data.hintsUsed).toBeNull();
     });
 
     it('silently no-ops for an unknown skill key (never throws)', async () => {

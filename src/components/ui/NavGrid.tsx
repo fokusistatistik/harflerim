@@ -13,11 +13,19 @@ import {
     ShieldCheck,
     Lock,
     Puzzle,
+    Target,
 } from 'lucide-react';
 import { NAV_AREAS, type NavArea, type NavAccent } from '@/config/navAreas';
 import { useParentGateStore } from '@/store/parentGateStore';
+import { ImageWithFallback } from './ImageWithFallback';
 
+// Faz 3 UX düzeltmesi (2026-09-13) — 'letter-hunt' burada hiç yoktu (o kart
+// hep imageSrc kullandığı için hiç Icon'a düşmezdi). ImageWithFallback
+// eklenince (kırık görsel → ikon geçişi) her area.imageSrc'li kart için de
+// GERÇEK bir yedek ikon gerekli hale geldi — kullanıcı testinde görsel 404
+// verince `<Icon>` undefined olup React'i çökertiyordu (bulundu/düzeltildi).
 const ICONS: Record<string, typeof Mic> = {
+    'letter-hunt': Target,
     'magic-words': Mic,
     'memory-match': LayoutGrid,
     'visual-match': Puzzle,
@@ -113,7 +121,7 @@ function CardShell({ area, children }: { area: NavArea; children: React.ReactNod
 
 export function NavGrid() {
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 lg:gap-8 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-5 w-full">
             {NAV_AREAS.map((area) => {
                 const accent = ACCENT_CLASSES[area.accent];
                 const Icon = ICONS[area.id];
@@ -122,7 +130,16 @@ export function NavGrid() {
                     <CardShell key={area.id} area={area}>
                         <div className="w-20 h-20 lg:w-24 lg:h-24 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 relative">
                             {area.imageSrc ? (
-                                <img src={area.imageSrc} alt={area.label} className="w-full h-full object-contain drop-shadow-lg" />
+                                <ImageWithFallback
+                                    src={area.imageSrc}
+                                    alt={area.label}
+                                    className="w-full h-full object-contain drop-shadow-lg"
+                                    fallback={
+                                        <div className={`${accent.iconBg} ${accent.iconText} p-4 rounded-full`}>
+                                            <Icon size={40} strokeWidth={2} />
+                                        </div>
+                                    }
+                                />
                             ) : (
                                 <div className={`${accent.iconBg} ${accent.iconText} p-4 rounded-full`}>
                                     <Icon size={40} strokeWidth={2} />

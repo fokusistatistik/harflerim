@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { listSongs, addSong, deleteSong, type SongData } from '@/actions/music';
+import { listSongs, addSong, updateSongLoopLimit, deleteSong, type SongData } from '@/actions/music';
 
 const CHECKLIST_ITEMS = [
     'Videoda ani/yüksek ses yok',
@@ -60,6 +60,12 @@ export function MusicTab() {
         refresh();
     };
 
+    const handleLoopLimitChange = async (id: string, value: number) => {
+        if (!Number.isFinite(value) || value < 1 || value > 20) return;
+        setSongs((prev) => prev.map((s) => (s.id === id ? { ...s, dailyLoopLimit: value } : s)));
+        await updateSongLoopLimit(id, value);
+    };
+
     if (!loaded) {
         return <p className="text-p-sm text-papatya-ink-soft text-center py-6">Yükleniyor...</p>;
     }
@@ -74,9 +80,19 @@ export function MusicTab() {
                             <img src={song.thumbnailUrl} alt={song.title} className="w-14 h-10 object-cover rounded-p-md" />
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-p-sm truncate">{song.title}</p>
-                                <p className="text-p-sm text-papatya-ink-soft">
-                                    Günlük {song.playsToday}/{song.dailyLoopLimit} kez
-                                </p>
+                                <label className="flex items-center gap-1 text-p-sm text-papatya-ink-soft">
+                                    Günlük {song.playsToday}/
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={20}
+                                        value={song.dailyLoopLimit}
+                                        onChange={(e) => handleLoopLimitChange(song.id, Number(e.target.value))}
+                                        aria-label={`${song.title} günlük tekrar hakkı`}
+                                        className="w-14 border border-papatya-rule rounded-p-sm px-1 py-0.5 bg-papatya-surface text-center"
+                                    />
+                                    kez
+                                </label>
                             </div>
                             <button
                                 type="button"

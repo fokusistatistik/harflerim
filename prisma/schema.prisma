@@ -13,6 +13,7 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
+  avatarUrl    String? // 2026-09-13 — Genel sekmesinden yüklenir (mediaStorage.ts, "avatar" alt klasörü). Önceki hardcoded dead-CDN placeholder'ın yerini alır.
   tier         String   @default("basic")
   createdAt    DateTime @default(now())
 
@@ -316,7 +317,45 @@ model SkillAttempt {
   gameId       String // "letter-hunt" | "memory-match" | "magic-words" | "visual-match"
   isCorrect    Boolean
   reactionTime Int? // Milisaniye — her oyunda ölçülemeyebilir (ör. konuşma tanıma)
+  hintsUsed    Int? // Faz 3.1 — yalnızca ipucu sistemi olan oyunlarda dolar (şu an yalnızca Harf Avı)
   createdAt    DateTime @default(now())
 
   @@index([userId, skillId])
+}
+
+/// 2026-09-13 — karşılaştırma/tanımlama oyunları için gerçek fotoğrafik
+/// nesne kataloğu (kullanıcının "melike" klasöründeki 88 kare 888×888
+/// görsel). ContentSet/ContentItem (harf-bazlı içerik) deseninden BİLİNÇLİ
+/// OLARAK ayrı tutuldu — bu içerik bir harfe değil KATEGORİYE ve
+/// KARŞILAŞTIRILABİLİR NİTELİKLERE (renk/ağırlık/hacim/boyut) bağlı,
+/// "hangisi kırmızı", "hangisi daha ağır/büyük" gibi oyunlar için geniş
+/// sütun yapısı bilinçli bir tasarım kararı (dar bir key-value tablosu
+/// yerine — kullanıcının "uzun vadeli yönetilebilir geniş sütun yapısı"
+/// isteği). `attributesJson`, henüz öngörülemeyen gelecekteki
+/// karşılaştırma/tanım oyunları için şemayı migrate etmeden genişletmeye
+/// yarayan bir kaçış kapısı. `prisma/seedComparisonItems.ts` ile tohumlanır.
+model ComparisonItem {
+  id       String @id @default(uuid())
+  slug     String @unique // dosya adından türeyen sabit anahtar, örn "araba" — görsel dosya adı ve python okuma script'leriyle ortak
+  name     String // ekranda gösterilecek Türkçe isim, örn "Araba"
+  category String // ana kategori — bkz. seed script'teki sabit küme: hayvan | meyve-sebze | yiyecek | giyim | arac | esya | oyuncak | mobilya | gezegen-gokyuzu | doga
+
+  color    String // baskın renk, Türkçe sabit bir küme (bkz. seed script) — örn "kırmızı"
+  colorHex String? // yaklaşık hex kod — ileride görsel/otomatik renk analizinde doldurulabilir, v1'de boş
+
+  approxWeightKg Float? // gerçek nesnenin yaklaşık ağırlığı (kg) — "hangisi daha ağır" oyunları için. Oyuncak olarak fotoğraflanmış nesnelerde OYUNCAK ölçeği, gerçek hayvan/meyve gibi nesnelerde GERÇEK DÜNYA ölçeği kullanıldı (bkz. seed script başındaki not) — karışık ölçek bilinçli bir ilk-sürüm kararı, gerekirse ayrıştırılabilir.
+  approxVolumeL  Float? // yaklaşık hacim (litre) — kaba bir tahmin, özellikle katı/düzensiz şekilli nesnelerde (ağaç, at gibi) kesin değil
+  approxSizeCm   Float? // gerçek nesnenin en uzun kenarı/boyu (cm) — ham "büyük/küçük" karşılaştırması için
+  sizeCategory   String? // kucuk | orta | buyuk | kocaman — 6-7 yaş için ham cm/kg değerinden daha sezgisel, kaba bir karşılaştırma katmanı
+
+  imageUrl    String // /karsilastirma/araba.jpg (public/karsilastirma altında, 888×888 kare)
+  readingText String // Piper TTS okuma metni (bkz. papatyaPythonClient.ts) — v1'de `name` ile aynı, ileride farklılaşabilir (ör. "kırmızı araba")
+
+  tags           String // virgülle ayrılmış serbest etiketler, esnek arama/filtre için — örn "hayvan,deniz,mavi,yüzen"
+  attributesJson String? // gelecekteki karşılaştırma/tanım oyunları için JSON kaçış kapısı (bkz. yukarıdaki model notu)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([category])
 }

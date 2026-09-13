@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDb = {
-    song: { findMany: vi.fn(), create: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
+    song: { findMany: vi.fn(), create: vi.fn(), findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
     songPlayCount: { findUnique: vi.fn(), upsert: vi.fn() },
 };
 
@@ -21,7 +21,7 @@ vi.mock('@/lib/youtube', () => ({
     fetchYoutubeMeta: mockFetchYoutubeMeta,
 }));
 
-const { listSongs, addSong, deleteSong, reportSongPlay } = await import('./music');
+const { listSongs, addSong, updateSongLoopLimit, deleteSong, reportSongPlay } = await import('./music');
 
 function todayString(): string {
     return new Date().toISOString().split('T')[0];
@@ -109,6 +109,34 @@ describe('addSong', () => {
             },
         });
         expect(mockLogAudit).toHaveBeenCalledWith('CONTENT_ADDED', 'user-1', 'Şarkı');
+    });
+});
+
+describe('updateSongLoopLimit', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
+    });
+
+    it('rejects an out-of-range limit', async () => {
+        const result = await updateSongLoopLimit('s1', 25);
+        expect(result.ok).toBe(false);
+        expect(mockDb.song.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a record belonging to a different user', async () => {
+        mockDb.song.findUnique.mockResolvedValue({ id: 's1', userId: 'someone-else', title: 'X' });
+        const result = await updateSongLoopLimit('s1', 5);
+        expect(result.ok).toBe(false);
+        expect(mockDb.song.update).not.toHaveBeenCalled();
+    });
+
+    it('updates the loop limit and logs SETTINGS_CHANGED', async () => {
+        mockDb.song.findUnique.mockResolvedValue({ id: 's1', userId: 'user-1', title: 'Şarkı' });
+        const result = await updateSongLoopLimit('s1', 7);
+        expect(result).toEqual({ ok: true });
+        expect(mockDb.song.update).toHaveBeenCalledWith({ where: { id: 's1' }, data: { dailyLoopLimit: 7 } });
+        expect(mockLogAudit).toHaveBeenCalledWith('SETTINGS_CHANGED', 'user-1', 'Şarkı günlük tekrar hakkı güncellendi');
     });
 });
 

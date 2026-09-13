@@ -21,6 +21,7 @@ import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { recordSkillAttempt } from '@/actions/skills';
+import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { GameHud } from '@/components/game/GameHud';
 
 const LETTERS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'Y', 'Z'];
@@ -31,6 +32,7 @@ export function GameBoard() {
     const [playSuccess] = useSound('/sounds/success.wav', { volume: 0.5 });
     const [playPop] = useSound('/sounds/pop.wav', { volume: 0.25 });
     const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
+    const checkCalmingMode = useCalmingModeMonitor('golge-eslestirme'); // Faz 3.2b
 
     const [targetLetter, setTargetLetter] = useState('A');
     const [isMatched, setIsMatched] = useState(false);
@@ -85,6 +87,7 @@ export function GameBoard() {
             playSuccess();
             // logEvent('success', { target: targetLetter, chosen: active.id as string });
             recordSkillAttempt('golge-eslestirme', 'visual-match', true).catch(() => {});
+            checkCalmingMode(true);
 
             // Next Level Delay
             setTimeout(() => {
@@ -94,6 +97,7 @@ export function GameBoard() {
             // Fail Logic
             // logEvent('attempt', { target: targetLetter, chosen: active.id as string });
             recordSkillAttempt('golge-eslestirme', 'visual-match', false).catch(() => {});
+            checkCalmingMode(false);
         }
     };
 

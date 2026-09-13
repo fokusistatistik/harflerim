@@ -1,0 +1,39 @@
+# Papatya'nın Faz 3 (Zeka Katmanı) Python altyapısı — nöbetçim/dersplani'deki
+# aynı desenden kopyalandı (bkz. dokumantasyon/python-altyapisi.md). harflerim
+# SQLite kullandığından (bkz. .env DATABASE_URL) burada postgres servisi YOK,
+# yalnızca Python servisi var.
+#
+# Port 8030 bilinçli seçildi — diğer WSL projeleriyle çakışmaz: sigma-python
+# (kamuhastaneleri)=8000, sigma-ozel-python=8010, nobetcim-python=8020,
+# cizelgecim-python (dersplani)=8050 (kontrol edildi 2026-09-13, ss -tlnp +
+# tüm docker-compose.yml'ler taranarak).
+services:
+  papatya-python:
+    build:
+      context: ./python
+      # network: host — 2026-09-13'te kök nedeni bulundu: Docker'ın bridge/NAT
+      # ağı bu WSL kurulumunda büyük indirmelerde (torch, ~189MB) rastgele
+      # noktalarda bağlantıyı kesiyordu (host'un kendi ağı tamamen sağlamdı,
+      # doğrudan curl ile aynı dosya sorunsuz iniyordu). host ağı NAT
+      # katmanını atlayıp sorunu tamamen çözdü, test edildi.
+      network: host
+    container_name: papatya-python
+    restart: unless-stopped
+    environment:
+      PAPATYA_PYTHON_AUTH_KEY: ${PAPATYA_PYTHON_AUTH_KEY}
+    ports:
+      # 127.0.0.1'e sabitlendi — nöbetçim/dersplani'deki güvenlik gerekçesiyle
+      # aynı: auth key basit bir header karşılaştırması, ağa/internete açık
+      # kalırsa brute-force riski taşır.
+      - "127.0.0.1:8030:8030"
+    volumes:
+      # Faz 3.5 — üretilen Piper ses önbelleği container yeniden oluşturulsa
+      # (image güncellemesi vb.) bile kaybolmasın (yeniden sentezlemek gerekmesin).
+      - papatya_tts_cache:/app/cache
+      # Faz 3.3 — konuşmacı embedding'leri (aile bireylerinin ses parmak izi
+      # vektörleri) container yeniden oluşturulsa bile kaybolmasın.
+      - papatya_speaker_embeddings:/app/speaker_embeddings
+
+volumes:
+  papatya_tts_cache:
+  papatya_speaker_embeddings:

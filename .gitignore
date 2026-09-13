@@ -56,3 +56,19 @@ public/fallback-*.js
 # (Faz 2.2+) — katı yerel işleme ilkesi gereği repoya asla girmez.
 public/uploads/*
 !public/uploads/.gitkeep
+
+# Python (python/ — Faz 3 Python temel altyapısı)
+python/__pycache__/
+python/**/__pycache__/
+python/venv/
+python/.venv/
+python/.pytest_cache/
+
+# Faz 3.5 — Piper TTS ağırlıkları (Docker build sırasında indirilir, ~63MB,
+# git'e asla commit edilmez) + üretilen ses önbelleği.
+python/tts_models/
+python/cache/
+
+# Faz 3.3 — konuşmacı embedding'leri (aile bireylerinin ses parmak izi
+# vektörleri) — kişisel veri, katı yerel işleme ilkesi gereği repoya girmez.
+python/speaker_embeddings/

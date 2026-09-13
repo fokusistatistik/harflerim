@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Mic, Square, Trash2, Play } from 'lucide-react';
+import { Mic, Square, Trash2, Play, Pencil, X } from 'lucide-react';
 import {
     listFamilyMembers,
     createFamilyMember,
+    updateFamilyMember,
     deleteFamilyMember,
     type FamilyMemberData,
 } from '@/actions/familyMembers';
@@ -17,6 +18,7 @@ import {
 export function FamilyMembersTab() {
     const [members, setMembers] = useState<FamilyMemberData[]>([]);
     const [loaded, setLoaded] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [relation, setRelation] = useState('');
     const [photo, setPhoto] = useState<File | null>(null);
@@ -62,11 +64,29 @@ export function FamilyMembersTab() {
         setIsRecording(false);
     };
 
+    const resetForm = () => {
+        setEditingId(null);
+        setName('');
+        setRelation('');
+        setPhoto(null);
+        setVoiceBlob(null);
+        setError('');
+    };
+
+    const startEdit = (member: FamilyMemberData) => {
+        setEditingId(member.id);
+        setName(member.name);
+        setRelation(member.relation);
+        setPhoto(null);
+        setVoiceBlob(null);
+        setError('');
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        if (!photo) {
+        if (!editingId && !photo) {
             setError('Bir fotoğraf seçin.');
             return;
         }
@@ -74,18 +94,15 @@ export function FamilyMembersTab() {
         const fd = new FormData();
         fd.set('name', name);
         fd.set('relation', relation);
-        fd.set('photo', photo);
+        if (photo) fd.set('photo', photo);
         if (voiceBlob) fd.set('voice', new File([voiceBlob], 'ses.webm', { type: 'audio/webm' }));
 
         setIsSaving(true);
-        const result = await createFamilyMember(fd);
+        const result = editingId ? await updateFamilyMember(editingId, fd) : await createFamilyMember(fd);
         setIsSaving(false);
 
         if (result.ok) {
-            setName('');
-            setRelation('');
-            setPhoto(null);
-            setVoiceBlob(null);
+            resetForm();
             refresh();
         } else {
             setError(result.error ?? 'Bir hata oluştu.');
@@ -94,6 +111,7 @@ export function FamilyMembersTab() {
 
     const handleDelete = async (id: string) => {
         await deleteFamilyMember(id);
+        if (editingId === id) resetForm();
         refresh();
     };
 
@@ -132,6 +150,14 @@ export function FamilyMembersTab() {
                             )}
                             <button
                                 type="button"
+                                onClick={() => startEdit(m)}
+                                className="min-w-tap min-h-tap flex items-center justify-center text-papatya-ink-soft"
+                                aria-label={`${m.name} kaydını düzenle`}
+                            >
+                                <Pencil size={16} />
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => handleDelete(m.id)}
                                 className="min-w-tap min-h-tap flex items-center justify-center text-papatya-rose"
                                 aria-label={`${m.name} kaydını sil`}
@@ -144,7 +170,20 @@ export function FamilyMembersTab() {
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3">
-                <h3 className="text-p-base font-bold text-papatya-ink-soft">Yeni aile bireyi ekle</h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-p-base font-bold text-papatya-ink-soft">
+                        {editingId ? 'Aile bireyini düzenle' : 'Yeni aile bireyi ekle'}
+                    </h3>
+                    {editingId && (
+                        <button
+                            type="button"
+                            onClick={resetForm}
+                            className="flex items-center gap-1 text-p-sm text-papatya-ink-soft"
+                        >
+                            <X size={14} /> Vazgeç
+                        </button>
+                    )}
+                </div>
                 <input
                     type="text"
                     placeholder="Ad"
@@ -159,12 +198,15 @@ export function FamilyMembersTab() {
                     onChange={(e) => setRelation(e.target.value)}
                     className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                 />
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
-                    className="text-p-sm"
-                />
+                <label className="flex flex-col gap-1">
+                    {editingId && <span className="text-p-sm text-papatya-ink-soft">Yeni fotoğraf (boş bırakırsan mevcut kalır)</span>}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+                        className="text-p-sm"
+                    />
+                </label>
 
                 <div className="flex items-center gap-2">
                     {!isRecording ? (
@@ -193,7 +235,7 @@ export function FamilyMembersTab() {
                     disabled={isSaving}
                     className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
                 >
-                    {isSaving ? 'Kaydediliyor...' : 'Ekle'}
+                    {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Ekle'}
                 </button>
             </form>
         </div>

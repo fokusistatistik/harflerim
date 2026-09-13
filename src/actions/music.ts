@@ -74,6 +74,32 @@ export async function addSong(
     return { ok: true };
 }
 
+/**
+ * 2026-09-13 — audit'te bulundu: eklendikten sonra `dailyLoopLimit`
+ * değiştirilemiyordu, tek yol sil-yeniden ekleyip YouTube linkini tekrar
+ * girmekti. Başlık/thumbnail YouTube'dan otomatik geldiği için kasıtlı
+ * olarak burada düzenlenmiyor — yalnızca günlük tekrar hakkı.
+ */
+export async function updateSongLoopLimit(
+    id: string,
+    dailyLoopLimit: number
+): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    if (!Number.isFinite(dailyLoopLimit) || dailyLoopLimit < 1 || dailyLoopLimit > 20) {
+        return { ok: false, error: 'Günlük tekrar sayısı 1-20 arasında olmalı.' };
+    }
+
+    const song = await db.song.findUnique({ where: { id } });
+    if (!song || song.userId !== user.id) return { ok: false, error: 'Kayıt bulunamadı.' };
+
+    await db.song.update({ where: { id }, data: { dailyLoopLimit: Math.round(dailyLoopLimit) } });
+    await logAudit('SETTINGS_CHANGED', user.id, `${song.title} günlük tekrar hakkı güncellendi`);
+
+    return { ok: true };
+}
+
 export async function deleteSong(id: string): Promise<{ ok: boolean; error?: string }> {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: 'Oturum bulunamadı.' };

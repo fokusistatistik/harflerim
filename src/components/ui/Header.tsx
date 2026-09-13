@@ -11,7 +11,7 @@ import { DaisyProgress } from '@/components/ui/DaisyProgress';
 const TOTAL_PETALS = 8;
 
 export function Header() {
-    const { currentLevel, isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
+    const { isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
     // Faz 1.9 — geçici çözüm: yapraklar zaman oranına göre dolar. Faz 2.8
     // gerçek "günün sekiz etkinliği" mantığını getirdiğinde bu hesap yerini bırakır.
     const filledPetals = isDayComplete
@@ -64,11 +64,16 @@ export function Header() {
             <div className="flex items-center gap-3 lg:gap-6">
                 <DaisyProgress filledCount={filledPetals} size={36} className="lg:w-11 lg:h-11" />
 
-                <div className="hidden sm:block px-3 py-1 lg:px-4 lg:py-2 bg-papatya-sky/15 rounded-full text-papatya-sky font-bold text-sm lg:text-base shadow-sm border border-papatya-sky/30">
-                    {currentLevel > 1 ? `${currentLevel - 1} Oyun Bitti` : 'Başlangıç'}
-                </div>
-
-                <div className="text-papatya-sky">
+                {/* 2026-09-13 — UX denetiminde kullanıcı bunu bir tema anahtarı
+                    sandı (bir düğme değil, yalnızca gün durumu göstergesi).
+                    Gerçek koyu tema Faz 5'e bırakıldı (bkz. YOL-HARITASI.md);
+                    burada yalnızca bir buton gibi görünmediğinden emin olunuyor
+                    ve ne olduğu title/aria-label ile açıklanıyor. */}
+                <div
+                    className="text-papatya-sky cursor-default"
+                    title={isDayComplete ? 'Bugünün etkinlikleri tamamlandı' : 'Gün devam ediyor'}
+                    aria-label={isDayComplete ? 'Bugünün etkinlikleri tamamlandı' : 'Gün devam ediyor'}
+                >
                     {isDayComplete ? <Moon size={24} className="fill-papatya-sky lg:w-7 lg:h-7" /> : <Sun size={24} className="text-papatya-petal lg:w-7 lg:h-7" />}
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLevelStore } from '@/store/levelStore';
+import { useParentGateStore } from '@/store/parentGateStore';
 import { Lock, Target, Timer } from 'lucide-react';
 
 /**
@@ -15,6 +16,7 @@ import { Lock, Target, Timer } from 'lucide-react';
 export function ParentFooter() {
     const [mounted, setMounted] = useState(false);
     const { isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
+    const openPinPrompt = useParentGateStore((s) => s.openPinPrompt);
 
     useEffect(() => {
         setMounted(true);
@@ -48,10 +50,19 @@ export function ParentFooter() {
 
             </div>
 
-            {/* Lock Icon */}
-            <div className="ml-4 pl-4 border-l border-papatya-rule opacity-50">
+            {/* Faz 3 UX düzeltmesi (2026-09-13) — bu ikon daha önce salt dekoratifti
+                (onClick yoktu, kullanıcı raporu: "kilit butonuna basınca bir şey
+                olmuyor"). Header'ın 700ms uzun-basma jestiyle AYNI eylemi
+                (openPinPrompt) tetikleyen gerçek bir düğmeye çevrildi — böylece
+                ebeveyn kilidine ulaşmanın ikinci, daha görünür bir yolu var. */}
+            <button
+                type="button"
+                onClick={() => openPinPrompt()}
+                className="ml-4 pl-4 border-l border-papatya-rule min-w-tap min-h-tap flex items-center justify-center text-papatya-ink-soft hover:text-papatya-ink transition-colors"
+                aria-label="Ebeveyn kilidini aç"
+            >
                 <Lock size={16} />
-            </div>
+            </button>
 
         </div>
     );

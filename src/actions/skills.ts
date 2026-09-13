@@ -29,7 +29,8 @@ export async function recordSkillAttempt(
     skillKey: string,
     gameId: string,
     isCorrect: boolean,
-    reactionTime?: number
+    reactionTime?: number,
+    hintsUsed?: number
 ): Promise<void> {
     try {
         const user = await getCurrentUser();
@@ -45,6 +46,7 @@ export async function recordSkillAttempt(
                 gameId,
                 isCorrect,
                 reactionTime: reactionTime ?? null,
+                hintsUsed: hintsUsed ?? null,
             },
         });
 

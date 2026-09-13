@@ -10,16 +10,17 @@ export default async function LoginPage() {
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center gap-8 px-6 py-12">
-            <div className="flex flex-col items-center gap-4">
-                <svg viewBox="0 0 120 120" className="w-24 h-24 md:w-28 md:h-28" aria-hidden="true">
-                    <g fill="#E8B33C">
-                        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-                            <ellipse key={deg} cx="60" cy="26" rx="10.5" ry="22" transform={`rotate(${deg} 60 60)`} />
-                        ))}
-                    </g>
-                    <circle cx="60" cy="60" r="16" fill="#5F7A52" />
-                </svg>
-                <h1 className="font-display text-4xl md:text-5xl text-slate-700">{APP_NAME}</h1>
+            {/* Gerçek marka görselleri (2026-09-13) — Faz 1.9'daki placeholder'ın
+                yerini aldı. Yatay logo açık/beyaz renkte tasarlandığı için
+                (bkz. PROMPTLAR.md) düz bir marka rengi zemin üzerine oturtuldu —
+                aksi halde kirli/krem sayfa zemininde neredeyse görünmez olurdu. */}
+            <div className="bg-papatya-leaf rounded-p-lg px-8 py-6 md:px-12 md:py-8 shadow-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="/papatya-yatay-logo.png"
+                    alt={APP_NAME}
+                    className="w-64 md:w-80 h-auto"
+                />
             </div>
 
             <LoginForm />

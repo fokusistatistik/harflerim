@@ -11,7 +11,8 @@ vi.mock('@/lib/db', () => ({ db: mockDb }));
 vi.mock('@/lib/auth', () => ({ getCurrentUser: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
-const { submitLevelResult } = await import('./game');
+const { submitLevelResult, getAdaptiveRoundConfig } = await import('./game');
+const { getCurrentUser } = await import('@/lib/auth');
 
 function baseSession(overrides: Partial<Record<string, unknown>> = {}) {
     return {
@@ -49,45 +50,38 @@ describe('submitLevelResult', () => {
         vi.clearAllMocks();
     });
 
-    it('advances the level on a correct answer at the current level', async () => {
+    it('logs the attempt as an Event with the given difficulty indicator', async () => {
         mockDb.session.findUnique.mockResolvedValue(baseSession());
         mockDailyUsage();
 
-        const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
+        await submitLevelResult('session-1', 5, true, 1000, 'A');
 
         expect(mockDb.event.create).toHaveBeenCalledWith({
             data: { sessionId: 'session-1', level: 5, targetLetter: 'A', isCorrect: true, reactionTime: 1000 },
         });
-        expect(mockDb.session.update).toHaveBeenCalledWith({
-            where: { id: 'session-1' },
-            data: { levelReached: 6, totalDuration: 101, completedAt: null },
-        });
-        expect(result?.isGameComplete).toBe(false);
-        expect(result?.isDayComplete).toBe(false);
     });
 
-    it('does not advance the level on an incorrect answer', async () => {
+    it('stores the difficulty indicator into Session.levelReached regardless of correctness (Faz 3.2 — no more level-gating)', async () => {
         mockDb.session.findUnique.mockResolvedValue(baseSession());
         mockDailyUsage();
 
-        await submitLevelResult('session-1', 5, false, 500, 'A');
+        await submitLevelResult('session-1', 8, false, 500, 'A');
 
         expect(mockDb.session.update).toHaveBeenCalledWith({
             where: { id: 'session-1' },
-            data: { levelReached: 5, totalDuration: 101, completedAt: null },
+            data: { levelReached: 8, totalDuration: 101 },
         });
     });
 
-    it('marks the game complete and caps the level when exceeding maxLevel (24)', async () => {
+    it('never marks the game complete anymore (Faz 3.2 — Harf Avı no longer "finishes")', async () => {
         mockDb.session.findUnique.mockResolvedValue(baseSession({ levelReached: 24 }));
         mockDailyUsage();
 
-        const result = await submitLevelResult('session-1', 24, true, 1000, 'Z');
+        const result = await submitLevelResult('session-1', 12, true, 1000, 'Z');
 
+        expect(result?.isGameComplete).toBe(false);
         const call = mockDb.session.update.mock.calls[0][0];
-        expect(call.data.levelReached).toBe(25);
-        expect(call.data.completedAt).toBeInstanceOf(Date);
-        expect(result?.isGameComplete).toBe(true);
+        expect(call.data).not.toHaveProperty('completedAt');
     });
 
     it('marks the day complete (globally) when total screen seconds reach dailyScreenLimit', async () => {
@@ -97,20 +91,16 @@ describe('submitLevelResult', () => {
         const result = await submitLevelResult('session-1', 5, false, 5000, 'A');
 
         expect(result?.isDayComplete).toBe(true);
-        // Oyunun kendi merdiveni (maxLevel) etkilenmez — global gün limiti ayrı bir kavramdır.
-        const call = mockDb.session.update.mock.calls[0][0];
-        expect(call.data.completedAt).toBeNull();
     });
 
-    it('still records elapsed time once a session (game) is already completed, but does not touch the session row again', async () => {
+    it('still updates the session even if it was already completed under the old system (legacy completedAt is now inert)', async () => {
         mockDb.session.findUnique.mockResolvedValue(baseSession({ completedAt: new Date() }));
         mockDailyUsage();
 
         const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
 
-        expect(mockDb.session.update).not.toHaveBeenCalled();
-        expect(mockDb.dailyUsage.upsert).toHaveBeenCalled();
-        expect(result?.isGameComplete).toBe(true);
+        expect(mockDb.session.update).toHaveBeenCalled();
+        expect(result?.isGameComplete).toBe(false);
     });
 
     it('does nothing if the session cannot be found', async () => {
@@ -120,5 +110,19 @@ describe('submitLevelResult', () => {
 
         expect(mockDb.session.update).not.toHaveBeenCalled();
         expect(result).toBeNull();
+    });
+});
+
+describe('getAdaptiveRoundConfig', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('falls back to the base config when there is no current user', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValue(null as any);
+
+        const result = await getAdaptiveRoundConfig();
+
+        expect(result).toEqual({ optionCount: 2, distractorType: 'random' });
     });
 });

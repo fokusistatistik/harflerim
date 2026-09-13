@@ -4,6 +4,7 @@ import { AudioProvider } from '@/components/AudioProvider';
 import { ParentFooter } from '@/components/ui/ParentFooter';
 import { Header } from '@/components/ui/Header';
 import { DayComplete } from '@/components/ui/DayComplete';
+import { CalmingMode } from '@/components/ui/CalmingMode';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { ParentGate } from '@/components/ui/ParentGate';
 import { BackgroundAwareness } from '@/components/ui/BackgroundAwareness';
@@ -62,6 +63,14 @@ export default async function RootLayout({
             className={`${andika.variable} ${patrickHand.variable}`}
             data-reduce-motion={settings?.reduceMotion ? 'true' : undefined}
             data-contrast={settings?.highContrast ? 'high' : undefined}
+            // 2026-09-13 — gerçek bir tema anahtarı yok (bilerek Faz 5'e
+            // ertelendi, bkz. YOL-HARITASI.md), ama globals.css'teki
+            // `prefers-color-scheme: dark` medya sorgusu cihazın sistem
+            // ayarına göre paleti sessizce koyuya çeviriyordu — test
+            // edilmemiş/tasarlanmamış bir görünümdü. `data-theme="light"`
+            // CSS'te zaten hazır bekleyen kaçış kapısını kullanıp paleti
+            // sistem tercihinden bağımsız krem/açık modda kilitler.
+            data-theme="light"
         >
             <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16 lg:pt-20' : ''}`}>
                 <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
@@ -71,6 +80,7 @@ export default async function RootLayout({
                     {user && <BackgroundAwareness />}
                     {children}
                     {user && <DayComplete />}
+                    {user && <CalmingMode />}
                 </AudioProvider>
                 {user && <ParentFooter />}
             </body>

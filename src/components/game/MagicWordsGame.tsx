@@ -14,6 +14,7 @@ import { useGameContent } from '@/hooks/useGameContent';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
+import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { GameHud } from './GameHud';
 
 // Faz 1.22 — burada daha önce bir useMagicWordsProgress/localStorage
@@ -74,6 +75,8 @@ export default function MagicWordsGame() {
 
     // Locking mechanism to prevent multiple triggers
     const isProcessingRef = useRef(false);
+
+    const checkCalmingMode = useCalmingModeMonitor('sesli-kelime-tanima'); // Faz 3.2b
 
     // Data
     const [gameWords, setGameWords] = useState<{ word: string; img: string }[]>([]);
@@ -162,9 +165,10 @@ export default function MagicWordsGame() {
 
         triggerReward({ playSound: playCorrect, confettiOptions: { particleCount: 200, spread: 120 } });
         recordSkillAttempt('sesli-kelime-tanima', 'magic-words', true).catch(() => {});
+        checkCalmingMode(true);
 
         moveToNextCard();
-    }, [playCorrect, triggerReward, moveToNextCard]);
+    }, [playCorrect, triggerReward, moveToNextCard, checkCalmingMode]);
 
 
     const handleSkip = useCallback(() => {
@@ -175,9 +179,10 @@ export default function MagicWordsGame() {
         playSad();
         encourageRetry().catch(() => {});
         recordSkillAttempt('sesli-kelime-tanima', 'magic-words', false).catch(() => {});
+        checkCalmingMode(false);
 
         moveToNextCard();
-    }, [playSad, encourageRetry, moveToNextCard]);
+    }, [playSad, encourageRetry, moveToNextCard, checkCalmingMode]);
 
 
     // --- MATCH LISTENER ---

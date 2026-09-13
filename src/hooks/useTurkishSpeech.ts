@@ -9,6 +9,8 @@ interface UseTurkishSpeechReturn {
     askLetter: (letter: string) => Promise<void>;
     celebrateSuccess: () => Promise<void>;
     encourageRetry: () => Promise<void>;
+    /** Faz 3.2b — Sakinleştirme Modu devreye girdiğinde her şeyi ANINDA susturur (Piper `<audio>` + tarayıcı speechSynthesis). */
+    stop: () => void;
     isSpeaking: boolean;
     isSupported: boolean;
     updateConfig: (config: Partial<AudioConfig>) => void;
@@ -27,6 +29,8 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
     const [config, setConfig] = useState<AudioConfig>(DEFAULT_CONFIG);
     const synthRef = useRef<SpeechSynthesis | null>(null);
     const hasInteractedRef = useRef(false);
+    /** Faz 3.2b — o an çalan Piper `<audio>` elementi, stop()'un durdurabilmesi için. */
+    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -50,18 +54,59 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
         };
     }, []);
 
+    // Faz 3.5 — Piper TTS önce denenir (daha doğal/kaliteli Türkçe ses,
+    // önceden üretilip önbelleklenen sabit külliyat için gecikmesiz). Başarısız
+    // olursa (servis kapalı, ağ hatası vb.) mevcut tarayıcı speechSynthesis'ine
+    // SESSİZCE düşülür — bu yüzden speak() asla reddedilmez/oyunu bozmaz.
+    const speakWithPiper = useCallback(async (text: string): Promise<boolean> => {
+        try {
+            const response = await fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            if (!response.ok) return false;
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            currentAudioRef.current = audio;
+
+            await new Promise<void>((resolve, reject) => {
+                // stop() bu event'lerden hiçbirini tetiklemez (pause "ended"
+                // sayılmaz) — bu yüzden onpause'u da çözücü olarak bağlıyoruz,
+                // stop() çağrıldığında bu Promise sonsuza kadar asılı kalmasın.
+                audio.onended = () => resolve();
+                audio.onpause = () => resolve();
+                audio.onerror = () => reject(new Error('audio playback failed'));
+                audio.play().catch(reject);
+            });
+
+            currentAudioRef.current = null;
+            URL.revokeObjectURL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    }, []);
+
     const speak = useCallback(
         async (text: string): Promise<void> => {
             if (!enabled) {
                 return;
             }
 
-            if (!synthRef.current || !isSupported) {
-                console.warn('Speech synthesis not supported');
+            if (!hasInteractedRef.current) {
                 return;
             }
 
-            if (!hasInteractedRef.current) {
+            setIsSpeaking(true);
+            const piperWorked = await speakWithPiper(text);
+            setIsSpeaking(false);
+            if (piperWorked) return;
+
+            if (!synthRef.current || !isSupported) {
+                console.warn('Speech synthesis not supported');
                 return;
             }
 
@@ -89,7 +134,7 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
                 synthRef.current!.speak(utterance);
             });
         },
-        [config, isSupported, enabled]
+        [config, isSupported, enabled, speakWithPiper]
     );
 
     // Faz 1.21 — bu cümleler artık src/locales/tr.json'dan okunuyor (tek
@@ -122,11 +167,21 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
         setConfig((prev) => ({ ...prev, ...newConfig }));
     }, []);
 
+    // Faz 3.2b — Sakinleştirme Modu tetiklendiğinde çağrılır: hem Piper
+    // `<audio>`'yu hem tarayıcı speechSynthesis'ini ANINDA durdurur.
+    const stop = useCallback(() => {
+        currentAudioRef.current?.pause();
+        currentAudioRef.current = null;
+        synthRef.current?.cancel();
+        setIsSpeaking(false);
+    }, []);
+
     return {
         speak,
         askLetter,
         celebrateSuccess,
         encourageRetry,
+        stop,
         isSpeaking,
         isSupported,
         updateConfig,

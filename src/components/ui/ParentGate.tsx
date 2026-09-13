@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music, Film } from 'lucide-react';
+import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music, Film, Palette } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { verifyParentPin, changeParentPin } from '@/actions/parentGate';
 import { logout } from '@/actions/auth';
@@ -12,6 +12,8 @@ import { ProgressTab } from './parentPanel/ProgressTab';
 import { FamilyMembersTab } from './parentPanel/FamilyMembersTab';
 import { MusicTab } from './parentPanel/MusicTab';
 import { CartoonTab } from './parentPanel/CartoonTab';
+import { DrawingsTab } from './parentPanel/DrawingsTab';
+import { IdentitySection } from './parentPanel/IdentitySection';
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
@@ -24,6 +26,7 @@ const TABS = [
     { key: 'aile', label: 'Aile Bireyleri', icon: Users },
     { key: 'muzik', label: 'Müzik', icon: Music },
     { key: 'video', label: 'Videolar', icon: Film },
+    { key: 'cizimler', label: 'Çizimler', icon: Palette },
     { key: 'profil', label: 'Çocuk Profili', icon: Sparkles },
     { key: 'duyusal', label: 'Duyusal', icon: HeartPulse },
     { key: 'sure', label: 'Ekran Süresi', icon: Clock },
@@ -131,7 +134,7 @@ export function ParentGate() {
         >
             <div
                 className={`bg-papatya-surface text-papatya-ink rounded-p-lg shadow-2xl w-full p-6 relative ${
-                    isUnlocked ? 'max-w-lg' : 'max-w-sm'
+                    isUnlocked ? 'max-w-sm md:max-w-2xl lg:max-w-5xl lg:w-[75vw] max-h-[90vh] overflow-y-auto' : 'max-w-sm'
                 }`}
             >
                 <button
@@ -198,7 +201,9 @@ export function ParentGate() {
                         <div className="min-h-[200px]">
                             {activeTab === 'genel' && (
                                 <div className="flex flex-col gap-5">
-                                    <form onSubmit={handleChangePin} className="flex flex-col gap-3">
+                                    <IdentitySection />
+
+                                    <form onSubmit={handleChangePin} className="flex flex-col gap-3 border-t border-papatya-rule pt-4">
                                         <h3 className="text-p-base font-bold text-papatya-ink-soft">PIN Değiştir</h3>
                                         <input
                                             type="password"
@@ -254,6 +259,7 @@ export function ParentGate() {
                             {activeTab === 'aile' && <FamilyMembersTab />}
                             {activeTab === 'muzik' && <MusicTab />}
                             {activeTab === 'video' && <CartoonTab />}
+                            {activeTab === 'cizimler' && <DrawingsTab />}
                             {activeTab === 'profil' && <ChildProfileTab />}
                             {activeTab === 'duyusal' && <SensoryTab />}
                             {activeTab === 'sure' && <ScreenTimeTab />}

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { getDailyUsage, addDailyUsageSeconds } from '@/lib/dailyUsage';
+import { getAdaptiveConfig, BASE_ADAPTIVE_CONFIG, type AdaptiveConfig } from '@/lib/adaptiveDifficulty';
 
 export interface GameState {
     sessionId: string;
@@ -64,14 +65,6 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
     };
 }
 
-// Her oyunun kendi seviye merdiveni (Faz 1.17: süre artık burada değil,
-// global günlük bütçe olarak dailyUsage.ts üzerinden yönetiliyor).
-const GAME_LIMITS: Record<string, { maxLevel: number }> = {
-    'letter-hunt': { maxLevel: 24 },
-    // Add future games here with their own IDs
-    'default': { maxLevel: 100 }
-};
-
 export interface SubmitResult {
     isGameComplete: boolean;
     isDayComplete: boolean;
@@ -79,9 +72,19 @@ export interface SubmitResult {
     dailyScreenLimit: number;
 }
 
+/**
+ * Faz 3.2 — Harf Avı artık sabit bir 24-seviye merdiveni değil, uyarlanabilir
+ * bir zorluk motoruyla çalışıyor (bkz. src/lib/adaptiveDifficulty.ts). Bu
+ * fonksiyon artık bir "seviye ilerletme kapısı" DEĞİL — yalnızca deneme logu
+ * (Event) + Session güncellemesi yapar. `difficultyIndicator`, o anki
+ * round'un optionCount'udur; `Session.levelReached` bunu bir analitik alan
+ * olarak saklamaya devam eder (Faz 3.1 öncesindeki "seviye" anlamı artık
+ * yok, yıkıcı bir migration'la silinmedi). Diğer oyunlar gibi bu oyun da
+ * artık "bitmez" — günlük süre bütçesi içinde sınırsız devam eder.
+ */
 export async function submitLevelResult(
     sessionId: string,
-    level: number,
+    difficultyIndicator: number,
     isCorrect: boolean,
     reactionTime: number,
     targetLetter: string
@@ -90,7 +93,7 @@ export async function submitLevelResult(
     await db.event.create({
         data: {
             sessionId,
-            level,
+            level: difficultyIndicator,
             targetLetter,
             isCorrect,
             reactionTime
@@ -101,48 +104,30 @@ export async function submitLevelResult(
     const currentSession = await db.session.findUnique({ where: { id: sessionId } });
     if (!currentSession) return null;
 
-    // Süre her zaman global günlük bütçeye işlenir — oyun kendi merdiveninde
-    // kilitli olsa bile çocuk başka bir oyuna geçebilir, o yüzden bu adım
-    // erken dönüşten önce çalışır.
+    // Süre her zaman global günlük bütçeye işlenir.
     const addedSeconds = Math.ceil(reactionTime / 1000);
     const dailyUsage = await addDailyUsageSeconds(currentSession.userId, addedSeconds);
-
-    if (currentSession.completedAt) {
-        return {
-            isGameComplete: true,
-            isDayComplete: dailyUsage.isDayComplete,
-            dailyScreenSeconds: dailyUsage.totalSeconds,
-            dailyScreenLimit: dailyUsage.dailyScreenLimit,
-        };
-    }
-
-    const limits = GAME_LIMITS[currentSession.gameId] || GAME_LIMITS['default'];
     const newTotalDuration = currentSession.totalDuration + addedSeconds;
-
-    let nextLevel = currentSession.levelReached;
-    if (isCorrect && level === currentSession.levelReached) {
-        nextLevel = level + 1;
-    }
-
-    let completedAt: Date | null = null;
-    if (nextLevel > limits.maxLevel) {
-        completedAt = new Date();
-        nextLevel = limits.maxLevel + 1; // Cap visual level
-    }
 
     await db.session.update({
         where: { id: sessionId },
         data: {
-            levelReached: nextLevel,
+            levelReached: difficultyIndicator,
             totalDuration: newTotalDuration,
-            completedAt: completedAt
         }
     });
 
     return {
-        isGameComplete: !!completedAt,
+        isGameComplete: false,
         isDayComplete: dailyUsage.isDayComplete,
         dailyScreenSeconds: dailyUsage.totalSeconds,
         dailyScreenLimit: dailyUsage.dailyScreenLimit,
     };
+}
+
+/** Faz 3.2 — GameBoard'ın her round başında çağırdığı, oturumu olmayan (giriş yapmamış) bir durumda güvenle en kolay ayara düşen sarmalayıcı. */
+export async function getAdaptiveRoundConfig(): Promise<AdaptiveConfig> {
+    const user = await getCurrentUser();
+    if (!user) return BASE_ADAPTIVE_CONFIG;
+    return getAdaptiveConfig(user.id);
 }

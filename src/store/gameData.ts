@@ -330,5 +330,8 @@ export const AUDIOS = {
     correct: 'https://cdn.freesound.org/previews/270/270402_5123851-lq.mp3',
     wrong: 'https://cdn.freesound.org/previews/415/415209_5121236-lq.mp3',
     complete: 'https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3',
-    sad: 'https://cdn.freesound.org/previews/369/369848_4588809-lq.mp3' // Cartoon crying/whining
+    // UX düzeltmesi (2026-09-13) — eski freesound.org linki 404 veriyordu
+    // (kullanıcı testinde bulundu). Diğer oyunların zaten kullandığı yerel
+    // dosyaya (public/sounds/error.wav) taşındı — "yanlış/pas" hissi için uygun.
+    sad: '/sounds/error.wav',
 };

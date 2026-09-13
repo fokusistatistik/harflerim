@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/auditLog';
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/mediaStorage';
+import { enrollFamilyMemberVoiceSample } from '@/actions/speaker';
 
 export interface FamilyMemberData {
     id: string;
@@ -57,10 +58,67 @@ export async function createFamilyMember(
     const photoPath = await saveUploadedFile(photo, 'family');
     const voicePath = voice instanceof File && voice.size > 0 ? await saveUploadedFile(voice, 'voice') : null;
 
-    await db.familyMember.create({
+    const member = await db.familyMember.create({
         data: { userId: user.id, name, relation, photoPath, voicePath },
     });
     await logAudit('FAMILY_MEMBER_ADDED', user.id, name);
+
+    // Faz 3.3 — ses örneği varsa konuşmacı tanıma için embedding çıkar.
+    // Best-effort, aile bireyi ekleme akışını asla bloklamaz/bozmaz.
+    if (voicePath) enrollFamilyMemberVoiceSample(member.id).catch(() => {});
+
+    return { ok: true };
+}
+
+/**
+ * 2026-09-13 — UX denetiminde bulundu: dosya başındaki yorum "ekler/
+ * düzenler/siler" diyordu ama düzenleme hiç yazılmamıştı — bir ismi
+ * düzeltmek veya fotoğrafı değiştirmek için silip yeniden eklemek
+ * gerekiyordu. Fotoğraf/ses YALNIZCA yeni bir dosya seçilirse değişir
+ * (boş bırakılırsa mevcut dosya korunur) — createFamilyMember'daki
+ * "fotoğraf zorunlu" kuralı burada geçerli değil, zaten bir dosya var.
+ */
+export async function updateFamilyMember(
+    id: string,
+    formData: FormData
+): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    const member = await db.familyMember.findUnique({ where: { id } });
+    if (!member || member.userId !== user.id) {
+        return { ok: false, error: 'Kayıt bulunamadı.' };
+    }
+
+    const name = String(formData.get('name') ?? '').trim();
+    const relation = String(formData.get('relation') ?? '').trim();
+    const photo = formData.get('photo');
+    const voice = formData.get('voice');
+
+    if (!name) return { ok: false, error: 'İsim gerekli.' };
+    if (!relation) return { ok: false, error: 'Yakınlık derecesi gerekli.' };
+
+    let photoPath = member.photoPath;
+    if (photo instanceof File && photo.size > 0) {
+        photoPath = await saveUploadedFile(photo, 'family');
+        await deleteUploadedFile(member.photoPath);
+    }
+
+    let voicePath = member.voicePath;
+    let voiceChanged = false;
+    if (voice instanceof File && voice.size > 0) {
+        voicePath = await saveUploadedFile(voice, 'voice');
+        if (member.voicePath) await deleteUploadedFile(member.voicePath);
+        voiceChanged = true;
+    }
+
+    const updated = await db.familyMember.update({
+        where: { id },
+        data: { name, relation, photoPath, voicePath },
+    });
+    await logAudit('FAMILY_MEMBER_UPDATED', user.id, name);
+
+    if (voiceChanged) enrollFamilyMemberVoiceSample(updated.id).catch(() => {});
 
     return { ok: true };
 }

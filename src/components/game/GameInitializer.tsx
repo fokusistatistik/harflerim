@@ -9,11 +9,11 @@ export function GameInitializer({ state }: { state: GameState }) {
 
     useEffect(() => {
         if (state) {
+            // Faz 3.2 — levelReached/isGameComplete artık levelStore'un işi değil
+            // (Harf Avı seviyesiz; bkz. src/lib/adaptiveDifficulty.ts).
             init(
                 state.sessionId,
-                state.levelReached,
                 state.totalDuration,
-                state.isGameComplete,
                 state.isDayComplete,
                 state.dailyScreenSeconds,
                 state.dailyScreenLimit,

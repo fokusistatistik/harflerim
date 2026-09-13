@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { HomeAvatar } from '@/components/ui/HomeAvatar';
 import { getDailySession } from '@/actions/game';
 import { GameInitializer } from '@/components/game/GameInitializer';
 import { getCurrentUser } from '@/lib/auth';
@@ -21,7 +22,7 @@ export default async function Home() {
     const InterestIcon = getInterestIcon(profile?.interests ?? []);
 
     return (
-        <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-24 md:pt-32 lg:pt-40 relative overflow-hidden">
+        <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-16 md:pt-20 lg:pt-8 relative overflow-hidden">
             <GameInitializer state={session} />
 
             {/* Background Decor */}
@@ -31,31 +32,31 @@ export default async function Home() {
                 <div className="absolute top-1/2 right-10 text-7xl opacity-20 animate-bounce delay-300">C</div>
             </div>
 
-            {/* Hero Section */}
-            <div className="z-10 flex flex-col items-center gap-6 lg:gap-8 max-w-6xl xl:max-w-7xl w-full px-4">
+            {/* Hero Section — 2026-09-13: masaüstünde avatar+başlık yan yana
+                (lg:flex-row), üstteki dikey boşluk azaltıldı (kullanıcı UX
+                geri bildirimi: "üstteki boşluğu azalt"). */}
+            <div className="z-10 flex flex-col items-center gap-4 lg:gap-5 max-w-6xl xl:max-w-7xl w-full px-4">
 
-                {/* Melike Avatar */}
-                <div className="relative w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 animate-float">
-                    <img
-                        src="https://static.fokusistatistik.com/melike/melike.png"
-                        alt={firstName}
-                        className="w-full h-full object-cover rounded-full border-8 border-white shadow-2xl"
-                    />
-                    <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg">
-                        <Star className="text-white fill-white" size={32} />
-                    </div>
-                    {hasInterest && (
-                        <div className="absolute -top-2 -left-2 bg-papatya-sky p-2 rounded-full shadow-lg">
-                            <InterestIcon className="text-white" size={24} />
+                <div className="flex flex-col lg:flex-row items-center gap-3 lg:gap-6">
+                    {/* Profil fotoğrafı — kullanıcıya dinamik bağlı (bkz. HomeAvatar) */}
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-28 lg:h-28 animate-float shrink-0">
+                        <HomeAvatar avatarUrl={user?.avatarUrl ?? null} firstName={firstName} />
+                        <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg">
+                            <Star className="text-white fill-white" size={24} />
                         </div>
-                    )}
-                </div>
+                        {hasInterest && (
+                            <div className="absolute -top-2 -left-2 bg-papatya-sky p-2 rounded-full shadow-lg">
+                                <InterestIcon className="text-white" size={20} />
+                            </div>
+                        )}
+                    </div>
 
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-hand font-bold text-softIndigo text-center leading-tight">
-                    {worldName(firstName)}
-                    <br />
-                    <span className="text-2xl md:text-3xl lg:text-4xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
-                </h1>
+                    <h1 className="text-3xl md:text-5xl lg:text-5xl font-hand font-bold text-softIndigo text-center lg:text-left leading-tight">
+                        {worldName(firstName)}
+                        <br />
+                        <span className="text-xl md:text-2xl lg:text-2xl text-gray-500 font-sans font-normal">Hoş Geldin {firstName}!</span>
+                    </h1>
+                </div>
 
                 <TodaySummary />
 

@@ -2,64 +2,54 @@
 
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { addDailyUsageSeconds } from '@/lib/dailyUsage';
+import { getAdaptiveMemoryConfig, BASE_MEMORY_ADAPTIVE_CONFIG, type MemoryAdaptiveConfig } from '@/lib/adaptiveDifficulty';
 
-export interface GameProgressResult {
-    levelReached: number;
-    totalDuration: number;
-    isGameComplete: boolean;
+export interface MemoryRoundResult {
+    isDayComplete: boolean;
+    dailyScreenSeconds: number;
+    dailyScreenLimit: number;
 }
 
 /**
- * Faz 1.22 — Harf Avı dışında, ama yine de bir seviye merdiveni olan oyunlar
- * (şu an yalnızca Hafıza Kartları) için hafif bir ilerleme kaydedicisi.
- * `submitLevelResult`'tan (Harf Avı'na özel) farklı olarak Event tablosuna
- * dokunmaz — her denemenin ayrıntılı kaydı artık SkillAttempt'te (Faz 1.20).
- * Bu yalnızca Session.levelReached/totalDuration/completedAt günceller.
+ * 2026-09-13 — Hafıza Kartları artık Harf Avı'yla aynı ilkeyi izliyor
+ * (bkz. src/actions/game.ts'teki submitLevelResult'ın doc-comment'i):
+ * sabit bir seviye merdiveni/kilit YOK, oyun "bitmez" — günlük süre
+ * bütçesi içinde sınırsız devam eder. Bu fonksiyon artık bir "seviye
+ * ilerletme kapısı" değil, yalnızca Session süresini günceller.
+ * `Session.levelReached` o round'un çift sayısını (pairCount) bir
+ * analitik alan olarak saklamaya devam eder — eski "seviye" anlamı yok.
+ * Önceki `advanceGameLevel`/`LEVEL_CAPS` (24 sabit seviye) kaldırıldı.
  */
-const LEVEL_CAPS: Record<string, number> = {
-    'memory-match': 24,
-};
-const DEFAULT_LEVEL_CAP = 100;
-
-export async function advanceGameLevel(
+export async function submitMemoryRoundResult(
     sessionId: string,
-    leveledUp: boolean,
+    pairCount: number,
     addedSeconds: number
-): Promise<GameProgressResult | null> {
+): Promise<MemoryRoundResult | null> {
     const user = await getCurrentUser();
     if (!user) return null;
 
     const session = await db.session.findUnique({ where: { id: sessionId } });
     if (!session || session.userId !== user.id) return null;
 
-    if (session.completedAt) {
-        return {
-            levelReached: session.levelReached,
-            totalDuration: session.totalDuration,
-            isGameComplete: true,
-        };
-    }
-
-    const cap = LEVEL_CAPS[session.gameId] ?? DEFAULT_LEVEL_CAP;
-    let nextLevel = session.levelReached;
-    if (leveledUp) nextLevel += 1;
-
-    let completedAt: Date | null = null;
-    if (nextLevel > cap) {
-        completedAt = new Date();
-        nextLevel = cap; // Görsel üst sınır — merdiven bitince en üst seviyede kalır
-    }
-
+    const dailyUsage = await addDailyUsageSeconds(user.id, Math.max(0, Math.round(addedSeconds)));
     const newTotalDuration = session.totalDuration + Math.max(0, Math.round(addedSeconds));
 
     await db.session.update({
         where: { id: sessionId },
-        data: { levelReached: nextLevel, totalDuration: newTotalDuration, completedAt },
+        data: { levelReached: pairCount, totalDuration: newTotalDuration },
     });
 
     return {
-        levelReached: nextLevel,
-        totalDuration: newTotalDuration,
-        isGameComplete: !!completedAt,
+        isDayComplete: dailyUsage.isDayComplete,
+        dailyScreenSeconds: dailyUsage.totalSeconds,
+        dailyScreenLimit: dailyUsage.dailyScreenLimit,
     };
+}
+
+/** Faz 3.2 desenindeki `getAdaptiveRoundConfig` ile aynı — oturumsuz durumda güvenle en kolay ayara düşer. */
+export async function getAdaptiveMemoryRoundConfig(): Promise<MemoryAdaptiveConfig> {
+    const user = await getCurrentUser();
+    if (!user) return BASE_MEMORY_ADAPTIVE_CONFIG;
+    return getAdaptiveMemoryConfig(user.id);
 }
