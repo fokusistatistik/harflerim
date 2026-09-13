@@ -8,7 +8,7 @@ Süreç kuralları (nasıl çalışıldığı) için [GENEL-KURALLAR.md](GENEL-K
 
 ---
 
-## Faz 1 — Temel & Kimlik (18/19 madde tamamlandı)
+## Faz 1 — Temel & Kimlik (26/27 madde tamamlandı)
 
 Yalnızca **1.15** (hesap silme akışı) açık kaldı — Faz 3.11'in şifreli yedekleme mekanizmasını bekliyor, bilerek ertelendi. Ayrıntısı hâlâ [YOL-HARITASI.md](YOL-HARITASI.md)'de.
 
@@ -32,5 +32,13 @@ Yalnızca **1.15** (hesap silme akışı) açık kaldı — Faz 3.11'in şifreli
 | 1.16 | Arka plan geçiş bildirimi | Page Visibility API ile ~15sn+ arka planda kalınıp geri dönüldüğünde ebeveyne toast gider (`useBackgroundAwareness`) — `'parent'` bildirim kanalının ilk gerçek tüketicisi. |
 | 1.17 | Duyusal ayarların merkezi bağlanması | `dailyScreenLimit` artık tüm oyunlar genelinde tek bir günlük bütçe (yeni `DailyUsage` tablosu); `reduceMotion`/`highContrast`/`speechEnabled` gerçekten bağlandı. |
 | 1.18 | Navigasyon iskeleti ve çıkış kontrolü | Çıkış kontrolü ebeveyn kapısına eklendi. `navAreas.ts` + `NavGrid`: Faz 1-3'te planlanan 10 alanın tamamı en az bir yuva olarak menüde. `Header`/`ParentFooter` token katmanına taşındı. |
+| 1.19 | Aile/Guardian veri modeli (yalnızca şema) | Yeni `Guardian` tablosu + `User.guardianId` (nullable) — Faz 3.12'nin "tek bir ebeveyn PIN'i tüm çocuk profillerini yönetir" gerekliliği için hazır bekliyor. Mevcut `parentPin`/`ParentGate` akışına dokunulmadı, 1.4b ile aynı desen. |
+| 1.20 | Beceri/kazanım (Skill) katmanı | Oyun-bağımsız `Skill`/`SkillAttempt` tabloları + `recordSkillAttempt()`. **Dört oyunun tamamı** (Harf Avı, Hafıza Kartları, Sihirli Kelimeler, Görsel Eşleştirme) kendi denemesini buraya da yazıyor — Faz 3.1/3.2/3.8/2.8b'nin dayanacağı ölçüm temeli. Zorluk ayarlama mantığı hâlâ Faz 3.1'in işi. |
+| 1.21 | Dil/metin katmanını tekilleştir | `src/locales/tr.json` artık gerçek tek kaynak (`t()`/`tArray()` yardımcılarıyla, `src/lib/i18n.ts`); `useTurkishSpeech.ts`'teki hardcoded/çakışan diziler kaldırıldı. Çoklu dile geçiş (Faz 4.3) için temel hazır, dil seçme UI'ı kapsam dışı. |
+| 1.22 | Oyun ilerlemesini tam veritabanına taşı | Hafıza Kartları ve Sihirli Kelimeler artık `localStorage` kullanmıyor — ilerleme `Session` tablosunda (yeni `advanceGameLevel()`), deneme kayıtları `SkillAttempt`'te. "İlerlemesi hesabına kaydedilir" vaadi artık dört oyun için de gerçek. |
+| 1.23 | Kişiselleştirme: hardcoded "Melike" metni | Harf Avı'ndaki sabit "Melike ile Harfleri Keşfet" metni oturumdaki kullanıcının `firstName`'ine bağlandı. Avatar görseli kasıtlı olarak değiştirilmedi (Faz 2.2'nin işi). |
+| 1.24 | ParentFooter'ı oyun-bağımsız hale getir | "Seviye X/24" (yalnızca Harf Avı'na özeldi) yerine `dailyScreenSeconds`/`dailyScreenLimit` tabanlı genel "Bugün: X/Y dk" göstergesi — hangi oyun oynanırsa oynansın doğru bilgi gösteriyor. |
+| 1.25 | Ekran sağlığı test kapsamı | `src/lib/dailyUsage.ts` için 9 birim test (limit altı/üstü/tam sınırda/zaten tamamlanmış senaryoları) — daha önce yalnızca dolaylı test ediliyordu. |
+| 1.26 | Küçük temizlik | `README.md` gerçek Papatya mimarisini anlatacak şekilde yeniden yazıldı. `magic-words`/`memory-match` sayfalarındaki Next.js `viewport` metadata uyarısı giderildi. |
 
-**Uzman denetimi notu** — Faz 1'in tamamı için arayüz sadeliği, giriş ritüelinin bilişsel yükü ve süre limitinin uygulanışı henüz çocuk gelişimi bakış açısıyla resmi olarak gözden geçirilmedi; bu, YOL-HARITASI.md'deki "Uzman denetim kapısı" ilkesi gereği faz tam kapanmadan önce yapılmalı.
+**Uzman denetimi notu** — Faz 1'in tamamı için arayüz sadeliği, giriş ritüelinin bilişsel yükü ve süre limitinin uygulanışı henüz çocuk gelişimi bakış açısıyla resmi olarak gözden geçirilmedi; bu, YOL-HARITASI.md'deki "Uzman denetim kapısı" ilkesi gereği faz tam kapanmadan önce yapılmalı. Ayrıca gerçek bir tarayıcıda üç cihaz (telefon/tablet/PC) görsel kontrolü de bu ortamda yapılamadı (yalnızca CSS derleme + HTTP durum kontrolü) — gerçek cihazlarda son bir görsel QA önerilir.
