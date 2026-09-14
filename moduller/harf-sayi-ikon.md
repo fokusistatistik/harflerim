@@ -71,7 +71,7 @@
 
 ### C2. NavGrid ana sayfa kartları — 9 yeni eşleşme (`diger` klasöründen)
 
-Kullanıcının onayıyla, `diger` klasöründeki JPG'ler NavGrid'in (ana sayfa kart ızgarası) daha önce yalnızca lucide-react ikonlarıyla temsil edilen kartlarına eşleştirildi:
+Kullanıcının onayıyla, `diger` klasöründeki JPG'ler NavGrid'in (ana sayfa kart ızgarası) daha önce yalnızca lucide-react ikonlarıyla temsil edilen kartlarına eşleştirildi. **2026-09-14 güncellemesi:** kullanıcı aynı 9 görselin şeffaf zeminli PNG hallerini `diger` klasörüne ekledi (JPG'lerin beyaz/krem zemini kart arka planıyla çakışıyordu) — kaynak JPG yerine bu PNG'ler işlenip aynı dosya adlarının üzerine yazıldı, kod tarafında değişiklik gerekmedi. Aynı turda `NavGrid.tsx`'teki kart görseli sınıfı da `object-contain drop-shadow-lg` yerine `object-cover rounded-full shadow-lg` yapıldı (dairesel + yakınlaştırılmış görünüm).
 
 | Kaynak dosya | Hedef dosya | Kart | Önceki (lucide) |
 |---|---|---|---|
