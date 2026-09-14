@@ -15,6 +15,7 @@ import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { getAdaptiveRoundConfig } from '@/actions/game';
 import type { AdaptiveConfig } from '@/lib/adaptiveDifficulty';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { DraggableToken } from './DraggableToken';
 import { TargetFrame } from './TargetFrame';
 import { HintImage } from './HintImage';
@@ -209,6 +210,7 @@ export default function GameBoard() {
                 <p className="text-papatya-ink-soft font-medium">
                     {firstName ? `${firstName} ile Harfleri Keşfet` : 'Harfleri Keşfet'}
                 </p>
+                <GameIntroCard gameId="letter-hunt" />
                 <button
                     type="button"
                     onClick={handleStart}

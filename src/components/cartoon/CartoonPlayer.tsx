@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { listVideos, type VideoData } from '@/actions/videos';
 
@@ -49,6 +50,9 @@ export function CartoonPlayer() {
             ) : (
                 <>
                     <h1 className="text-p-2xl font-bold text-center">Çizgi Filmim</h1>
+                    <div className="flex justify-center">
+                        <GameIntroCard gameId="cartoon" variant="banner" />
+                    </div>
                     {!loaded ? (
                         <p className="text-center text-papatya-ink-soft">Yükleniyor...</p>
                     ) : videos.length === 0 ? (

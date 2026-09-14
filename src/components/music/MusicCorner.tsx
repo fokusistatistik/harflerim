@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { listSongs, reportSongPlay, type SongData } from '@/actions/music';
 
@@ -109,6 +110,9 @@ export function MusicCorner() {
             ) : (
                 <>
                     <h1 className="text-p-2xl font-bold text-center">Müzik Köşesi</h1>
+                    <div className="flex justify-center">
+                        <GameIntroCard gameId="music-corner" variant="banner" />
+                    </div>
                     {!loaded ? (
                         <p className="text-center text-papatya-ink-soft">Yükleniyor...</p>
                     ) : songs.length === 0 ? (

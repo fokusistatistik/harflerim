@@ -15,6 +15,7 @@ import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { getDailySession } from '@/actions/game';
 import { submitMemoryRoundResult, getAdaptiveMemoryRoundConfig } from '@/actions/gameProgress';
 import { getComparisonPairsPool } from '@/actions/comparisonPairs';
@@ -198,6 +199,7 @@ export default function MemoryMatchGame() {
             <div className="min-h-screen bg-gradient-to-b from-papatya-sky/10 to-papatya-petal/10 flex flex-col items-center justify-center p-4 pb-28 gap-8">
                 <h1 className="text-3xl md:text-5xl font-hand font-bold text-papatya-leaf text-center">Hafıza Kartları</h1>
                 <p className="text-papatya-ink-soft text-center max-w-md">Nasıl eşleştirmek istersin?</p>
+                <GameIntroCard gameId="memory-match" />
 
                 <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl">
                     <button

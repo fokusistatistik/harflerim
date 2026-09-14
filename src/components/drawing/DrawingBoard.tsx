@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Undo2, Trash2, Save } from 'lucide-react';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { listDrawings, saveDrawing, type DrawingData } from '@/actions/drawings';
@@ -136,6 +137,7 @@ export function DrawingBoard() {
         <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4 items-center">
             <GameHud />
             <h1 className="text-p-2xl font-bold text-center">Çizim Tahtası</h1>
+            <GameIntroCard gameId="drawing-board" variant="banner" />
 
             <canvas
                 ref={canvasRef}

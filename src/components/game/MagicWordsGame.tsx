@@ -15,6 +15,7 @@ import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { GameHud } from './GameHud';
 
 // Faz 1.22 — burada daha önce bir useMagicWordsProgress/localStorage
@@ -315,7 +316,10 @@ function WelcomeScreen({ onStart, status }: { onStart: () => void, status: strin
                 {status === 'checking' && <div className="absolute inset-0 border-4 border-papatya-sky/40 rounded-full animate-spin border-t-transparent"></div>}
             </div>
             <h1 className="text-4xl lg:text-5xl font-hand font-bold mb-4">Sihirli Kelimeler</h1>
-            <p className="text-center opacity-90 mb-8 max-w-xs">Sınırsız eğlenceye hazır mısın?</p>
+            <p className="text-center opacity-90 mb-6 max-w-xs">Sınırsız eğlenceye hazır mısın?</p>
+            <div className="mb-8">
+                <GameIntroCard gameId="magic-words" />
+            </div>
             <button onClick={onStart} disabled={status === 'checking'} className="min-h-tap bg-papatya-surface text-papatya-sky px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-70">
                 {status === 'checking' ? "Başlatılıyor..." : "Oyuna Başla"}
             </button>

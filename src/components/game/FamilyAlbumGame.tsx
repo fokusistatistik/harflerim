@@ -8,6 +8,7 @@ import { useHintTimer } from '@/hooks/useHintTimer';
 import { useVoiceConfirm } from '@/hooks/useVoiceConfirm';
 import { recordSkillAttempt } from '@/actions/skills';
 import { listFamilyMembers, type FamilyMemberData } from '@/actions/familyMembers';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { GameHud } from './GameHud';
 
 const OPTIONS_PER_ROUND = 3;
@@ -129,6 +130,7 @@ export default function FamilyAlbumGame() {
         <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-6 items-center">
             <GameHud />
             <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
+            <GameIntroCard gameId="family-album" variant="banner" />
 
             {target && (
                 <div className="flex flex-col items-center gap-4">

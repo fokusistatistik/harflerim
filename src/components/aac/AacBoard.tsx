@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { GameHud } from '@/components/game/GameHud';
 import { useAudio } from '@/components/AudioProvider';
 import { AAC_CATEGORIES, type AacSymbol } from '@/store/aacData';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 
 /**
  * Faz 3.7 — İletişim Tahtası. Tek dokunuş → seslendirme (bkz. YOL-HARITASI.md
@@ -30,6 +31,9 @@ export function AacBoard() {
 
             <h1 className="text-p-2xl font-bold text-center text-papatya-ink">İletişim Tahtası</h1>
             <p className="text-center text-papatya-ink-soft">Söylemek istediğin bir simgeye dokun</p>
+            <div className="flex justify-center">
+                <GameIntroCard gameId="aac-board" variant="banner" />
+            </div>
 
             <div className="flex flex-col gap-8 max-w-3xl mx-auto w-full">
                 {AAC_CATEGORIES.map((category) => (

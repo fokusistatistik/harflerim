@@ -23,6 +23,7 @@ import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { recordSkillAttempt } from '@/actions/skills';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 
 const LETTERS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'Y', 'Z'];
 
@@ -118,7 +119,7 @@ export function GameBoard() {
 
             {/* Header / Nav — Faz 1.8: paylaşılan GameHud */}
             <div className="absolute top-4 left-4 right-4 lg:top-8 lg:left-8 lg:right-8 z-10">
-                <GameHud />
+                <GameHud right={<GameIntroCard gameId="visual-match" variant="tooltip" />} />
             </div>
 
             <DndContext

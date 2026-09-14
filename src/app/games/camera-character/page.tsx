@@ -1,5 +1,6 @@
 import { CameraCharacter } from '@/components/character/CameraCharacter';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 
 /**
  * Faz 3.4 — kanıtlayıcı entegrasyon noktası. Kamera ayarı (Ebeveyn Alanı →
@@ -17,6 +18,7 @@ export default function CameraCharacterPage() {
             <p className="text-papatya-ink-soft max-w-md">
                 Kamera ayarı ebeveyn panelinden açıksa karakter senin hareketlerini takip eder. Kapalıysa sakin duruşunda bekler.
             </p>
+            <GameIntroCard gameId="camera-character" />
             <CameraCharacter />
         </main>
     );

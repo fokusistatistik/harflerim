@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Eraser } from 'lucide-react';
 import { GameHud } from '@/components/game/GameHud';
+import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { recordSkillAttempt } from '@/actions/skills';
 import letterPaths from '@/data/letterPaths.json';
@@ -93,6 +94,7 @@ export function WritingPractice() {
         <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4 items-center">
             <GameHud />
             <h1 className="text-p-2xl font-bold text-center">Yazı Alıştırması</h1>
+            <GameIntroCard gameId="writing-practice" variant="banner" />
 
             <div className="flex items-center gap-2 bg-papatya-surface rounded-p-md p-1">
                 <button
