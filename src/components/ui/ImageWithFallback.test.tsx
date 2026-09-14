@@ -1,22 +1,14 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { ImageWithFallback } from './ImageWithFallback';
 
 describe('ImageWithFallback', () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
-    });
-
-    it('renders the image by default', () => {
+    it('varsayılan olarak görseli gösterir', () => {
         render(<ImageWithFallback src="/ok.png" alt="test" fallback={<span>yedek</span>} />);
         expect(screen.getByRole('img')).toBeInTheDocument();
     });
 
-    it('shows the fallback when the image fires onError', () => {
+    it('görsel onError tetiklediğinde yedeği gösterir', () => {
         render(<ImageWithFallback src="/broken.png" alt="test" fallback={<span>yedek</span>} />);
 
         act(() => {
@@ -27,9 +19,10 @@ describe('ImageWithFallback', () => {
         expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
 
-    it('shows the fallback when onLoad fires but naturalWidth is 0 (e.g. a 200 HTML error page)', () => {
+    it('onLoad tetiklenip naturalWidth 0 ise (200 dönen HTML hata sayfası) yedeğe düşer', () => {
         render(<ImageWithFallback src="/fake-200.png" alt="test" fallback={<span>yedek</span>} />);
         const img = screen.getByRole('img') as HTMLImageElement;
+        Object.defineProperty(img, 'complete', { value: true, configurable: true });
         Object.defineProperty(img, 'naturalWidth', { value: 0, configurable: true });
 
         act(() => {
@@ -39,27 +32,27 @@ describe('ImageWithFallback', () => {
         expect(screen.getByText('yedek')).toBeInTheDocument();
     });
 
-    it('keeps showing the image when it loads successfully (naturalWidth > 0)', () => {
+    it('görsel başarıyla yüklendiğinde (naturalWidth > 0) görseli göstermeye devam eder', () => {
         render(<ImageWithFallback src="/real.png" alt="test" fallback={<span>yedek</span>} />);
         const img = screen.getByRole('img') as HTMLImageElement;
+        Object.defineProperty(img, 'complete', { value: true, configurable: true });
         Object.defineProperty(img, 'naturalWidth', { value: 200, configurable: true });
 
         act(() => {
             fireEvent.load(img);
-            vi.advanceTimersByTime(10000);
         });
 
         expect(screen.getByRole('img')).toBeInTheDocument();
         expect(screen.queryByText('yedek')).not.toBeInTheDocument();
     });
 
-    it('falls back on its own after the timeout even if neither onError nor onLoad ever fires (hung request)', () => {
-        render(<ImageWithFallback src="/hangs-forever.png" alt="test" fallback={<span>yedek</span>} timeoutMs={4000} />);
+    // Regresyon (2026-09-14): görsel cache'ten hydration'dan önce yüklenince
+    // React'in onLoad'u hiç tetiklenmiyor. Eski zaman aşımı mantığı bu durumda
+    // sağlam görseli 4 sn sonra yedek ikona çeviriyordu.
+    it('onLoad hiç tetiklenmese bile sağlam görseli yedeğe çevirmez', () => {
+        render(<ImageWithFallback src="/cached.png" alt="test" fallback={<span>yedek</span>} />);
 
-        act(() => {
-            vi.advanceTimersByTime(4001);
-        });
-
-        expect(screen.getByText('yedek')).toBeInTheDocument();
+        expect(screen.getByRole('img')).toBeInTheDocument();
+        expect(screen.queryByText('yedek')).not.toBeInTheDocument();
     });
 });

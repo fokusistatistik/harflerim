@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 
 interface ImageWithFallbackProps {
     src: string;
@@ -8,56 +8,50 @@ interface ImageWithFallbackProps {
     className?: string;
     /** Görsel yüklenemezse (404/ağ hatası) bunun yerine gösterilir — kırık görsel ikonu + üst üste binen alt metin yerine sakin bir yer tutucu. */
     fallback: ReactNode;
-    /** onError hiç tetiklenmeyen bazı ağ hatalarına karşı güvenlik ağı (ms). Varsayılan 4000. */
-    timeoutMs?: number;
     /** Native `<img loading>` — anlık gösterilen ipucu görselleri gibi yerlerde 'eager' gecikmeyi önler. */
     loading?: 'eager' | 'lazy';
 }
 
 /**
- * UX düzeltmesi (2026-09-13) — kullanıcı raporu: "görseller linkler patlak".
- * Kök neden: eski içerik CDN'i (static.fokusistatistik.com) artık 404
- * döndürüyor — bu ayrı, çok daha büyük bir içerik-yenileme işi (bkz.
- * PROMPTLAR.md). Bu bileşen o daha büyük işi ÇÖZMEZ, yalnızca kırık bir
- * görselin görünümünü (üst üste binen alt metinli, çirkin bir "kırık resim"
- * ikonu yerine) sakin bir yer tutucuya çevirir.
+ * Kırık bir görselin görünümünü (üst üste binen alt metinli çirkin bir "kırık
+ * resim" ikonu yerine) sakin bir yer tutucuya çevirir.
  *
- * Yalnızca `onError`'a güvenmiyor: gerçek testte bu CDN'e bazı ağ/DNS
- * hatalarında `onError`'un HİÇ tetiklenmediği (isteğin sessizce asılı
- * kaldığı) gözlemlendi — bu yüzden bir zaman aşımı güvenlik ağı da var.
+ * 2026-09-14 — buradaki zaman aşımı "güvenlik ağı" kaldırıldı. Sağlam
+ * görselleri öldürüyordu: görsel tarayıcı cache'inden hydration'dan ÖNCE
+ * yüklendiğinde React'in onLoad'u hiç tetiklenmiyor, 4 sn sonra zamanlayıcı
+ * çalışan PNG'yi "başarısız" sayıp yedek ikona düşüyordu (ana sayfadaki tüm
+ * kart görselleri ikinci ziyarette birden ikona dönüyordu). Zaman aşımının
+ * var oluş sebebi olan ölü dış CDN artık hiç kullanılmıyor — tüm görseller
+ * aynı origin'den (/public) geliyor, asılı kalan istek senaryosu yok.
+ *
+ * Cache'ten gelen görselin kaçırılmaması için onLoad yerine ref callback'i
+ * kullanılıyor: element bağlandığı anda `complete` zaten true ise yükleme
+ * React devreye girmeden bitmiş demektir, sonucu oradan okuyoruz.
  */
-export function ImageWithFallback({ src, alt, className, fallback, timeoutMs = 4000, loading }: ImageWithFallbackProps) {
+export function ImageWithFallback({ src, alt, className, fallback, loading }: ImageWithFallbackProps) {
     const [failed, setFailed] = useState(false);
-    const loadedRef = useRef(false);
 
-    useEffect(() => {
-        loadedRef.current = false;
-        setFailed(false);
-        const timer = setTimeout(() => {
-            if (!loadedRef.current) setFailed(true);
-        }, timeoutMs);
-        return () => clearTimeout(timer);
-    }, [src, timeoutMs]);
+    // Bazı sunucular 404 için bile 200 + HTML gövdesi döndürebilir —
+    // naturalWidth 0 ise gerçek bir görsel değildir.
+    const bozukMu = (img: HTMLImageElement) => img.complete && img.naturalWidth === 0;
+
+    const ref = useCallback((img: HTMLImageElement | null) => {
+        if (img && bozukMu(img)) setFailed(true);
+    }, []);
 
     if (failed) return <>{fallback}</>;
 
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
+            ref={ref}
             src={src}
             alt={alt}
             className={className}
             loading={loading}
             onError={() => setFailed(true)}
             onLoad={(e) => {
-                // Bazı sunucular 404 için bile 200 + HTML gövdesi döndürebilir
-                // (bkz. bu proje: content-type text/html) — naturalWidth 0 ise
-                // gerçek bir görsel değildir, yine de fallback'e düş.
-                if (e.currentTarget.naturalWidth === 0) {
-                    setFailed(true);
-                } else {
-                    loadedRef.current = true;
-                }
+                if (bozukMu(e.currentTarget)) setFailed(true);
             }}
         />
     );

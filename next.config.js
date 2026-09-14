@@ -15,17 +15,6 @@ const withPWA = require("@ducanh2912/next-pwa").default({
     workboxOptions: {
         runtimeCaching: [
             {
-                urlPattern: /^https:\/\/static\.fokusistatistik\.com\/.*/i,
-                handler: "CacheFirst",
-                options: {
-                    cacheName: "papatya-content-images",
-                    expiration: {
-                        maxEntries: 320, // ~260 kelime/harf görseli + büyüme payı
-                        maxAgeSeconds: 60 * 60 * 24 * 90, // 90 gün
-                    },
-                },
-            },
-            {
                 urlPattern: /^https:\/\/cdn\.freesound\.org\/.*/i,
                 handler: "CacheFirst",
                 options: {
@@ -45,10 +34,6 @@ const nextConfig = {
     reactStrictMode: true,
     images: {
         remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: 'static.fokusistatistik.com',
-            },
             {
                 protocol: 'https',
                 hostname: 'cdn.freesound.org',
