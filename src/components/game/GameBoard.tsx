@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, defaultDropAnimationSideEffects, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, defaultDropAnimationSideEffects, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import useSound from 'use-sound';
 
@@ -128,7 +128,7 @@ export default function GameBoard() {
 
     // Audio
     const [playSuccess] = useSound(AUDIOS.correct, { volume: 0.6 });
-    const [playError] = useSound(AUDIOS.wrong, { volume: 0.5 });
+    const [playError] = useSound(AUDIOS.sad, { volume: 0.5 });
     const [playComplete] = useSound(AUDIOS.complete, { volume: 0.6 });
 
     // Sensors
@@ -225,8 +225,8 @@ export default function GameBoard() {
         startRound();
     };
 
-    const handleDragStart = (event: any) => {
-        setActiveId(event.active.id);
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(String(event.active.id));
         hintWasVisibleRef.current = showHint; // Faz 3.1 — dismissHint'ten ÖNCE yakala
         dismissHint(); // Interaction resets hint
     };

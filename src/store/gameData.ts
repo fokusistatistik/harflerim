@@ -180,10 +180,12 @@ export const AUDIOS = {
     // 2026-09-14 — kullanıcı raporu: eski correct/complete sesleri (freesound.org
     // CDN, uzun ve rahatsız edici) daha soft iki yerel dosyayla değiştirildi.
     correct: '/sounds/win.mp3',
-    wrong: 'https://cdn.freesound.org/previews/415/415209_5121236-lq.mp3',
     complete: '/sounds/bonus.mp3',
-    // UX düzeltmesi (2026-09-13) — eski freesound.org linki 404 veriyordu
-    // (kullanıcı testinde bulundu). Diğer oyunların zaten kullandığı yerel
-    // dosyaya (public/sounds/error.wav) taşındı — "yanlış/pas" hissi için uygun.
+    // UX düzeltmesi (2026-09-13) — eski freesound.org linki (`wrong`) 404
+    // veriyordu (kullanıcı testinde bulundu). Yerel dosyaya (public/sounds/
+    // error.wav) taşındı — "yanlış/pas" hissi için uygun. 2026-09-14'te
+    // denetimde `wrong` key'i hâlâ Harf Avı'nda kullanılıyor bulundu (ölü
+    // CDN'e bağlı kalmıştı), key tamamen kaldırılıp tüm kullanımlar `sad`'e
+    // birleştirildi — artık tek bir "yanlış cevap" ses kaynağı var.
     sad: '/sounds/error.wav',
 };

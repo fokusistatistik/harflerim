@@ -86,7 +86,7 @@ export default function MagicWordsGame() {
     const { data: content } = useGameContent();
     const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
     const [playCorrect] = useSound(AUDIOS.correct, { volume: 0.5 });
-    const [playSad] = useSound((AUDIOS as any).sad || AUDIOS.wrong, { volume: 0.5 });
+    const [playSad] = useSound(AUDIOS.sad, { volume: 0.5 });
     const { encourageRetry } = useAudio();
     const triggerReward = useRewardMoment();
 
