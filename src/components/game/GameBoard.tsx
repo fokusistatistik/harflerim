@@ -232,10 +232,15 @@ export default function GameBoard() {
     };
     startRoundRef.current = startRound;
 
+    // 2026-09-14 — kullanıcı bulgusu: "Başla"ya basınca çift ses geliyordu.
+    // Kök neden: burada doğrudan startRound() çağrılıyordu VE isPlaying'i
+    // izleyen useEffect (options.length === 0 koşuluyla) de aynı anda
+    // kendi startRound()'unu tetikliyordu — iki round paralel başlayıp iki
+    // ayrı TTS isteği (soru + kelime, iki harf için) çakışıyordu. Round
+    // başlatmayı tek sorumluya (o useEffect) bırakmak yeterli.
     const handleStart = () => {
         setRoundsCompleted(0);
         setIsPlaying(true);
-        startRound();
     };
 
     const handleDragStart = (event: DragStartEvent) => {
