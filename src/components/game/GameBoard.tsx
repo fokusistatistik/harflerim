@@ -178,10 +178,15 @@ export default function GameBoard() {
 
         // Pick Target — 2026-09-14 denetim bulgusu: hedef harf tamamen
         // rastgeleydi, "hangi harflerde zorlanıyor" bilgisi hiç
-        // kullanılmıyordu. Ağırlıklı rastgele: zayıf harf varsa %50
+        // kullanılmıyordu. Ağırlıklı rastgele: zayıf harf varsa bir
         // olasılıkla oradan seçilir (tam öncelik değil — çeşitlilik/
         // tekrar oynanabilirlik korunur, sıkıcı bir döngüye girmez).
-        const useWeakLetter = config.weakLetters.length > 0 && Math.random() < 0.5;
+        // 2026-09-14 (2. bulgu) — kullanıcı "sürekli aynı harf geliyor"
+        // bildirdi: weakLetters çoğu zaman tek elemanlı olduğunda (yalnızca
+        // 1 zayıf harf varken) %50 oranı o TEK harfin arka arkaya defalarca
+        // çıkmasına yol açıyordu. %25'e düşürüldü — zayıf harf hâlâ normalden
+        // sık gelir ama baskın/yorucu olmaz.
+        const useWeakLetter = config.weakLetters.length > 0 && Math.random() < 0.25;
         const targetPool = useWeakLetter ? config.weakLetters : alphabetOrder;
         const randomTarget = targetPool[Math.floor(Math.random() * targetPool.length)];
         const objects = letterObjects[randomTarget];
@@ -333,7 +338,15 @@ export default function GameBoard() {
                     onBack={() => setIsPlaying(false)}
                     center={
                         <div className="bg-papatya-petal/15 px-6 py-2 lg:px-8 lg:py-3 rounded-full border-2 border-papatya-petal/40">
-                            <span className="text-papatya-petal-deep font-bold lg:text-lg">Tur {roundsCompleted + 1}</span>
+                            {/* 2026-09-14 — kullanıcı bulgusu: "Tur N" oturuma özel bir
+                                sayaçtı (kapatıp açınca hep "Tur 1"e dönüyordu), başlangıç
+                                ekranındaki kalıcı "Bugün X/Y doğru" ile tutarsız görünüyordu.
+                                Artık aynı günlük sayıma bağlı: todayStats oyuna girildiği
+                                andaki toplamı sabitler, roundsCompleted o oturumdaki artışı
+                                ekler — kapatıp açsan bile sayı geriye sarılmaz. */}
+                            <span className="text-papatya-petal-deep font-bold lg:text-lg">
+                                {todayStats ? `Bugün ${todayStats.correct + roundsCompleted}. doğru` : `Tur ${roundsCompleted + 1}`}
+                            </span>
                         </div>
                     }
                 />
