@@ -68,8 +68,12 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 const FALLBACK_DIFFICULTY: AdaptiveConfig = { optionCount: 2, distractorType: 'random', weakLetters: [] };
 
 export default function GameBoard() {
-    const { isDayComplete, sessionId, firstName } = useLevelStore();
-    const isLocked = isDayComplete;
+    const { isDayComplete, sessionId, firstName, isLetterHuntLimitReached, dailyLetterHuntLimit } = useLevelStore();
+    // 2026-09-14 — kullanıcı isteği: süre bütçesine EK, Harf Avı'na özel bir
+    // günlük round limiti (varsayılan 100, ebeveyn panelinden ayarlanabilir).
+    // Yalnızca bu oyunu kilitler — diğer oyunlar/global DayComplete ekranı
+    // bundan etkilenmez.
+    const isLocked = isDayComplete || isLetterHuntLimitReached;
     const { askLetter, encourageRetry, speak } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
     const { data: content } = useGameContent();
@@ -317,6 +321,11 @@ export default function GameBoard() {
                             Bugün {todayStats.correct}/{todayStats.total} doğru
                         </span>
                     </div>
+                )}
+                {isLetterHuntLimitReached && !isDayComplete && (
+                    <p className="text-papatya-ink-soft text-p-sm max-w-xs">
+                        Bugünkü {dailyLetterHuntLimit} turluk Harf Avı hakkın doldu — yarın devam! Diğer oyunlar açık. 🌼
+                    </p>
                 )}
                 <button
                     type="button"

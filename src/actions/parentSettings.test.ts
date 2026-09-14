@@ -14,13 +14,14 @@ vi.mock('@/lib/auth', async () => {
 });
 vi.mock('@/lib/auditLog', () => ({ logAudit: mockLogAudit }));
 
-const { getParentPreferences, updateScreenTimeLimit, updateSensoryToggles } = await import('./parentSettings');
+const { getParentPreferences, updateScreenTimeLimit, updateLetterHuntLimit, updateSensoryToggles } = await import('./parentSettings');
 
 function userWithSettings(overrides: Partial<Record<string, unknown>> = {}) {
     return {
         id: 'user-1',
         settings: {
             dailyScreenLimit: 1800,
+            dailyLetterHuntLimit: 100,
             reduceMotion: false,
             highContrast: false,
             speechEnabled: true,
@@ -79,6 +80,38 @@ describe('updateScreenTimeLimit', () => {
         expect(mockDb.userSettings.update).toHaveBeenCalledWith({
             where: { userId: 'user-1' },
             data: { dailyScreenLimit: 2700 },
+        });
+        expect(mockLogAudit).toHaveBeenCalledWith('SETTINGS_CHANGED', 'user-1', expect.any(String));
+    });
+});
+
+describe('updateLetterHuntLimit', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockGetCurrentUser.mockResolvedValue(userWithSettings());
+    });
+
+    it('rejects a value below the minimum', async () => {
+        const result = await updateLetterHuntLimit(10);
+
+        expect(result.ok).toBe(false);
+        expect(mockDb.userSettings.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a value above the maximum', async () => {
+        const result = await updateLetterHuntLimit(1000);
+
+        expect(result.ok).toBe(false);
+        expect(mockDb.userSettings.update).not.toHaveBeenCalled();
+    });
+
+    it('stores a valid value and logs SETTINGS_CHANGED', async () => {
+        const result = await updateLetterHuntLimit(150);
+
+        expect(result).toEqual({ ok: true });
+        expect(mockDb.userSettings.update).toHaveBeenCalledWith({
+            where: { userId: 'user-1' },
+            data: { dailyLetterHuntLimit: 150 },
         });
         expect(mockLogAudit).toHaveBeenCalledWith('SETTINGS_CHANGED', 'user-1', expect.any(String));
     });

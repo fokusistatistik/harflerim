@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDb = {
-    event: { create: vi.fn(), findMany: vi.fn() },
+    event: { create: vi.fn(), findMany: vi.fn(), count: vi.fn() },
     session: { findUnique: vi.fn(), update: vi.fn() },
     userSettings: { findUnique: vi.fn() },
     dailyUsage: { findUnique: vi.fn(), upsert: vi.fn() },
@@ -53,7 +53,8 @@ describe('submitLevelResult', () => {
         // 2026-09-14 — denetim bulgusu düzeltmesi: submitLevelResult artık
         // getCurrentUser() ile çağıranın oturum sahibi olduğunu doğruluyor.
         // baseSession()'ın userId'siyle ('user-1') eşleşen varsayılan mock.
-        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1' } as any);
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1', settings: { dailyLetterHuntLimit: 100 } } as any);
+        mockDb.event.count.mockResolvedValue(1);
     });
 
     it('logs the attempt as an Event with the given difficulty indicator', async () => {
@@ -107,6 +108,30 @@ describe('submitLevelResult', () => {
 
         expect(mockDb.session.update).toHaveBeenCalled();
         expect(result?.isGameComplete).toBe(false);
+    });
+
+    it('reports isLetterHuntLimitReached once roundsPlayedToday reaches dailyLetterHuntLimit', async () => {
+        mockDb.session.findUnique.mockResolvedValue(baseSession());
+        mockDailyUsage();
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1', settings: { dailyLetterHuntLimit: 5 } } as any);
+        mockDb.event.count.mockResolvedValue(5); // bu round dahil, tam limitte
+
+        const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
+
+        expect(result?.roundsPlayedToday).toBe(5);
+        expect(result?.dailyLetterHuntLimit).toBe(5);
+        expect(result?.isLetterHuntLimitReached).toBe(true);
+    });
+
+    it('does not report isLetterHuntLimitReached while under the limit', async () => {
+        mockDb.session.findUnique.mockResolvedValue(baseSession());
+        mockDailyUsage();
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1', settings: { dailyLetterHuntLimit: 100 } } as any);
+        mockDb.event.count.mockResolvedValue(3);
+
+        const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
+
+        expect(result?.isLetterHuntLimitReached).toBe(false);
     });
 
     it('does nothing if the session cannot be found', async () => {

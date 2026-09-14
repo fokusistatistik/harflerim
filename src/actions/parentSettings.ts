@@ -6,6 +6,8 @@ import { logAudit } from '@/lib/auditLog';
 
 export interface ParentPreferences {
     dailyScreenLimitMinutes: number;
+    /** 2026-09-14 — Harf Avı'na özel, süre bütçesine EK günlük round limiti. */
+    dailyLetterHuntLimit: number;
     reduceMotion: boolean;
     highContrast: boolean;
     speechEnabled: boolean;
@@ -25,6 +27,7 @@ export async function getParentPreferences(): Promise<ParentPreferences | null> 
     const s = user.settings;
     return {
         dailyScreenLimitMinutes: Math.round(s.dailyScreenLimit / 60),
+        dailyLetterHuntLimit: s.dailyLetterHuntLimit,
         reduceMotion: s.reduceMotion,
         highContrast: s.highContrast,
         speechEnabled: s.speechEnabled,
@@ -36,8 +39,8 @@ export async function updateScreenTimeLimit(minutes: number): Promise<{ ok: bool
     const user = await getCurrentUser();
     if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
 
-    if (!Number.isFinite(minutes) || minutes < 5 || minutes > 480) {
-        return { ok: false, error: 'Ekran süresi 5-480 dakika arasında olmalı.' };
+    if (!Number.isFinite(minutes) || minutes < 10 || minutes > 240) {
+        return { ok: false, error: 'Ekran süresi 10-240 dakika arasında olmalı.' };
     }
 
     await db.userSettings.update({
@@ -45,6 +48,23 @@ export async function updateScreenTimeLimit(minutes: number): Promise<{ ok: bool
         data: { dailyScreenLimit: Math.round(minutes) * 60 },
     });
     await logAudit('SETTINGS_CHANGED', user.id, 'Günlük ekran süresi limiti güncellendi');
+
+    return { ok: true };
+}
+
+export async function updateLetterHuntLimit(rounds: number): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    if (!Number.isFinite(rounds) || rounds < 25 || rounds > 250) {
+        return { ok: false, error: 'Harf Avı tur limiti 25-250 arasında olmalı.' };
+    }
+
+    await db.userSettings.update({
+        where: { userId: user.id },
+        data: { dailyLetterHuntLimit: Math.round(rounds) },
+    });
+    await logAudit('SETTINGS_CHANGED', user.id, 'Harf Avı günlük tur limiti güncellendi');
 
     return { ok: true };
 }

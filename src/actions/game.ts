@@ -19,6 +19,15 @@ export interface GameState {
     gameId: string;
     /** Faz 1.23 — oyun bileşenlerinin kişiselleştirme için (ör. "X ile Harfleri Keşfet"). */
     firstName: string;
+    /** 2026-09-14 — Harf Avı'na özel, süre bütçesine EK günlük round limiti. */
+    roundsPlayedToday: number;
+    dailyLetterHuntLimit: number;
+    isLetterHuntLimitReached: boolean;
+}
+
+/** Bugün bu oturumda (Harf Avı) kaç Event (=round) kaydedilmiş. */
+async function countRoundsToday(sessionId: string): Promise<number> {
+    return db.event.count({ where: { sessionId } });
 }
 
 export async function getDailySession(gameId: string = 'letter-hunt'): Promise<GameState> {
@@ -50,7 +59,11 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
         });
     }
 
-    const dailyUsage = await getDailyUsage(user.id);
+    const [dailyUsage, roundsPlayedToday] = await Promise.all([
+        getDailyUsage(user.id),
+        gameId === 'letter-hunt' ? countRoundsToday(session.id) : Promise.resolve(0),
+    ]);
+    const dailyLetterHuntLimit = user.settings?.dailyLetterHuntLimit ?? 100;
 
     return {
         sessionId: session.id,
@@ -61,7 +74,10 @@ export async function getDailySession(gameId: string = 'letter-hunt'): Promise<G
         dailyScreenSeconds: dailyUsage.totalSeconds,
         dailyScreenLimit: dailyUsage.dailyScreenLimit,
         gameId: session.gameId,
-        firstName: user.firstName
+        firstName: user.firstName,
+        roundsPlayedToday,
+        dailyLetterHuntLimit,
+        isLetterHuntLimitReached: roundsPlayedToday >= dailyLetterHuntLimit,
     };
 }
 
@@ -70,6 +86,10 @@ export interface SubmitResult {
     isDayComplete: boolean;
     dailyScreenSeconds: number;
     dailyScreenLimit: number;
+    /** 2026-09-14 — Harf Avı'na özel günlük round limiti doldu mu. */
+    isLetterHuntLimitReached: boolean;
+    roundsPlayedToday: number;
+    dailyLetterHuntLimit: number;
 }
 
 /**
@@ -114,7 +134,10 @@ export async function submitLevelResult(
 
     // Süre her zaman global günlük bütçeye işlenir.
     const addedSeconds = Math.ceil(reactionTime / 1000);
-    const dailyUsage = await addDailyUsageSeconds(currentSession.userId, addedSeconds);
+    const [dailyUsage, roundsPlayedToday] = await Promise.all([
+        addDailyUsageSeconds(currentSession.userId, addedSeconds),
+        countRoundsToday(sessionId), // Event.create() yukarıda zaten yapıldı, bu round dahil sayar
+    ]);
     const newTotalDuration = currentSession.totalDuration + addedSeconds;
 
     await db.session.update({
@@ -125,11 +148,16 @@ export async function submitLevelResult(
         }
     });
 
+    const dailyLetterHuntLimit = user.settings?.dailyLetterHuntLimit ?? 100;
+
     return {
         isGameComplete: false,
         isDayComplete: dailyUsage.isDayComplete,
         dailyScreenSeconds: dailyUsage.totalSeconds,
         dailyScreenLimit: dailyUsage.dailyScreenLimit,
+        roundsPlayedToday,
+        dailyLetterHuntLimit,
+        isLetterHuntLimitReached: roundsPlayedToday >= dailyLetterHuntLimit,
     };
 }
 

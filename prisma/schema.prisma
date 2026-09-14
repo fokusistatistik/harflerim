@@ -176,6 +176,9 @@ model UserSettings {
   parentPin String @default("0000")
 
   dailyScreenLimit Int     @default(1800)
+  /// Harf Avı'nın günlük round (tur) limiti — süre bütçesine EK, ayrı bir
+  /// sınır (2026-09-14, kullanıcı isteği). Diğer oyunları etkilemez.
+  dailyLetterHuntLimit Int @default(100)
   reduceMotion     Boolean @default(false)
   highContrast     Boolean @default(false)
   speechEnabled    Boolean @default(true)

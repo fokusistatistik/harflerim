@@ -13,6 +13,10 @@ interface LevelState {
     sessionId: string | null;
     /** Faz 1.23 — kişiselleştirme için (ör. "X ile Harfleri Keşfet"). */
     firstName: string;
+    /** 2026-09-14 — Harf Avı'na özel, süre bütçesine EK günlük round limiti. */
+    roundsPlayedToday: number;
+    dailyLetterHuntLimit: number;
+    isLetterHuntLimitReached: boolean;
 
     // Actions
     initSession: (
@@ -21,7 +25,10 @@ interface LevelState {
         isDayComplete: boolean,
         dailyScreenSeconds: number,
         dailyScreenLimit: number,
-        firstName: string
+        firstName: string,
+        roundsPlayedToday: number,
+        dailyLetterHuntLimit: number,
+        isLetterHuntLimitReached: boolean
     ) => void;
     /**
      * Faz 3.2 — eski `advanceLevel` artık bir "seviye ilerletme" değil, yalnızca
@@ -48,8 +55,11 @@ export const useLevelStore = create<LevelState>((set, get) => ({
     dailyScreenLimit: 1800,
     sessionId: null,
     firstName: '',
+    roundsPlayedToday: 0,
+    dailyLetterHuntLimit: 100,
+    isLetterHuntLimitReached: false,
 
-    initSession: (sessionId, duration, isDayComplete, dailyScreenSeconds, dailyScreenLimit, firstName) => {
+    initSession: (sessionId, duration, isDayComplete, dailyScreenSeconds, dailyScreenLimit, firstName, roundsPlayedToday, dailyLetterHuntLimit, isLetterHuntLimitReached) => {
         set({
             sessionId,
             totalDuration: duration,
@@ -57,12 +67,15 @@ export const useLevelStore = create<LevelState>((set, get) => ({
             dailyScreenSeconds,
             dailyScreenLimit,
             firstName,
+            roundsPlayedToday,
+            dailyLetterHuntLimit,
+            isLetterHuntLimitReached,
         });
     },
 
     advanceLevel: async (isCorrect, targetLetter, reactionTime, difficultyIndicator, hintsUsed) => {
-        const { totalDuration, sessionId, isDayComplete } = get();
-        if (!sessionId || isDayComplete) return;
+        const { totalDuration, sessionId, isDayComplete, isLetterHuntLimitReached } = get();
+        if (!sessionId || isDayComplete || isLetterHuntLimitReached) return;
 
         // Optimistically update duration; sunucu senkronu sonrası kesin değerlerle üzerine yazılır.
         const addedSec = Math.ceil(reactionTime / 1000);
@@ -75,6 +88,9 @@ export const useLevelStore = create<LevelState>((set, get) => ({
                 isDayComplete: result.isDayComplete,
                 dailyScreenSeconds: result.dailyScreenSeconds,
                 dailyScreenLimit: result.dailyScreenLimit,
+                roundsPlayedToday: result.roundsPlayedToday,
+                dailyLetterHuntLimit: result.dailyLetterHuntLimit,
+                isLetterHuntLimitReached: result.isLetterHuntLimitReached,
             });
         }
 

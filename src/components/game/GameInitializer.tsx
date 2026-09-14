@@ -17,7 +17,10 @@ export function GameInitializer({ state }: { state: GameState }) {
                 state.isDayComplete,
                 state.dailyScreenSeconds,
                 state.dailyScreenLimit,
-                state.firstName
+                state.firstName,
+                state.roundsPlayedToday,
+                state.dailyLetterHuntLimit,
+                state.isLetterHuntLimitReached
             );
         }
     }, [state, init]);
