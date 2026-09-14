@@ -14,7 +14,7 @@ const { useNotificationStore } = await import('@/store/notificationStore');
 describe('useCalmingModeMonitor', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        useCalmingModeStore.setState({ isActive: false });
+        useCalmingModeStore.setState({ isActive: false, acknowledged: false });
         useNotificationStore.setState({ toasts: [] });
     });
 
@@ -52,7 +52,7 @@ describe('useCalmingModeMonitor', () => {
         const { result } = renderHook(() => useCalmingModeMonitor('gorsel-hafiza'));
 
         await act(async () => {
-            result.current(true);
+            result.current(false);
         });
 
         expect(mockCheckCalmingModeTrigger).toHaveBeenCalledWith('gorsel-hafiza');
@@ -65,5 +65,33 @@ describe('useCalmingModeMonitor', () => {
         await act(async () => {
             expect(() => result.current(false)).not.toThrow();
         });
+    });
+
+    // 2026-09-14 — kullanıcı bulgusu: "Devam Edelim" sonrası ilk yeni yanlışta
+    // mod anında tekrar tetikleniyordu, çünkü geçmiş yanlış zinciri hiç
+    // sıfırlanmıyordu. `acknowledged` bunu client tarafında bastırır.
+    it('does not re-check the server while acknowledged, even on a new wrong answer', async () => {
+        useCalmingModeStore.setState({ acknowledged: true });
+        mockCheckCalmingModeTrigger.mockResolvedValue(true);
+        const { result } = renderHook(() => useCalmingModeMonitor('harf-tanima'));
+
+        await act(async () => {
+            result.current(false);
+        });
+
+        expect(mockCheckCalmingModeTrigger).not.toHaveBeenCalled();
+        expect(useCalmingModeStore.getState().isActive).toBe(false);
+    });
+
+    it('clears acknowledged on the first correct answer and resumes normal checking', async () => {
+        useCalmingModeStore.setState({ acknowledged: true });
+        const { result } = renderHook(() => useCalmingModeMonitor('harf-tanima'));
+
+        await act(async () => {
+            result.current(true);
+        });
+
+        expect(useCalmingModeStore.getState().acknowledged).toBe(false);
+        expect(mockCheckCalmingModeTrigger).not.toHaveBeenCalled();
     });
 });

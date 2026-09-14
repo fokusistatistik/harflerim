@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDb = {
-    session: { findUnique: vi.fn(), update: vi.fn() },
+    session: { findUnique: vi.fn(), update: vi.fn(), upsert: vi.fn() },
     userSettings: { findUnique: vi.fn() },
     dailyUsage: { findUnique: vi.fn(), upsert: vi.fn() },
 };
@@ -13,7 +13,7 @@ vi.mock('@/lib/db', () => ({ db: mockDb }));
 vi.mock('@/lib/auth', () => ({ getCurrentUser: mockGetCurrentUser }));
 vi.mock('@/lib/skillAnalytics', () => ({ detectErrorStreak: mockDetectErrorStreak }));
 
-const { submitMemoryRoundResult, getAdaptiveMemoryRoundConfig } = await import('./gameProgress');
+const { submitMemoryRoundResult, getAdaptiveMemoryRoundConfig, getMemoryMatchDailyState } = await import('./gameProgress');
 
 function baseSession(overrides: Partial<Record<string, unknown>> = {}) {
     return {
@@ -22,6 +22,7 @@ function baseSession(overrides: Partial<Record<string, unknown>> = {}) {
         gameId: 'memory-match',
         levelReached: 3,
         totalDuration: 100,
+        roundsPlayed: 0,
         completedAt: null,
         ...overrides,
     };
@@ -48,7 +49,7 @@ function mockDailyUsage({
 describe('submitMemoryRoundResult', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1', settings: { dailyMemoryMatchLimit: 20 } });
     });
 
     it('updates Session.levelReached (pairCount) and duration, no cap/completion logic', async () => {
@@ -57,11 +58,29 @@ describe('submitMemoryRoundResult', () => {
 
         const result = await submitMemoryRoundResult('session-1', 6, 20);
 
-        expect(result).toEqual({ isDayComplete: false, dailyScreenSeconds: 20, dailyScreenLimit: 1800 });
+        expect(result).toEqual({
+            isDayComplete: false,
+            dailyScreenSeconds: 20,
+            dailyScreenLimit: 1800,
+            roundsPlayedToday: 1,
+            dailyMemoryMatchLimit: 20,
+            isMemoryMatchLimitReached: false,
+        });
         expect(mockDb.session.update).toHaveBeenCalledWith({
             where: { id: 'session-1' },
-            data: { levelReached: 6, totalDuration: 120 },
+            data: { levelReached: 6, totalDuration: 120, roundsPlayed: 1 },
         });
+    });
+
+    it('reports isMemoryMatchLimitReached once roundsPlayed reaches the daily limit', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1', settings: { dailyMemoryMatchLimit: 5 } });
+        mockDb.session.findUnique.mockResolvedValue(baseSession({ roundsPlayed: 4 }));
+        mockDailyUsage();
+
+        const result = await submitMemoryRoundResult('session-1', 4, 10);
+
+        expect(result?.roundsPlayedToday).toBe(5);
+        expect(result?.isMemoryMatchLimitReached).toBe(true);
     });
 
     it('never sets completedAt, even after many rounds (game no longer "finishes")', async () => {
@@ -107,6 +126,53 @@ describe('submitMemoryRoundResult', () => {
         const result = await submitMemoryRoundResult('missing-session', 4, 10);
 
         expect(result).toBeNull();
+    });
+});
+
+describe('getMemoryMatchDailyState', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('returns null when there is no current user', async () => {
+        mockGetCurrentUser.mockResolvedValue(null);
+
+        const result = await getMemoryMatchDailyState();
+
+        expect(result).toBeNull();
+        expect(mockDb.session.upsert).not.toHaveBeenCalled();
+    });
+
+    it('reports the current rounds played and limit state', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1', settings: { dailyMemoryMatchLimit: 20 } });
+        mockDb.session.upsert.mockResolvedValue({ id: 'session-1', roundsPlayed: 7 });
+
+        const result = await getMemoryMatchDailyState();
+
+        expect(result).toEqual({
+            sessionId: 'session-1',
+            roundsPlayedToday: 7,
+            dailyMemoryMatchLimit: 20,
+            isMemoryMatchLimitReached: false,
+        });
+    });
+
+    it('reports the limit as reached when roundsPlayed meets it', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1', settings: { dailyMemoryMatchLimit: 20 } });
+        mockDb.session.upsert.mockResolvedValue({ id: 'session-1', roundsPlayed: 20 });
+
+        const result = await getMemoryMatchDailyState();
+
+        expect(result?.isMemoryMatchLimitReached).toBe(true);
+    });
+
+    it('falls back to the default limit (20) when no user settings exist', async () => {
+        mockGetCurrentUser.mockResolvedValue({ id: 'user-1', settings: null });
+        mockDb.session.upsert.mockResolvedValue({ id: 'session-1', roundsPlayed: 0 });
+
+        const result = await getMemoryMatchDailyState();
+
+        expect(result?.dailyMemoryMatchLimit).toBe(20);
     });
 });
 

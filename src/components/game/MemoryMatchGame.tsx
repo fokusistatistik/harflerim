@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
-import { LayoutGrid, Sparkles, User } from 'lucide-react';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import clsx from 'clsx';
 import { useAudio } from '@/components/AudioProvider';
@@ -16,8 +15,7 @@ import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { recordSkillAttempt } from '@/actions/skills';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
-import { getDailySession } from '@/actions/game';
-import { submitMemoryRoundResult, getAdaptiveMemoryRoundConfig } from '@/actions/gameProgress';
+import { submitMemoryRoundResult, getAdaptiveMemoryRoundConfig, getMemoryMatchDailyState } from '@/actions/gameProgress';
 import { getComparisonPairsPool } from '@/actions/comparisonPairs';
 import { GameHud } from './GameHud';
 
@@ -46,19 +44,57 @@ interface Card {
  *     birbirine karışmaz, kullanıcı her round başında hangisini oynayacağını
  *     seçer.
  */
+// 2026-09-14 — kullanıcı isteği: sayfa yenilenince/tekrar girilince oyun hep
+// mod seçim ekranından açılıyordu. Harf Avı'ndaki `PLAYING_STORAGE_KEY`
+// deseninin aynısı — yalnızca "oyundaydın + hangi mod" niyeti saklanır (tam
+// round durumu değil, kasıtlı olarak basit); sekme kapanınca sıfırlanır.
+const PLAYING_STORAGE_KEY = 'papatya-playing-memory-match';
+
+function readStoredMode(): Mode | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const raw = window.sessionStorage.getItem(PLAYING_STORAGE_KEY);
+        return raw === 'harf' || raw === 'nesne' ? raw : null;
+    } catch {
+        return null;
+    }
+}
+
 export default function MemoryMatchGame() {
     const checkCalmingMode = useCalmingModeMonitor('gorsel-hafiza'); // Faz 3.2b
 
-    const [mode, setMode] = useState<Mode | null>(null);
+    const [mode, setModeState] = useState<Mode | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [roundsCompleted, setRoundsCompleted] = useState(0);
+    // Yalnızca mount sırasında bir kez okunur — "yenilemede devam et" niyeti.
+    const [restoredMode] = useState<Mode | null>(readStoredMode);
+
+    const setMode = (next: Mode | null) => {
+        setModeState(next);
+        try {
+            if (next) window.sessionStorage.setItem(PLAYING_STORAGE_KEY, next);
+            else window.sessionStorage.removeItem(PLAYING_STORAGE_KEY);
+        } catch {
+            /* sessionStorage yoksa sessizce yalnızca bu oturumda devam et */
+        }
+    };
 
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [roundStartTime, setRoundStartTime] = useState<number>(0);
+    // 2026-09-14 — kullanıcı isteği: Harf Avı'ndaki dailyLetterHuntLimit
+    // deseninin aynısı — süre bütçesine EK, oyuna özel günlük round limiti
+    // (ebeveyn panelinden 10-50 arası ayarlanabilir, varsayılan 20).
+    const [roundsPlayedToday, setRoundsPlayedToday] = useState(0);
+    const [dailyMemoryMatchLimit, setDailyMemoryMatchLimit] = useState(20);
+    const [isMemoryMatchLimitReached, setIsMemoryMatchLimitReached] = useState(false);
 
     const [cards, setCards] = useState<Card[]>([]);
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+    // 2026-09-14 — denetim bulgusu (moduller/hafizakartlari.md, blok e):
+    // eşleşme sonucu hiçbir aria-live bölgesiyle duyurulmuyordu. TargetFrame'deki
+    // (Harf Avı) `role="status" aria-live="polite"` deseninin aynısı.
+    const [liveMessage, setLiveMessage] = useState('');
 
     const { celebrateSuccess, encourageRetry } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
@@ -66,13 +102,17 @@ export default function MemoryMatchGame() {
     const dayBudget = useGameDayBudget(); // Faz 1.8: bu oyun da global süre bütçesine katkı yapar
     const triggerReward = useRewardMoment();
 
-    const [playFlip] = useSound('https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3', { volume: 0.5 });
+    const [playFlip] = useSound(AUDIOS.flip, { volume: 0.5 });
     const [playMatch] = useSound(AUDIOS.correct, { volume: 0.5 });
 
     React.useEffect(() => {
         let cancelled = false;
-        getDailySession('memory-match').then((state) => {
-            if (!cancelled) setSessionId(state.sessionId);
+        getMemoryMatchDailyState().then((state) => {
+            if (cancelled || !state) return;
+            setSessionId(state.sessionId);
+            setRoundsPlayedToday(state.roundsPlayedToday);
+            setDailyMemoryMatchLimit(state.dailyMemoryMatchLimit);
+            setIsMemoryMatchLimitReached(state.isMemoryMatchLimitReached);
         });
         return () => {
             cancelled = true;
@@ -106,6 +146,7 @@ export default function MemoryMatchGame() {
 
     const startRound = async (roundMode: Mode) => {
         if (dayBudget?.isDayComplete) return;
+        if (isMemoryMatchLimitReached) return;
 
         const { pairCount } = await getAdaptiveMemoryRoundConfig();
         const deck = roundMode === 'harf' ? buildLetterDeck(pairCount) : await buildObjectDeck(pairCount);
@@ -151,6 +192,7 @@ export default function MemoryMatchGame() {
                     playMatch();
                     celebrateSuccess().catch(() => {});
                     pushToast({ scope: 'child', kind: 'success', message: 'Harika!' });
+                    setLiveMessage('Doğru eşleşme!');
                     newCards[newFlipped[0]].isMatched = true;
                     newCards[newFlipped[1]].isMatched = true;
                     setCards(newCards);
@@ -161,6 +203,7 @@ export default function MemoryMatchGame() {
             } else {
                 setTimeout(() => {
                     encourageRetry().catch(() => {});
+                    setLiveMessage('Eşleşmedi, tekrar deneyelim');
                     newCards[newFlipped[0]].isFlipped = false;
                     newCards[newFlipped[1]].isFlipped = false;
                     setCards(newCards);
@@ -180,12 +223,26 @@ export default function MemoryMatchGame() {
             const elapsedSeconds = Math.max(1, Math.round((Date.now() - roundStartTime) / 1000));
             const pairCount = currentCards.length / 2;
 
+            let limitReached = false;
             if (sessionId) {
-                await submitMemoryRoundResult(sessionId, pairCount, elapsedSeconds);
+                const result = await submitMemoryRoundResult(sessionId, pairCount, elapsedSeconds);
+                if (result) {
+                    setRoundsPlayedToday(result.roundsPlayedToday);
+                    setDailyMemoryMatchLimit(result.dailyMemoryMatchLimit);
+                    setIsMemoryMatchLimitReached(result.isMemoryMatchLimitReached);
+                    limitReached = result.isMemoryMatchLimitReached;
+                }
             }
             setRoundsCompleted((r) => r + 1);
 
-            if (mode) startRound(mode);
+            // 2026-09-14 — limit bu round ile dolduysa yeni round başlatma,
+            // mod seçim ekranına dön (limit uyarısı orada gösterilir).
+            if (mode && !limitReached) {
+                startRound(mode);
+            } else {
+                setIsPlaying(false);
+                setMode(null);
+            }
         }, 1500);
     };
 
@@ -196,19 +253,34 @@ export default function MemoryMatchGame() {
     // --- MOD SEÇİMİ ---
     if (!isPlaying) {
         return (
-            <div className="min-h-app bg-gradient-to-b from-papatya-sky/10 to-papatya-petal/10 flex flex-col items-center justify-center p-4 pb-28 gap-8">
+            <div className="min-h-app bg-gradient-to-b from-papatya-sky/10 to-papatya-petal/10 flex flex-col items-center p-4 pt-8 md:pt-12 lg:pt-16 pb-28 gap-6 md:gap-8">
                 <h1 className="text-3xl md:text-5xl font-hand font-bold text-papatya-leaf text-center">Hafıza Kartları</h1>
                 <p className="text-papatya-ink-soft text-center max-w-md">Nasıl eşleştirmek istersin?</p>
                 <GameIntroCard gameId="memory-match" />
+
+                {!isMemoryMatchLimitReached && roundsPlayedToday > 0 && (
+                    <div className="flex items-center gap-2 bg-papatya-leaf/10 px-5 py-2 rounded-full border border-papatya-leaf/30">
+                        <span className="text-papatya-leaf font-bold">
+                            Bugün {roundsPlayedToday}/{dailyMemoryMatchLimit} tur
+                        </span>
+                    </div>
+                )}
+                {isMemoryMatchLimitReached && (
+                    <p className="text-papatya-ink-soft text-p-sm max-w-xs text-center">
+                        Bugünkü {dailyMemoryMatchLimit} turluk Hafıza Kartları hakkın doldu — yarın devam! Diğer oyunlar açık. 🌼
+                    </p>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl">
                     <button
                         type="button"
                         onClick={() => startRound('harf')}
-                        className="flex-1 flex flex-col items-center gap-3 bg-papatya-surface border-4 border-papatya-sky/30 hover:border-papatya-sky rounded-p-lg p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        disabled={isMemoryMatchLimitReached}
+                        className="flex-1 flex flex-col items-center gap-3 bg-papatya-surface border-4 border-papatya-sky/30 hover:border-papatya-sky rounded-p-lg p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        <div className="bg-papatya-sky/15 text-papatya-sky p-4 rounded-full">
-                            <LayoutGrid size={40} strokeWidth={2} />
+                        <div className="w-[106px] h-[106px] flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/ikonlar/abc.png" alt="" className="w-full h-full object-contain" />
                         </div>
                         <span className="text-xl font-bold text-papatya-ink">Harflerle</span>
                         <span className="text-p-sm text-papatya-ink-soft text-center">Harf ve kelime kartlarını eşleştir</span>
@@ -217,10 +289,12 @@ export default function MemoryMatchGame() {
                     <button
                         type="button"
                         onClick={() => startRound('nesne')}
-                        className="flex-1 flex flex-col items-center gap-3 bg-papatya-surface border-4 border-papatya-leaf/30 hover:border-papatya-leaf rounded-p-lg p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        disabled={isMemoryMatchLimitReached}
+                        className="flex-1 flex flex-col items-center gap-3 bg-papatya-surface border-4 border-papatya-leaf/30 hover:border-papatya-leaf rounded-p-lg p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        <div className="bg-papatya-leaf/15 text-papatya-leaf p-4 rounded-full">
-                            <Sparkles size={40} strokeWidth={2} />
+                        <div className="w-[106px] h-[106px] flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/ikonlar/meyveler.png" alt="" className="w-full h-full object-contain" />
                         </div>
                         <span className="text-xl font-bold text-papatya-ink">Nesnelerle</span>
                         <span className="text-p-sm text-papatya-ink-soft text-center">Gerçek nesne fotoğraflarını eşleştir</span>
@@ -241,7 +315,10 @@ export default function MemoryMatchGame() {
         <div className="min-h-app bg-papatya-cream flex flex-col items-center relative p-4 lg:p-8">
             <div className="w-full z-10 mb-6 lg:mb-8">
                 <GameHud
-                    onBack={() => setIsPlaying(false)}
+                    onBack={() => {
+                        setIsPlaying(false);
+                        setMode(null);
+                    }}
                     center={
                         <div className="bg-papatya-petal/15 px-6 py-2 lg:px-8 lg:py-3 rounded-full border-2 border-papatya-petal/40">
                             <span className="text-papatya-petal-deep font-bold lg:text-lg">Tur {roundsCompleted + 1}</span>
@@ -249,6 +326,8 @@ export default function MemoryMatchGame() {
                     }
                 />
             </div>
+
+            <span role="status" aria-live="polite" className="sr-only">{liveMessage}</span>
 
             <div className="flex-1 w-full max-w-4xl xl:max-w-5xl flex items-center justify-center">
                 <div className={clsx(
@@ -261,8 +340,24 @@ export default function MemoryMatchGame() {
                     {cards.map((card, idx) => (
                         <div
                             key={card.id}
-                            className="relative aspect-square cursor-pointer group min-w-tap min-h-tap"
+                            role="button"
+                            tabIndex={card.isMatched ? -1 : 0}
+                            aria-label={
+                                card.isMatched
+                                    ? `${card.label}, eşleşti`
+                                    : card.isFlipped
+                                        ? card.label
+                                        : 'Kapalı kart, açmak için seç'
+                            }
+                            aria-disabled={card.isMatched}
+                            className="relative aspect-square cursor-pointer group min-w-tap min-h-tap focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-papatya-sky rounded-2xl"
                             onClick={() => handleCardClick(idx)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleCardClick(idx);
+                                }
+                            }}
                             style={{ perspective: '1000px' }}
                         >
                             <motion.div
@@ -277,7 +372,8 @@ export default function MemoryMatchGame() {
                                     style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                                 >
                                     <div className="w-full h-full bg-papatya-sky/10 flex items-center justify-center p-4">
-                                        <User className="text-papatya-sky opacity-60" size={32} />
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src="/ikonlar/papatya_favicon.png" alt="" className="w-2/3 h-2/3 object-contain opacity-80" />
                                     </div>
                                 </div>
 

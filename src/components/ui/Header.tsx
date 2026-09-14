@@ -58,16 +58,16 @@ export function Header() {
     const limitMin = Math.round(dailyScreenLimit / 60);
 
     return (
-        <header className="fixed top-0 left-0 w-full h-16 lg:h-20 bg-papatya-surface/90 backdrop-blur-md shadow-sm z-40 flex items-center justify-between px-4 md:px-8 lg:px-12 xl:px-16 border-b border-papatya-rule">
+        <header className="fixed top-0 left-0 w-full min-h-16 lg:h-20 bg-papatya-surface/90 backdrop-blur-md shadow-sm z-40 flex items-center justify-between gap-2 px-3 md:px-8 lg:px-12 xl:px-16 border-b border-papatya-rule">
 
             {/* Left: Home & Clock */}
-            <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0 shrink-0">
                 {/* Kısa dokunuş: ana sayfaya git. Uzun basma (~700ms): ebeveyn
                     kapısını aç (Faz 1.3) — çocuğun yanlışlıkla bulamayacağı bir jest. */}
                 <Link
                     href="/"
                     {...longPress}
-                    className="inline-flex items-center justify-center min-w-tap min-h-tap p-2 bg-papatya-petal/15 rounded-xl text-papatya-petal-deep hover:bg-papatya-petal/25 hover:scale-105 transition-all shadow-sm border border-papatya-petal/30"
+                    className="inline-flex items-center justify-center min-w-tap min-h-tap p-2 bg-papatya-petal/15 rounded-xl text-papatya-petal-deep hover:bg-papatya-petal/25 hover:scale-105 transition-all shadow-sm border border-papatya-petal/30 shrink-0"
                     title="Ana Sayfa"
                 >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,18 +75,24 @@ export function Header() {
                 </Link>
 
                 <div className="flex flex-col">
-                    <span className="text-2xl lg:text-3xl font-bold text-papatya-ink font-mono leading-none">{time}</span>
+                    <span className="text-xl md:text-2xl lg:text-3xl font-bold text-papatya-ink font-mono leading-none">{time}</span>
                     <span className="text-xs text-papatya-ink-soft font-bold hidden md:block">CANLI</span>
                 </div>
             </div>
 
-            {/* Center: Date */}
-            <div className="text-lg md:text-xl lg:text-2xl font-hand font-bold text-papatya-ink-soft">
+            {/* Center: Date — 2026-09-14 kullanıcı bulgusu: dar mobilde (≤400px)
+                uzun Türkçe tarih string'i ("14 Eylül Pazartesi") sol/sağ
+                gruplarla çakışıp ikinci satıra taşıyordu. `truncate` + `min-w-0`
+                ile taşan metin kırpılır (üç nokta), çakışma yerine zarif kesilme
+                olur; `hidden xs:block` yok çünkü tarih çocuk için önemli bir
+                bilgi — tamamen gizlemek yerine küçük ekranda kırpılması tercih
+                edildi. */}
+            <div className="flex-1 min-w-0 text-center text-sm sm:text-lg md:text-xl lg:text-2xl font-hand font-bold text-papatya-ink-soft truncate px-1">
                 {dateStr}
             </div>
 
             {/* Right: süre özeti / Daisy progress / gün durumu / ebeveyn kilidi */}
-            <div className="flex items-center gap-3 md:gap-4 lg:gap-6">
+            <div className="flex items-center gap-2 md:gap-4 lg:gap-6 shrink-0">
                 {mounted && (
                     <div className="hidden sm:flex items-center gap-1.5 text-xs lg:text-sm text-papatya-ink-soft font-semibold whitespace-nowrap">
                         <Timer size={14} className="text-papatya-sky shrink-0" />

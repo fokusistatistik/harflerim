@@ -197,4 +197,9 @@ export const AUDIOS = {
     // CDN'e bağlı kalmıştı), key tamamen kaldırılıp tüm kullanımlar `sad`'e
     // birleştirildi — artık tek bir "yanlış cevap" ses kaynağı var.
     sad: '/sounds/error.wav',
+    // 2026-09-14 — Hafıza Kartları denetimi (moduller/hafizakartlari.md, blok d):
+    // kart çevirme sesi hâlâ harici cdn.freesound.org'a bağlıydı, projenin
+    // "çevrimdışı çalışır" ilkesini zayıflatıyordu. Kullanıcının kendi ses
+    // kaydından (card.mp3) yerel dosyaya taşındı.
+    flip: '/sounds/card.mp3',
 };

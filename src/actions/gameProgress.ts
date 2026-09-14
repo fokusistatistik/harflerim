@@ -9,6 +9,10 @@ export interface MemoryRoundResult {
     isDayComplete: boolean;
     dailyScreenSeconds: number;
     dailyScreenLimit: number;
+    /** 2026-09-14 — Hafıza Kartları'na özel günlük round limiti (Harf Avı'ndaki dailyLetterHuntLimit ile aynı desen). */
+    roundsPlayedToday: number;
+    dailyMemoryMatchLimit: number;
+    isMemoryMatchLimitReached: boolean;
 }
 
 /**
@@ -20,6 +24,11 @@ export interface MemoryRoundResult {
  * `Session.levelReached` o round'un çift sayısını (pairCount) bir
  * analitik alan olarak saklamaya devam eder — eski "seviye" anlamı yok.
  * Önceki `advanceGameLevel`/`LEVEL_CAPS` (24 sabit seviye) kaldırıldı.
+ *
+ * 2026-09-14 — Harf Avı'ndaki günlük round limiti deseni buraya da
+ * taşındı: her round tamamlanışında `Session.roundsPlayed` bir artırılır
+ * (Harf Avı'nın aksine ayrı bir Event tablosu olmadığı için doğrudan
+ * sayaç tutulur) ve `UserSettings.dailyMemoryMatchLimit`'e karşı denetlenir.
  */
 export async function submitMemoryRoundResult(
     sessionId: string,
@@ -34,16 +43,22 @@ export async function submitMemoryRoundResult(
 
     const dailyUsage = await addDailyUsageSeconds(user.id, Math.max(0, Math.round(addedSeconds)));
     const newTotalDuration = session.totalDuration + Math.max(0, Math.round(addedSeconds));
+    const roundsPlayedToday = (session.roundsPlayed ?? 0) + 1;
 
     await db.session.update({
         where: { id: sessionId },
-        data: { levelReached: pairCount, totalDuration: newTotalDuration },
+        data: { levelReached: pairCount, totalDuration: newTotalDuration, roundsPlayed: roundsPlayedToday },
     });
+
+    const dailyMemoryMatchLimit = user.settings?.dailyMemoryMatchLimit ?? 20;
 
     return {
         isDayComplete: dailyUsage.isDayComplete,
         dailyScreenSeconds: dailyUsage.totalSeconds,
         dailyScreenLimit: dailyUsage.dailyScreenLimit,
+        roundsPlayedToday,
+        dailyMemoryMatchLimit,
+        isMemoryMatchLimitReached: roundsPlayedToday >= dailyMemoryMatchLimit,
     };
 }
 
@@ -52,4 +67,41 @@ export async function getAdaptiveMemoryRoundConfig(): Promise<MemoryAdaptiveConf
     const user = await getCurrentUser();
     if (!user) return BASE_MEMORY_ADAPTIVE_CONFIG;
     return getAdaptiveMemoryConfig(user.id);
+}
+
+export interface MemoryMatchDailyState {
+    sessionId: string;
+    roundsPlayedToday: number;
+    dailyMemoryMatchLimit: number;
+    isMemoryMatchLimitReached: boolean;
+}
+
+/**
+ * 2026-09-14 — mod seçim ekranı açılırken (round başlamadan ÖNCE) günlük
+ * limitin dolup dolmadığını bilmek gerekiyor — `submitMemoryRoundResult`
+ * yalnızca bir round BİTTİKTEN sonra çağrılıyor, bu yüzden ayrı bir
+ * "oturumu getir/oluştur ve mevcut durumu bildir" fonksiyonu gerekli
+ * (Harf Avı'ndaki `getDailySession`'ın memory-match'e özel karşılığı —
+ * `getDailySession`'ın kendi `GameState` tipini bozmamak için ayrı tutuldu).
+ */
+export async function getMemoryMatchDailyState(): Promise<MemoryMatchDailyState | null> {
+    const user = await getCurrentUser();
+    if (!user) return null;
+
+    const today = new Date().toISOString().split('T')[0];
+    const session = await db.session.upsert({
+        where: { userId_date_gameId: { userId: user.id, date: today, gameId: 'memory-match' } },
+        create: { userId: user.id, date: today, gameId: 'memory-match', levelReached: 1, totalDuration: 0 },
+        update: {},
+    });
+
+    const dailyMemoryMatchLimit = user.settings?.dailyMemoryMatchLimit ?? 20;
+    const roundsPlayedToday = session.roundsPlayed ?? 0;
+
+    return {
+        sessionId: session.id,
+        roundsPlayedToday,
+        dailyMemoryMatchLimit,
+        isMemoryMatchLimitReached: roundsPlayedToday >= dailyMemoryMatchLimit,
+    };
 }

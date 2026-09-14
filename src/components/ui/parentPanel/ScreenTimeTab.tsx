@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getParentPreferences, updateScreenTimeLimit, updateLetterHuntLimit } from '@/actions/parentSettings';
+import { getParentPreferences, updateScreenTimeLimit, updateLetterHuntLimit, updateMemoryMatchLimit } from '@/actions/parentSettings';
 
 export function ScreenTimeTab() {
     const [minutes, setMinutes] = useState(30);
     const [letterHuntLimit, setLetterHuntLimit] = useState(100);
+    const [memoryMatchLimit, setMemoryMatchLimit] = useState(20);
     const [loaded, setLoaded] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -17,6 +18,7 @@ export function ScreenTimeTab() {
             if (!cancelled && prefs) {
                 setMinutes(prefs.dailyScreenLimitMinutes);
                 setLetterHuntLimit(prefs.dailyLetterHuntLimit);
+                setMemoryMatchLimit(prefs.dailyMemoryMatchLimit);
                 setLoaded(true);
             }
         });
@@ -30,15 +32,16 @@ export function ScreenTimeTab() {
         setError('');
         setSaved(false);
         setIsSaving(true);
-        const [screenResult, letterHuntResult] = await Promise.all([
+        const [screenResult, letterHuntResult, memoryMatchResult] = await Promise.all([
             updateScreenTimeLimit(minutes),
             updateLetterHuntLimit(letterHuntLimit),
+            updateMemoryMatchLimit(memoryMatchLimit),
         ]);
         setIsSaving(false);
-        if (screenResult.ok && letterHuntResult.ok) {
+        if (screenResult.ok && letterHuntResult.ok && memoryMatchResult.ok) {
             setSaved(true);
         } else {
-            setError(screenResult.error ?? letterHuntResult.error ?? 'Bir hata oluştu.');
+            setError(screenResult.error ?? letterHuntResult.error ?? memoryMatchResult.error ?? 'Bir hata oluştu.');
         }
     };
 
@@ -72,6 +75,19 @@ export function ScreenTimeTab() {
                 step={5}
                 value={letterHuntLimit}
                 onChange={(e) => setLetterHuntLimit(Number(e.target.value))}
+                className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+            />
+            <label className="text-p-sm text-papatya-ink-soft mt-2" htmlFor="memory-match-limit">
+                Hafıza Kartları günlük tur limiti
+            </label>
+            <input
+                id="memory-match-limit"
+                type="number"
+                min={10}
+                max={50}
+                step={5}
+                value={memoryMatchLimit}
+                onChange={(e) => setMemoryMatchLimit(Number(e.target.value))}
                 className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
             />
             {error && <p className="text-p-sm text-papatya-rose">{error}</p>}

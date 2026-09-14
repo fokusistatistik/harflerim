@@ -7,7 +7,7 @@ const { CalmingMode } = await import('./CalmingMode');
 describe('CalmingMode', () => {
     beforeEach(() => {
         vi.useRealTimers();
-        useCalmingModeStore.setState({ isActive: false });
+        useCalmingModeStore.setState({ isActive: false, acknowledged: false });
     });
 
     it('renders nothing when inactive', () => {
@@ -15,11 +15,12 @@ describe('CalmingMode', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
-    it('renders the breathing screen and "Devam Edelim" button when active', () => {
+    it('renders the breathing screen and both exit buttons when active', () => {
         useCalmingModeStore.setState({ isActive: true });
         render(<CalmingMode />);
 
         expect(screen.getByText('Devam Edelim')).toBeInTheDocument();
+        expect(screen.getByText('Oynamaya devam et')).toBeInTheDocument();
         expect(screen.getByText(/Nefes/)).toBeInTheDocument();
     });
 
@@ -30,6 +31,16 @@ describe('CalmingMode', () => {
         fireEvent.click(screen.getByText('Devam Edelim'));
 
         expect(useCalmingModeStore.getState().isActive).toBe(false);
+    });
+
+    it('deactivates the store when "Oynamaya devam et" is tapped (same action, second exit path)', () => {
+        useCalmingModeStore.setState({ isActive: true });
+        render(<CalmingMode />);
+
+        fireEvent.click(screen.getByText('Oynamaya devam et'));
+
+        expect(useCalmingModeStore.getState().isActive).toBe(false);
+        expect(useCalmingModeStore.getState().acknowledged).toBe(true);
     });
 
     it('never mentions a diagnosis/judgment — only the two breath cues and the continue button', () => {

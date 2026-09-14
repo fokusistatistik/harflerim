@@ -14,7 +14,7 @@ vi.mock('@/lib/auth', async () => {
 });
 vi.mock('@/lib/auditLog', () => ({ logAudit: mockLogAudit }));
 
-const { getParentPreferences, updateScreenTimeLimit, updateLetterHuntLimit, updateSensoryToggles } = await import('./parentSettings');
+const { getParentPreferences, updateScreenTimeLimit, updateLetterHuntLimit, updateMemoryMatchLimit, updateSensoryToggles } = await import('./parentSettings');
 
 function userWithSettings(overrides: Partial<Record<string, unknown>> = {}) {
     return {
@@ -22,6 +22,7 @@ function userWithSettings(overrides: Partial<Record<string, unknown>> = {}) {
         settings: {
             dailyScreenLimit: 1800,
             dailyLetterHuntLimit: 100,
+            dailyMemoryMatchLimit: 20,
             reduceMotion: false,
             highContrast: false,
             speechEnabled: true,
@@ -112,6 +113,38 @@ describe('updateLetterHuntLimit', () => {
         expect(mockDb.userSettings.update).toHaveBeenCalledWith({
             where: { userId: 'user-1' },
             data: { dailyLetterHuntLimit: 150 },
+        });
+        expect(mockLogAudit).toHaveBeenCalledWith('SETTINGS_CHANGED', 'user-1', expect.any(String));
+    });
+});
+
+describe('updateMemoryMatchLimit', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockGetCurrentUser.mockResolvedValue(userWithSettings());
+    });
+
+    it('rejects a value below the minimum', async () => {
+        const result = await updateMemoryMatchLimit(5);
+
+        expect(result.ok).toBe(false);
+        expect(mockDb.userSettings.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a value above the maximum', async () => {
+        const result = await updateMemoryMatchLimit(60);
+
+        expect(result.ok).toBe(false);
+        expect(mockDb.userSettings.update).not.toHaveBeenCalled();
+    });
+
+    it('stores a valid value and logs SETTINGS_CHANGED', async () => {
+        const result = await updateMemoryMatchLimit(30);
+
+        expect(result).toEqual({ ok: true });
+        expect(mockDb.userSettings.update).toHaveBeenCalledWith({
+            where: { userId: 'user-1' },
+            data: { dailyMemoryMatchLimit: 30 },
         });
         expect(mockLogAudit).toHaveBeenCalledWith('SETTINGS_CHANGED', 'user-1', expect.any(String));
     });

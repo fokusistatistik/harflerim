@@ -179,6 +179,10 @@ model UserSettings {
   /// Harf Avı'nın günlük round (tur) limiti — süre bütçesine EK, ayrı bir
   /// sınır (2026-09-14, kullanıcı isteği). Diğer oyunları etkilemez.
   dailyLetterHuntLimit Int @default(100)
+  /// Hafıza Kartları'nın günlük round (tur) limiti — dailyLetterHuntLimit ile
+  /// aynı desen, ayrı bir sınır (2026-09-14, kullanıcı isteği, 10-50 arası,
+  /// varsayılan 20). Diğer oyunları etkilemez.
+  dailyMemoryMatchLimit Int @default(20)
   reduceMotion     Boolean @default(false)
   highContrast     Boolean @default(false)
   speechEnabled    Boolean @default(true)
@@ -235,6 +239,12 @@ model Session {
   totalDuration Int     @default(0) // Seconds
   levelReached  Int     @default(1) // 1 to 24
   gameId        String  @default("letter-hunt")
+  /// 2026-09-14 — Hafıza Kartları'nın günlük round (tur) limiti için sayaç
+  /// (bkz. UserSettings.dailyMemoryMatchLimit). Harf Avı bu amaçla `Event`
+  /// tablosunu sayıyor (kendi ayrı Event modeli var); Hafıza Kartları'nın
+  /// böyle bir tablosu olmadığı için burada doğrudan bir sayaç tutulur.
+  /// Yalnızca `gameId: 'memory-match'` satırlarında anlamlıdır.
+  roundsPlayed  Int     @default(0)
 
   events      Event[]
 

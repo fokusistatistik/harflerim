@@ -20,10 +20,10 @@ describe('checkCalmingModeTrigger', () => {
         expect(mockDetectErrorStreak).not.toHaveBeenCalled();
     });
 
-    it('returns false when the consecutive-wrong streak is below the threshold (5)', async () => {
+    it('returns false when the consecutive-wrong streak is below the threshold (10)', async () => {
         mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
         mockDetectErrorStreak.mockResolvedValue({
-            ardisikYanlisSayisi: 4,
+            ardisikYanlisSayisi: 9,
             sonDenemeSayisi: 10,
             sonDenemeBasariOrani: 0.3,
             sonDenemeOrtalamaTepkiSuresi: 1000,
@@ -32,10 +32,10 @@ describe('checkCalmingModeTrigger', () => {
         await expect(checkCalmingModeTrigger('harf-tanima')).resolves.toBe(false);
     });
 
-    it('returns true when the consecutive-wrong streak reaches the threshold (5)', async () => {
+    it('returns true when the consecutive-wrong streak reaches the threshold (10)', async () => {
         mockGetCurrentUser.mockResolvedValue({ id: 'user-1' });
         mockDetectErrorStreak.mockResolvedValue({
-            ardisikYanlisSayisi: 5,
+            ardisikYanlisSayisi: 10,
             sonDenemeSayisi: 10,
             sonDenemeBasariOrani: 0.1,
             sonDenemeOrtalamaTepkiSuresi: 500,

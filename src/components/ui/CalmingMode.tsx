@@ -11,8 +11,15 @@ const BREATH_CYCLE_MS = 8000; // 4sn al + 4sn ver
  * otomatik-yönlendirmesiz deseniyle aynı, ama farklı bir an: bu "gün bitti"
  * değil, "birlikte bir nefes alalım" anı — papatya-sky/cream tonları (gece
  * teması DEĞİL). Klinik bir tanı/yorum metni İÇERMEZ — yalnızca durdurma ve
- * davet (roadmap ilkesi). Kapanış YALNIZCA çocuğun kendi "Devam Edelim"
- * dokunuşuyla olur — zorlama, süre veya ebeveyn onayı gerekmez.
+ * davet (roadmap ilkesi). Kapanış YALNIZCA çocuğun kendi dokunuşuyla olur —
+ * zorlama, süre veya ebeveyn onayı gerekmez; otomatik zaman aşımı YOK.
+ *
+ * 2026-09-14 — kullanıcı bulgusu: tek çıkışın "çıkışsız/zorunlu" hissettiği
+ * bildirildi. İkinci bir buton eklendi — ikisi de AYNI eylemi (deactivate)
+ * tetikler, yalnızca farklı bir duygusal çerçeve sunar: "Devam Edelim" nefes
+ * egzersizini bitirmiş hissiyle, "Oynamaya devam et" doğrudan oyuna dönme
+ * isteğiyle. Roadmap ilkesi bozulmuyor — hâlâ yalnızca çocuğun kendi
+ * dokunuşu, süre/zorlama yok.
  */
 export function CalmingMode() {
     const isActive = useCalmingModeStore((s) => s.isActive);
@@ -44,13 +51,22 @@ export function CalmingMode() {
                 {phase === 'in' ? 'Nefes al...' : 'Nefes ver...'}
             </p>
 
-            <button
-                type="button"
-                onClick={deactivate}
-                className="min-h-tap px-10 py-4 rounded-full bg-papatya-leaf text-white text-xl font-bold shadow-lg hover:shadow-xl transition-all"
-            >
-                Devam Edelim
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                    type="button"
+                    onClick={deactivate}
+                    className="min-h-tap px-10 py-4 rounded-full bg-papatya-leaf text-white text-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                >
+                    Devam Edelim
+                </button>
+                <button
+                    type="button"
+                    onClick={deactivate}
+                    className="min-h-tap px-10 py-4 rounded-full bg-papatya-surface border-2 border-papatya-leaf text-papatya-leaf text-xl font-bold shadow-sm hover:shadow-md transition-all"
+                >
+                    Oynamaya devam et
+                </button>
+            </div>
         </div>
     );
 }
