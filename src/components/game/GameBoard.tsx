@@ -77,6 +77,13 @@ export default function GameBoard() {
     const checkCalmingMode = useCalmingModeMonitor('harf-tanima'); // Faz 3.2b
 
     const [isPlaying, setIsPlaying] = useState(false);
+    // 2026-09-14 — kullanıcı bulgusu: her doğru cevaptan sonra oyun
+    // setIsPlaying(false) ile başlangıç ekranına dönüyordu — Faz 3.2'nin
+    // "sonsuz round" ilkesiyle çelişen, eski 24-seviyeli sistemden kalma bir
+    // kalıntıydı. Artık Hafıza Kartları'nın deseniyle tutarlı: doğru cevap
+    // sonrası günlük bütçe dolmadıkça otomatik yeni round başlıyor, oyun
+    // yalnızca "Ana Sayfa" düğmesiyle ya da günlük bütçe dolunca kapanıyor.
+    const [roundsCompleted, setRoundsCompleted] = useState(0);
     // Faz 3.2 — bir sonraki round'un zorluğu artık sabit bir "seviye" değil,
     // her round başında sunucudan tazece sorulan uyarlanabilir bir konfig.
     const [difficulty, setDifficulty] = useState<AdaptiveConfig>(FALLBACK_DIFFICULTY);
@@ -165,6 +172,7 @@ export default function GameBoard() {
     };
 
     const handleStart = () => {
+        setRoundsCompleted(0);
         setIsPlaying(true);
         startRound();
     };
@@ -200,7 +208,15 @@ export default function GameBoard() {
 
             setTimeout(() => {
                 playComplete();
-                setIsPlaying(false);
+                setRoundsCompleted((r) => r + 1);
+                // Günlük süre bütçesi dolmadıkça oyun kendini kapatmaz —
+                // başlangıç ekranı yalnızca ev/geri düğmesiyle ya da bütçe
+                // dolunca (isLocked) görünür.
+                if (isLocked) {
+                    setIsPlaying(false);
+                } else {
+                    startRound();
+                }
             }, 1000);
 
         } else {
@@ -240,7 +256,14 @@ export default function GameBoard() {
     return (
         <div className="h-full w-full bg-cream flex flex-col md:flex-row overflow-hidden relative">
             <div className="absolute top-20 left-4 right-4 z-50">
-                <GameHud onBack={() => setIsPlaying(false)} />
+                <GameHud
+                    onBack={() => setIsPlaying(false)}
+                    center={
+                        <div className="bg-papatya-petal/15 px-6 py-2 lg:px-8 lg:py-3 rounded-full border-2 border-papatya-petal/40">
+                            <span className="text-papatya-petal-deep font-bold lg:text-lg">Tur {roundsCompleted + 1}</span>
+                        </div>
+                    }
+                />
             </div>
 
             <DndContext
