@@ -2,7 +2,7 @@
 
 > Bu dosya, `moduller/` klasöründeki modül denetim dokümanlarının ilkidir — diğer oyun/araçlar (Hafıza Kartları, Sihirli Kelimeler, Gölge Eşleştirme, Aile Albümü, Çizim Tahtası, Yazı Alıştırması, Müzik Köşesi, AAC Tahtası, Kamera Karakteri, Çizgi Filmim) için de aynı yapı kullanılacak. Amaç: her modülün Faz 2.11 denetim çeklistindeki (bkz. [YOL-HARITASI.md](../YOL-HARITASI.md)) yedi bloğa göre güncel durumunu tek yerde, kanıta dayalı ve güncellenebilir şekilde tutmak.
 >
-> Son güncelleme: 2026-09-14.
+> Son güncelleme: 2026-09-14 (denetim önerilerinin tamamı uygulandı).
 
 ## Özet
 
@@ -14,28 +14,26 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 
 ## Blok (a) — Klinik/pedagojik/gelişimsel uygunluk
 
-**Durum: Kısmen sağlam, harf-özel zekâ eksik.**
+**Durum: Sağlam — harf-özel zekâ eklendi.**
 
 - ✅ Zorluk kademeli ve güvenli: ilk round her zaman en kolay (`BASE_ADAPTIVE_CONFIG`), 3 ardışık yanlışta anında en kolaya düşer (`adaptiveDifficulty.ts:21,30-32`).
 - ✅ Sakinleştirme modu doğru bağlı: `useCalmingModeMonitor('harf-tanima')` her `handleDragEnd`'de çağrılıyor (`GameBoard.tsx`), 5 ardışık yanlışta tüm sesi kesip ebeveyne bildirim gönderiyor (çocuğa değil) — doğru tasarım.
 - ✅ Rozet mekanizması spam değil: bir beceri yalnızca ilk kez doğru yapıldığında bir kez rozet veriyor (`skills.ts`).
-- ⚠️ **Zorluk sistemi genel performans-bazlı, harf-bazlı değil.** `getAdaptiveConfig`/`detectErrorStreak` yalnızca `harf-tanima` skillKey'inin genel son-10-deneme başarı oranına bakıyor; "hangi harflerde zorlanıyor" bilgisi hiç kullanılmıyor. Hedef harf tamamen rastgele seçiliyor (`alphabetOrder[Math.random()...]`, `GameBoard.tsx`).
-- ⚠️ Pekiştirme her tek doğru cevapta tetikleniyor (ses + konfeti + ⭐ + 1sn sonra ikinci ses) — aralıklı pekiştirme yok, aşırı-uyarıcı olma riski düşük ama var.
-
-**Öneri:** `Event`/`SkillAttempt` tablosunda zaten `targetLetter` tutuluyor — harf-bazlı hata oranı hesaplanıp zayıf harflere ağırlıklı seçim eklenebilir (Faz 3.16'nın içerik eksikliğinden bağımsız bir iyileştirme).
+- ✅ (2026-09-14) **Harf-bazlı zayıflık takibi eklendi.** `getAdaptiveRoundConfig` artık son 20 `Event`'te en yüksek yanlış oranına sahip harfleri (`weakLetters`, en fazla 3) hesaplıyor (`actions/game.ts` → `getWeakLetters`); `GameBoard.tsx` hedef harfi %50 olasılıkla bu listeden seçiyor (tam öncelik değil — çeşitlilik korunuyor, sıkıcı tekrar döngüsüne girmiyor).
+- ⚠️ Pekiştirme her tek doğru cevapta tetikleniyor (ses + konfeti + ⭐ + 1sn sonra ikinci ses) — aralıklı pekiştirme yok, aşırı-uyarıcı olma riski düşük ama var. (Henüz ele alınmadı.)
 
 ---
 
 ## Blok (b) — Ebeveyn deneyimi
 
-**Durum: Zayıf — bu oyuna özel hiçbir ebeveyn kontrolü yok.**
+**Durum: İyileşti — beceri ilerlemesi artık görünür, zorluk override hâlâ yok.**
 
-- ❌ Ebeveyn panelinin hiçbir tab'ında (`ChildProfileTab`, `ScreenTimeTab`, `SensoryTab`, `ProgressTab` dahil) Harf Avı'na özel bir ayar yok: zorluk override, harf havuzu seçimi, içerik özelleştirmesi mevcut değil.
-- ❌ `ProgressTab.tsx` genel kullanım süresi + rozet + audit log gösteriyor ama **beceri/harf bazlı ilerleme yok** — "hangi harflerde zorlanıyor" ebeveyn tarafından görülemiyor. `getSkillHistory`/`getCrossGameValidation` (`skillAnalytics.ts`) bu rapor için hazır ama hiçbir UI'da çağrılmıyor.
+- ❌ Ebeveyn panelinin hiçbir tab'ında Harf Avı'na özel bir zorluk override'ı veya harf havuzu seçimi yok. (Henüz ele alınmadı — bilinçli bir sonraki adım olabilir.)
+- ✅ (2026-09-14) **`ProgressTab.tsx`'e "Beceri ilerlemesi" bölümü eklendi.** Yeni `getAllSkillProgress()` action'ı (`skills.ts`) her becerinin son-10-deneme başarı oranını (`detectErrorStreak`'in ham verisi) ilerleme çubuğuyla gösteriyor — yorum/sıralama içermiyor. Gerçek tarayıcıda doğrulandı (El Yazısı %100, Görsel Hafıza %40 gibi).
 - ✅ Günlük süre limiti (global `levelStore`) doğru çalışıyor, "Başla" butonu bütçe dolunca kilitleniyor.
-- ✅ (2026-09-14 eklendi) Başlangıç ekranında "Bugün X/Y doğru" özeti var — küçük ama gerçek bir ilerleme sinyali.
+- ✅ (2026-09-14) Başlangıç ekranında "Bugün X/Y doğru" özeti var — küçük ama gerçek bir ilerleme sinyali.
 
-**Öneri:** `getSkillHistory` sonucunu `ProgressTab.tsx`'e bağlayan bir "beceri bazlı ilerleme" bölümü — bu zaten Faz 3.8'in ("içgörü raporu") kapsamına giriyor, altyapı hazır.
+**Öneri:** Harf-bazlı zorluk override (ör. ebeveynin belirli harfleri manuel olarak "sık sor" işaretlemesi) hâlâ yok — blok (a)'daki otomatik ağırlıklandırmayı tamamlayıcı bir sonraki adım olabilir.
 
 ---
 
@@ -50,8 +48,9 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ✅ `disabled` durumları görsel olarak net (opacity + renk farkı).
 - ⚠️ Erişilebilirlik etiketleri eksik: sürüklenebilir kartlarda `role`/`aria-label` yok, doğru/yanlış durum değişimi `aria-live` ile duyurulmuyor — ekran okuyucu kullanıcıları için oyun büyük ölçüde erişilemez.
 - ✅ (2026-09-14) `handleDragStart` tip güvenliği düzeltildi (`any` → `DragStartEvent`).
+- ✅ (2026-09-14) **Erişilebilirlik etiketleri eklendi.** `DraggableToken`'a harf-özel `aria-label` ("X harfi, sürüklenebilir"), `TargetFrame`'e `aria-live="polite"` durum duyurusu ("Doğru!"/"Tekrar deneyelim"). Not: dnd-kit zaten `role`/`aria-roledescription`/`tabIndex` gibi temel özellikleri `attributes` ile sağlıyordu — eksik olan asıl harf-özel etiketti.
 
-**Öneri:** `aria-live="polite"` bölgesi (durum değişimlerini duyurmak için) ve sürüklenebilir kartlara `role="button" aria-label="{harf} harfini sürükle"` — ekran okuyucu erişilebilirliği hiç ele alınmamış bir alan, ayrı bir denetim gerektirir.
+**Kalan:** Ekran okuyucu deneyimi kod-seviyesinde iyileşti ama gerçek bir ekran okuyucuyla (VoiceOver/NVDA) uçtan uca test edilmedi — bu bir insan/cihaz adımı.
 
 ---
 
@@ -62,23 +61,20 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ✅ (2026-09-14) Eski `static.fokusistatistik.com` CDN'i tamamen ölüydü (258 link, hepsi 404) — tespit edilip düzeltildi. 240 kelimenin **71'i** artık gerçek yerel görsele (`public/karsilastirma/`) bağlı, kalan 169'u `ImageWithFallback` sayesinde kırık ikon yerine zarif metin-fallback gösteriyor.
 - ✅ (2026-09-14) `AUDIOS.wrong` (hâlâ ölü CDN'e bağlıydı, gözden kaçmıştı) bulunup `AUDIOS.sad`'e (yerel) birleştirildi.
 - ✅ Piper TTS entegrasyonu sağlam: `/api/tts` önce denenir, başarısızsa sessizce tarayıcı `speechSynthesis`'ine düşer.
-- ⚠️ **Yalnızca hedef harf sesli okunuyor, ipucu kelimesi (`currentObject.word`) hiç seslendirilmiyor** — yalnızca ekranda yazı olarak gösteriliyor. Çoklu-duyusal pekiştirme (görsel+işitsel) eksik.
-- ❌ 240 kelimenin 169'u hâlâ görselsiz — bkz. Faz 3.16 (roadmap), öncelik: F/Ğ/H/I/J/N/Ö/R/U/V (1 kelime), C/İ/L/M/O/Ş/Ü/Z (2 kelime).
-
-**Öneri:** İpucu kelimesi gösterildiğinde `speak(currentObject.word)` ile de seslendirilebilir — küçük bir ekleme, çoklu-duyusal öğrenmeyi güçlendirir.
+- ✅ (2026-09-14) **İpucu kelimesi artık sesli okunuyor.** `startRound`'da `askLetter(harf).then(() => speak(kelime))` — art arda, çakışmadan (`GameBoard.tsx`). Gerçek tarayıcıda 2 ayrı TTS isteği ile doğrulandı.
+- ❌ 240 kelimenin 169'u hâlâ görselsiz — bkz. Faz 3.16 (roadmap), öncelik: F/Ğ/H/I/J/N/Ö/R/U/V (1 kelime), C/İ/L/M/O/Ş/Ü/Z (2 kelime). (Görsel bulma/üretme işi, kod değil — kullanıcı sürecinde devam ediyor.)
 
 ---
 
 ## Blok (e) — Erişilebilirlik/duyusal uygunluk
 
-**Durum: Zayıf — ebeveynin girdiği duyusal ayarlar oyunla hiç bağlı değil.**
+**Durum: reduceMotion köprüsü kuruldu (tüm oyunları kapsıyor), sensoryProfile hâlâ bağlı değil.**
 
-- ❌ **`sensoryProfile` (Prisma, ebeveyn panelinden dolduruluyor) hiçbir oyun kodunda okunmuyor** — yalnızca yazılıyor, hiç tüketilmiyor.
-- ❌ **`UserSettings.reduceMotion` alanı var ama Harf Avı'nın hiçbir bileşeninde kontrol edilmiyor** — Framer Motion animasyonları (ipucu pulse'ı `repeat: Infinity`, hata shake'i) bu ayardan tamamen bağımsız çalışıyor.
-- ⚠️ İpucu gösterimindeki pulse+glow animasyonu **sonsuz döngü** (`repeat: Infinity, repeatDelay: 1`) — ipucu görünür kaldığı sürece durmuyor, duyusal hassasiyeti olan bir çocuk için potansiyel rahatsızlık kaynağı.
-- Renk kontrastı kod-seviyesinde kesin ölçülemedi (tahmini: metin kontrastı yeterli, dolgu renkleri dekoratif).
+- ✅ (2026-09-14) **`reduceMotion` artık Framer Motion'a da bağlı.** Yeni `MotionPreference.tsx` (kök `layout.tsx`'te) Framer Motion'ın kendi `MotionConfig reducedMotion="always"` provider'ını kullanıyor — tek bir yerden TÜM oyunlardaki `motion.*` animasyonlarını (yalnızca Harf Avı değil, Hafıza Kartları/Sihirli Kelimeler/Gölge Eşleştirme dahil tüm oyunlar) kapsıyor. Daha önce yalnızca CSS geçiş süreleri (`--papatya-duration-*`) bu ayara bağlıydı. Gerçek tarayıcıda doğrulandı: `reduceMotion=true` iken oyun akışı (round geçişi, eşleşme, toast) bozulmadan devam ediyor.
+- ❌ **`sensoryProfile` (ses/ışık/dokunma hassasiyeti JSON'u) hâlâ hiçbir oyun kodunda okunmuyor** — yalnızca yazılıyor. Bu daha karmaşık bir iş (JSON yorumlama gerektiriyor, `reduceMotion` gibi tek bir boolean değil), henüz ele alınmadı.
+- ⚠️ İpucu gösterimindeki pulse+glow animasyonu artık `reduceMotion` açıkken duruyor (yukarıdaki köprü sayesinde), ama varsayılan (reduceMotion kapalı) durumda hâlâ sonsuz döngü — bu tasarım gereği, ebeveyn açıkça "hareketi azalt"ı seçmedikçe değişmiyor.
 
-**Öneri:** Bu proje genelinde bir "duyusal profil → oyun davranışı" köprüsü eksik. `reduceMotion=true` iken global bir Framer Motion `transition={{duration:0}}` override'ı mantıklı bir ilk adım olur; bu tek oyuna özel değil, mimari bir boşluk.
+**Öneri:** `sensoryProfile` JSON'unun (`{sound, light, touch}`) oyun davranışına bağlanması hâlâ ayrı bir iş — ör. `sound: "high"` iken ses seviyesi otomatik kısılabilir. Kapsamlı bir tasarım kararı gerektiriyor, tek oturumda ele alınmadı.
 
 ---
 
@@ -88,10 +84,10 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 
 - ✅ `recordSkillAttempt`/`getTodaySkillStats` doğru şekilde `getCurrentUser()` ile doğrulanıyor, sorgular `userId` ile filtreleniyor.
 - ✅ Client'a sızan hassas veri yok.
-- ⚠️ `getAdaptiveRoundConfig` auth yoksa `redirect` yerine sessizce `BASE_ADAPTIVE_CONFIG` döndürüyor — `getDailySession`'ın (`redirect('/giris')`) tersine bir davranış. Zararsız (en kolay zorluk döner) ama tutarsız.
-- ⚠️ `submitLevelResult`, `sessionId`'nin var olup olmadığını kontrol ediyor ama **çağıranın o session'ın gerçek sahibi olduğunu (`userId` eşleşmesi) doğrulamıyor** — düşük risk (UUID tahmin edilemez) ama açık bir yetki kontrolü eksik.
+- ⚠️ `getAdaptiveRoundConfig` auth yoksa `redirect` yerine sessizce `BASE_ADAPTIVE_CONFIG` döndürüyor — `getDailySession`'ın (`redirect('/giris')`) tersine bir davranış. Zararsız (en kolay zorluk döner) ama tutarsız. (Bilinçli bir tasarım kararı olarak bırakıldı — çocuk deneyimini bloklamamak için.)
+- ✅ (2026-09-14) **`submitLevelResult`'a sahiplik kontrolü eklendi.** Artık `getCurrentUser()` çağırıp `session.userId === user.id` doğruluyor — önceden yalnızca `sessionId`'nin var olup olmadığına bakılıyordu. 2 yeni test eklendi (auth yok / başka kullanıcının session'ı).
 
-**Öneri:** `submitLevelResult`'a `session.userId === user.id` kontrolü eklenmesi; auth-yoksa-davranış tutarsızlığının bilinçli mi yoksa gözden kaçmış mı olduğunun netleştirilmesi.
+**Kalan:** Auth-yoksa-davranış tutarsızlığı (bir action redirect, diğeri sessiz fallback) bilinçli bir tasarım tercihi olarak değerlendirildi, değiştirilmedi.
 
 ---
 
@@ -102,22 +98,29 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ✅ Doğru cevap: ses + konfeti + ⭐ + rozet — tam kapsanmış.
 - ✅ Yanlış cevap: ses (artık doğru kaynağa bağlı) + shake animasyonu + TTS teşvik + toast — tam kapsanmış.
 - ✅ Sürükleme başlangıcı/bırakma: görsel geri bildirim var (büyüme, hedef üstünde renk değişimi).
-- ❌ **İpucu gösterimi tamamen sessiz** — yalnızca görsel pulse animasyonu, hiçbir ses/TTS tetiklenmiyor.
+- ⚠️ İpucu gösterimi hâlâ görsel-ağırlıklı (pulse animasyonu) — ama blok (d)'deki düzeltmeyle artık round başında kelime zaten sesli okunuyor, bu yüzden "tamamen sessiz" bulgusu kısmen kapandı. İpucuya özel ayrı bir "dikkat" sesi (chime) hâlâ yok — küçük bir iyileştirme alanı olarak kalıyor.
 
-**Öneri:** İpucu belirdiğinde hafif bir "dikkat" sesi (chime) eklenebilir — blok (d)'deki "ipucu kelimesi seslendirilmiyor" bulgusuyla aynı kökten, birlikte ele alınabilir.
+**Öneri:** İpucu belirdiği anda hafif bir chime eklenebilir — küçük, isteğe bağlı bir ekleme.
 
 ---
 
-## Genel geliştirme önerileri (öncelik sırasıyla değil)
+## Genel geliştirme önerileri — durum (2026-09-14 turunda 8/8 uygulandı)
 
-1. Harf-bazlı zayıflık takibi (blok a) — mevcut veri altyapısı yeterli, yalnızca `startRound`'da seçim mantığı eklenmeli.
-2. `ProgressTab.tsx`'e beceri/harf bazlı ilerleme özeti (blok b) — `skillAnalytics.ts` fonksiyonları hazır, bağlanmamış.
-3. Ekran okuyucu erişilebilirliği (blok c) — `aria-live`, `role`/`aria-label` hiç yok.
-4. İpucu kelimesinin sesli okunması (blok d/g) — küçük, yüksek etkili bir ekleme.
-5. Kalan 169 kelimenin görsel eksikliği (blok d) — Faz 3.16, roadmap'te zaten takipte.
-6. `sensoryProfile`/`reduceMotion` → oyun davranışı köprüsü (blok e) — mimari boşluk, tek oyuna özel değil.
-7. `submitLevelResult` yetki kontrolü sıkılaştırması (blok f).
-8. `gameData.ts`'in yalnızca "seed kaynağı" olduğunu netleştiren bir dosya-başı not — gerçek çalışma zamanı içeriği DB'den (`ContentSet`/`ContentItem`) geliyor, bu ayrım koda yeni bakan biri için açık değil.
+1. ✅ Harf-bazlı zayıflık takibi (blok a).
+2. ✅ `ProgressTab.tsx`'e beceri/harf bazlı ilerleme özeti (blok b).
+3. ✅ Erişilebilirlik etiketleri — `aria-label`, `aria-live` (blok c). *(Gerçek ekran okuyucu testi hâlâ bir insan/cihaz adımı.)*
+4. ✅ İpucu kelimesinin sesli okunması (blok d/g).
+5. ⏳ Kalan 169 kelimenin görsel eksikliği (blok d) — Faz 3.16, roadmap'te takipte, kod dışı bir iş (görsel bulma/üretme).
+6. ✅ `reduceMotion` → oyun davranışı köprüsü (blok e) — tüm oyunları kapsayacak şekilde kuruldu. *(`sensoryProfile` JSON'u hâlâ bağlı değil, ayrı ve daha karmaşık bir iş.)*
+7. ✅ `submitLevelResult` yetki kontrolü sıkılaştırması (blok f).
+8. ✅ `gameData.ts`'e "yalnızca seed kaynağı" notu (blok f/genel).
+
+**Yeni ortaya çıkan, henüz ele alınmayan öneriler:**
+- `sensoryProfile` JSON'unun oyun davranışına bağlanması (blok e) — `reduceMotion`'dan daha karmaşık, ayrı bir tasarım turu gerektiriyor.
+- Ebeveyn panelinden harf-bazlı zorluk override'ı (blok b) — otomatik ağırlıklandırmayı (madde 1) tamamlayıcı manuel kontrol.
+- Pekiştirme yoğunluğunun aralıklı hale getirilmesi (blok a) — her tek doğru cevapta değil, ör. her 2-3 doğruda bir tam kutlama.
+- İpucuya özel bir "dikkat" sesi/chime (blok g) — küçük, isteğe bağlı.
+- Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi (blok c) — insan/cihaz adımı.
 
 ---
 
@@ -130,8 +133,12 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - 2026-09-14: Mobil/masaüstü HUD-kart çakışma bug'ı düzeltildi.
 - 2026-09-14: Sayfa yenilenince "Başla" ekranına dönme sorunu (sessionStorage ile) ve "Bugün X/Y doğru" özeti eklendi.
 - 2026-09-14: Arka plan bildirimi eşiği 15 saniyeden 5 dakikaya çıkarıldı.
+- 2026-09-14: Denetimde bulunan `AUDIOS.wrong`'un hâlâ ölü CDN'e bağlı kalması ve `handleDragStart`'ın tip güvenliği düzeltildi.
+- 2026-09-14: Kapsamlı denetimin 8 geliştirme önerisinin tamamı uygulandı — erişilebilirlik etiketleri, ipucu kelimesinin seslendirilmesi, `submitLevelResult` yetki kontrolü, `gameData.ts` notu (küçük); harf-bazlı zayıflık takibi, `ProgressTab`'e beceri ilerlemesi (orta); `reduceMotion` → Framer Motion köprüsü — tüm oyunları kapsıyor (mimari).
 
 ## Açık kalan işler (roadmap referansı)
 
-- **Faz 3.16** — Harf Avı güçlendirilecek harfler (169 kelimenin görsel eksikliği).
-- Bu dokümandaki blok (b), (e) bulguları henüz roadmap'e madde olarak işlenmedi — gerekirse Faz 3'e yeni bir madde olarak eklenebilir.
+- **Faz 3.16** — Harf Avı güçlendirilecek harfler (169 kelimenin görsel eksikliği). Kod dışı, görsel bulma/üretme işi.
+- `sensoryProfile` JSON'unun oyun davranışına bağlanması — henüz roadmap'e madde olarak işlenmedi.
+- Ebeveyn panelinden harf-bazlı zorluk override'ı — henüz roadmap'e madde olarak işlenmedi.
+- Gerçek ekran okuyucu testi ve klinik/pedagojik uzman denetimi (blok a, c) — Faz 3'ün "Uzman denetimi" ve "Tam gerçek-cihaz QA" notlarının kapsamında, ayrı insan/cihaz adımları.
