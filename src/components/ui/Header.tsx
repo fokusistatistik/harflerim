@@ -7,16 +7,30 @@ import Link from 'next/link';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { DaisyProgress } from '@/components/ui/DaisyProgress';
+import { getTodaySummary } from '@/actions/todaySummary';
 
 const TOTAL_PETALS = 8;
 
 export function Header() {
-    const { isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
-    // Faz 1.9 — geçici çözüm: yapraklar zaman oranına göre dolar. Faz 2.8
-    // gerçek "günün sekiz etkinliği" mantığını getirdiğinde bu hesap yerini bırakır.
-    const filledPetals = isDayComplete
-        ? TOTAL_PETALS
-        : Math.max(0, Math.min(TOTAL_PETALS, Math.floor((dailyScreenSeconds / Math.max(1, dailyScreenLimit)) * TOTAL_PETALS)));
+    const { isDayComplete } = useLevelStore();
+    // 2026-09-14 — kullanıcı bulgusu: "3/8 tamamlandı" yazıyor ama sadece 1
+    // yaprak doluydu. Kök neden: bu gösterge Faz 1.9'un geçici zaman-oranı
+    // hesabını (dailyScreenSeconds/dailyScreenLimit) kullanıyordu, Faz 2.8'in
+    // gerçek "günün sekiz etkinliği" mantığına (bkz. TodaySummary.tsx,
+    // getTodaySummary) hiç bağlanmamıştı — iki gösterge aynı papatya
+    // metaforunu paylaşıyordu ama birbirinden bağımsızdı. Artık aynı kaynağı
+    // okuyor: kaç etkinlik "yapıldı" işaretliyse o kadar yaprak dolu.
+    const [doneCount, setDoneCount] = useState(0);
+    useEffect(() => {
+        let cancelled = false;
+        getTodaySummary().then((activities) => {
+            if (!cancelled) setDoneCount(activities.filter((a) => a.done).length);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+    const filledPetals = Math.max(0, Math.min(TOTAL_PETALS, doneCount));
     const openPinPrompt = useParentGateStore((s) => s.openPinPrompt);
     const longPress = useLongPress(openPinPrompt);
     const [time, setTime] = useState('');

@@ -24,13 +24,6 @@ export default async function Home() {
         <main className="min-h-app bg-cream flex flex-col items-center justify-start p-4 pt-16 md:pt-20 lg:pt-8 relative overflow-hidden">
             <GameInitializer state={session} />
 
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
-                <div className="absolute top-10 left-10 text-6xl opacity-20 animate-bounce delay-700">A</div>
-                <div className="absolute bottom-20 right-20 text-8xl opacity-20 animate-bounce delay-1000">B</div>
-                <div className="absolute top-1/2 right-10 text-7xl opacity-20 animate-bounce delay-300">C</div>
-            </div>
-
             {/* Hero Section — 2026-09-13: masaüstünde avatar+başlık yan yana
                 (lg:flex-row), üstteki dikey boşluk azaltıldı (kullanıcı UX
                 geri bildirimi: "üstteki boşluğu azalt"). */}
