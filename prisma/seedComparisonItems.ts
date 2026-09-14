@@ -140,6 +140,11 @@ const ITEMS: ComparisonItemSeed[] = [
     { slug: 'jelibon', name: 'Jelibon', category: 'yiyecek', color: 'kırmızı', approxWeightKg: 0.01, approxVolumeL: 0.01, approxSizeCm: 3, sizeCategory: 'kucuk', tags: ['yiyecek', 'şeker', 'kırmızı'] },
     { slug: 'ceviz', name: 'Ceviz', category: 'yiyecek', color: 'kahverengi', approxWeightKg: 0.01, approxVolumeL: 0.01, approxSizeCm: 4, sizeCategory: 'kucuk', tags: ['yiyecek', 'kuruyemiş', 'kahverengi'] },
     { slug: 'isik', name: 'Trafik Işığı', category: 'esya', color: 'kırmızı-sarı-yeşil', approxWeightKg: 15, approxVolumeL: 20, approxSizeCm: 200, sizeCategory: 'buyuk', tags: ['trafik', 'renkli', 'oyuncak'] },
+
+    // 2026-09-14 — üçüncü tur ekleme (3 yeni görsel + ucak.jpg güncellemesi).
+    { slug: 'ip', name: 'İp', category: 'esya', color: 'mor', approxWeightKg: 0.05, approxVolumeL: 0.05, approxSizeCm: 10, sizeCategory: 'kucuk', tags: ['ev', 'mor', 'sarım'] },
+    { slug: 'lale', name: 'Lale', category: 'doga', color: 'kırmızı', approxWeightKg: 0.02, approxVolumeL: 0.02, approxSizeCm: 30, sizeCategory: 'kucuk', tags: ['çiçek', 'kırmızı', 'bitki'] },
+    { slug: 'valiz', name: 'Valiz', category: 'esya', color: 'yeşil', approxWeightKg: 3, approxVolumeL: 40, approxSizeCm: 55, sizeCategory: 'orta', tags: ['seyahat', 'yeşil', 'çanta'] },
 ];
 
 async function main() {

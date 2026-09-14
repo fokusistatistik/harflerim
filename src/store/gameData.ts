@@ -131,7 +131,7 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     'İ': [
         { word: 'İnek', img: '/karsilastirma/inek.jpg' },
         { word: 'İncir', img: 'https://static.fokusistatistik.com/melike/gorseller/incir.png' },
-        { word: 'İp', img: 'https://static.fokusistatistik.com/melike/gorseller/ip.png' },
+        { word: 'İp', img: '/karsilastirma/ip.jpg' },
         { word: 'İtfaiye', img: 'https://static.fokusistatistik.com/melike/gorseller/itfaiye.png' },
         { word: 'İğne', img: 'https://static.fokusistatistik.com/melike/gorseller/igne.png' },
         { word: 'İlaç', img: 'https://static.fokusistatistik.com/melike/gorseller/ilac.png' },
@@ -166,7 +166,7 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     'L': [
         { word: 'Limon', img: '/karsilastirma/limon.jpg' },
         { word: 'Leylek', img: 'https://static.fokusistatistik.com/melike/gorseller/leylek.png' },
-        { word: 'Lale', img: 'https://static.fokusistatistik.com/melike/gorseller/lale.png' },
+        { word: 'Lale', img: '/karsilastirma/lale.jpg' },
         { word: 'Leğen', img: 'https://static.fokusistatistik.com/melike/gorseller/legen.png' },
         { word: 'Lolipop', img: 'https://static.fokusistatistik.com/melike/gorseller/lolipop.png' },
         { word: 'Levrek', img: 'https://static.fokusistatistik.com/melike/gorseller/levrek.png' }
@@ -276,7 +276,7 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Ünlü', img: 'https://static.fokusistatistik.com/melike/gorseller/unlu.png' }
     ],
     'V': [
-        { word: 'Valiz', img: 'https://static.fokusistatistik.com/melike/gorseller/valiz.png' },
+        { word: 'Valiz', img: '/karsilastirma/valiz.jpg' },
         { word: 'Vişne', img: 'https://static.fokusistatistik.com/melike/gorseller/visne.png' },
         { word: 'Vapur', img: 'https://static.fokusistatistik.com/melike/gorseller/vapur.png' },
         { word: 'Voleybol', img: 'https://static.fokusistatistik.com/melike/gorseller/voleybol.png' },
