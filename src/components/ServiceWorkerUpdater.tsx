@@ -35,17 +35,26 @@ export function ServiceWorkerUpdater() {
         // denemesinden kalma) bir SW hâlâ kayıtlı duruyorsa, o eski SW
         // dev server'ın servis ettiği isteklere bile müdahale edip eski
         // cache'lenmiş görselleri döndürmeye devam eder. Dev modda hiç SW
-        // olmaması gerektiği için, burada varsa ZORLA temizlenir — güvenli,
-        // çünkü doğru davranışta (dev) zaten hiç SW kaydı olmamalı.
+        // olmaması gerektiği için, burada varsa temizlenir.
+        //
+        // 2026-09-14 (3. bulgu) — İLK SÜRÜM burada unregister() sonrası
+        // OTOMATİK reload() çağırıyordu. Bu bir döngü riski taşıyordu:
+        // unregister() tamamlanmadan reload tetiklenirse (ya da SW'nin
+        // fetch handler'ı reload'un kendi isteğini son bir kez yakalarsa)
+        // yeni sayfa yüklemesi SW'yi TEKRAR bulup component TEKRAR
+        // unregister+reload yapabiliyordu — "4-5 saniyede bir kendi
+        // kendine yenilenip eski hâline dönme" bildirilen davranışın
+        // kaynağı büyük ihtimalle buydu. Artık reload YOK: yalnızca
+        // sessizce unregister edilir, kullanıcı zaten bildiği şekilde
+        // (normal navigasyon/sekme yenileme) devam eder — kontrolsüz
+        // otomatik reload döngüsüne kapı açılmaz.
         if (process.env.NODE_ENV === 'development') {
             navigator.serviceWorker.getRegistrations().then((regs) => {
                 if (regs.length === 0) return;
-                Promise.all(regs.map((r) => r.unregister())).then(() => {
-                    if ('caches' in window) {
-                        caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n))));
-                    }
-                    window.location.reload();
-                });
+                Promise.all(regs.map((r) => r.unregister()));
+                if ('caches' in window) {
+                    caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n))));
+                }
             });
             return;
         }
