@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDb = {
-    event: { create: vi.fn() },
+    event: { create: vi.fn(), findMany: vi.fn() },
     session: { findUnique: vi.fn(), update: vi.fn() },
     userSettings: { findUnique: vi.fn() },
     dailyUsage: { findUnique: vi.fn(), upsert: vi.fn() },
+    skill: { findUnique: vi.fn() },
+    skillAttempt: { findMany: vi.fn() },
 };
 
 vi.mock('@/lib/db', () => ({ db: mockDb }));
@@ -48,6 +50,10 @@ function mockDailyUsage({
 describe('submitLevelResult', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // 2026-09-14 — denetim bulgusu düzeltmesi: submitLevelResult artık
+        // getCurrentUser() ile çağıranın oturum sahibi olduğunu doğruluyor.
+        // baseSession()'ın userId'siyle ('user-1') eşleşen varsayılan mock.
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1' } as any);
     });
 
     it('logs the attempt as an Event with the given difficulty indicator', async () => {
@@ -111,6 +117,27 @@ describe('submitLevelResult', () => {
         expect(mockDb.session.update).not.toHaveBeenCalled();
         expect(result).toBeNull();
     });
+
+    it('returns null and writes nothing if there is no current user', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValue(null as any);
+        mockDb.session.findUnique.mockResolvedValue(baseSession());
+
+        const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
+
+        expect(mockDb.event.create).not.toHaveBeenCalled();
+        expect(mockDb.session.update).not.toHaveBeenCalled();
+        expect(result).toBeNull();
+    });
+
+    it('returns null and writes nothing if the session belongs to a different user', async () => {
+        mockDb.session.findUnique.mockResolvedValue(baseSession({ userId: 'someone-else' }));
+
+        const result = await submitLevelResult('session-1', 5, true, 1000, 'A');
+
+        expect(mockDb.event.create).not.toHaveBeenCalled();
+        expect(mockDb.session.update).not.toHaveBeenCalled();
+        expect(result).toBeNull();
+    });
 });
 
 describe('getAdaptiveRoundConfig', () => {
@@ -123,6 +150,33 @@ describe('getAdaptiveRoundConfig', () => {
 
         const result = await getAdaptiveRoundConfig();
 
-        expect(result).toEqual({ optionCount: 2, distractorType: 'random' });
+        expect(result).toEqual({ optionCount: 2, distractorType: 'random', weakLetters: [] });
+    });
+
+    it('returns no weak letters when there is no Event history yet', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1' } as any);
+        mockDb.skillAttempt.findMany.mockResolvedValue([]);
+        mockDb.event.findMany.mockResolvedValue([]);
+
+        const result = await getAdaptiveRoundConfig();
+
+        expect(result.weakLetters).toEqual([]);
+    });
+
+    it('surfaces the letters with the highest wrong-rate in the recent window, worst first', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1' } as any);
+        mockDb.skillAttempt.findMany.mockResolvedValue([]);
+        mockDb.event.findMany.mockResolvedValue([
+            { targetLetter: 'B', isCorrect: false },
+            { targetLetter: 'B', isCorrect: false },
+            { targetLetter: 'A', isCorrect: true },
+            { targetLetter: 'A', isCorrect: false },
+            { targetLetter: 'C', isCorrect: true },
+        ]);
+
+        const result = await getAdaptiveRoundConfig();
+
+        // B: 2/2 yanlış (%100), A: 1/2 yanlış (%50), C: hiç yanlış yok — dahil değil.
+        expect(result.weakLetters).toEqual(['B', 'A']);
     });
 });

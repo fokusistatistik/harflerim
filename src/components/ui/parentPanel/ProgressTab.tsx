@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getUsageStats, type UsageStats } from '@/actions/usageStats';
 import { listBadges, type BadgeData } from '@/actions/badges';
 import { listRecentAuditLog, type AuditLogEntry } from '@/actions/auditLogView';
+import { getAllSkillProgress, type SkillProgressSummary } from '@/actions/skills';
 
 function formatMinutes(seconds: number): string {
     return `${Math.round(seconds / 60)} dk`;
@@ -30,18 +31,22 @@ export function ProgressTab() {
     const [stats, setStats] = useState<UsageStats | null>(null);
     const [badges, setBadges] = useState<BadgeData[]>([]);
     const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
+    const [skillProgress, setSkillProgress] = useState<SkillProgressSummary[]>([]);
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
-        Promise.all([getUsageStats(), listBadges(), listRecentAuditLog()]).then(([usageResult, badgeResult, auditResult]) => {
-            if (!cancelled) {
-                setStats(usageResult);
-                setBadges(badgeResult);
-                setAuditLog(auditResult);
-                setLoaded(true);
+        Promise.all([getUsageStats(), listBadges(), listRecentAuditLog(), getAllSkillProgress()]).then(
+            ([usageResult, badgeResult, auditResult, skillResult]) => {
+                if (!cancelled) {
+                    setStats(usageResult);
+                    setBadges(badgeResult);
+                    setAuditLog(auditResult);
+                    setSkillProgress(skillResult);
+                    setLoaded(true);
+                }
             }
-        });
+        );
         return () => {
             cancelled = true;
         };
@@ -94,6 +99,37 @@ export function ProgressTab() {
                                 {badge.label}
                             </li>
                         ))}
+                    </ul>
+                )}
+            </div>
+
+            <div className="border-t border-papatya-rule pt-3">
+                <p className="text-p-sm font-bold text-papatya-ink-soft mb-2">Beceri ilerlemesi</p>
+                <p className="text-p-sm text-papatya-ink-soft mb-2">
+                    Son 10 denemedeki başarı oranı — yorum içermez, sıralama/puan değildir.
+                </p>
+                {skillProgress.filter((s) => s.attemptCount > 0).length === 0 ? (
+                    <p className="text-p-sm text-papatya-ink-soft">Henüz yeterli deneme yok.</p>
+                ) : (
+                    <ul className="flex flex-col gap-2">
+                        {skillProgress
+                            .filter((s) => s.attemptCount > 0)
+                            .map((s) => (
+                                <li key={s.skillKey} className="bg-papatya-cream rounded-p-md p-3">
+                                    <div className="flex items-center justify-between text-p-sm mb-1">
+                                        <span className="font-bold">{s.label}</span>
+                                        <span className="text-papatya-ink-soft">
+                                            {s.successRate !== null ? `%${Math.round(s.successRate * 100)}` : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="h-2 bg-papatya-rule/30 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-papatya-leaf rounded-full"
+                                            style={{ width: `${Math.round((s.successRate ?? 0) * 100)}%` }}
+                                        />
+                                    </div>
+                                </li>
+                            ))}
                     </ul>
                 )}
             </div>

@@ -28,7 +28,14 @@ export function DraggableToken({ letter, id, disabled, highlight, letterImages }
     const imgSrc = letterImages[letter];
 
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="z-50 touch-none">
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
+            aria-label={`${letter} harfi, sürüklenebilir`}
+            className="z-50 touch-none"
+        >
             <motion.div
                 animate={
                     isDragging

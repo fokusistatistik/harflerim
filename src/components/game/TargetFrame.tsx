@@ -23,6 +23,9 @@ export function TargetFrame({ id, targetLetter, status, letterImages }: TargetFr
 
     return (
         <div ref={setNodeRef} className="relative">
+            <span role="status" aria-live="polite" className="sr-only">
+                {status === 'success' ? 'Doğru!' : status === 'error' ? 'Tekrar deneyelim' : ''}
+            </span>
             <motion.div
                 animate={
                     status === 'error' ? { x: [-10, 10, -10, 10, 0] } :

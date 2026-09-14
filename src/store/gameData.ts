@@ -1,3 +1,12 @@
+/**
+ * ⚠️ Bu dosyadaki LETTER_OBJECTS/LETTER_IMAGES, Harf Avı'nın ÇALIŞMA ZAMANI
+ * içerik kaynağı DEĞİLDİR — yalnızca `prisma/seedContent.ts`'in DB'yi
+ * (ContentSet/ContentItem) tohumladığı KAYNAK VERİDİR (Faz 1.4). Oyun
+ * gerçekte `src/actions/content.ts` → `getGameContent()` ile DB'den okur.
+ * Bu dosyada bir kelime/görsel değiştirirsen, DB'ye yansıması için
+ * `npm run seed:content` çalıştırman gerekir — aksi halde değişiklik
+ * yalnızca burada kalır, oyunda görünmez.
+ */
 export interface LetterAsset {
     word: string;
     img: string;

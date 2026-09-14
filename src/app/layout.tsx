@@ -8,6 +8,7 @@ import { CalmingMode } from '@/components/ui/CalmingMode';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { ParentGate } from '@/components/ui/ParentGate';
 import { BackgroundAwareness } from '@/components/ui/BackgroundAwareness';
+import { MotionPreference } from '@/components/MotionPreference';
 import { APP_NAME } from '@/config/brand';
 import { getCurrentUser } from '@/lib/auth';
 import './globals.css';
@@ -73,16 +74,18 @@ export default async function RootLayout({
             data-theme="light"
         >
             <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16 lg:pt-20' : ''}`}>
-                <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
-                    {user && <Header />}
-                    {user && <ToastHost />}
-                    {user && <ParentGate />}
-                    {user && <BackgroundAwareness />}
-                    {children}
-                    {user && <DayComplete />}
-                    {user && <CalmingMode />}
-                </AudioProvider>
-                {user && <ParentFooter />}
+                <MotionPreference reduceMotion={settings?.reduceMotion ?? false}>
+                    <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
+                        {user && <Header />}
+                        {user && <ToastHost />}
+                        {user && <ParentGate />}
+                        {user && <BackgroundAwareness />}
+                        {children}
+                        {user && <DayComplete />}
+                        {user && <CalmingMode />}
+                    </AudioProvider>
+                    {user && <ParentFooter />}
+                </MotionPreference>
             </body>
         </html>
     );

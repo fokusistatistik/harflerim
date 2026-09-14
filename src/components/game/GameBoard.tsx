@@ -65,12 +65,12 @@ const SIMILAR_MAPPING: Record<string, string[]> = {
 // kolay ayar. src/lib/adaptiveDifficulty.ts'teki BASE_ADAPTIVE_CONFIG ile
 // AYNI değerler — o dosya sunucu-only (Prisma'ya dokunuyor) olduğu için
 // buraya bilerek runtime import edilmiyor, yalnızca tipi paylaşılıyor.
-const FALLBACK_DIFFICULTY: AdaptiveConfig = { optionCount: 2, distractorType: 'random' };
+const FALLBACK_DIFFICULTY: AdaptiveConfig = { optionCount: 2, distractorType: 'random', weakLetters: [] };
 
 export default function GameBoard() {
     const { isDayComplete, sessionId, firstName } = useLevelStore();
     const isLocked = isDayComplete;
-    const { askLetter, encourageRetry } = useAudio();
+    const { askLetter, encourageRetry, speak } = useAudio();
     const pushToast = useNotificationStore((s) => s.pushToast);
     const { data: content } = useGameContent();
     const triggerReward = useRewardMoment();
@@ -176,8 +176,14 @@ export default function GameBoard() {
         const config = await getAdaptiveRoundConfig();
         setDifficulty(config);
 
-        // Pick Target
-        const randomTarget = alphabetOrder[Math.floor(Math.random() * alphabetOrder.length)];
+        // Pick Target — 2026-09-14 denetim bulgusu: hedef harf tamamen
+        // rastgeleydi, "hangi harflerde zorlanıyor" bilgisi hiç
+        // kullanılmıyordu. Ağırlıklı rastgele: zayıf harf varsa %50
+        // olasılıkla oradan seçilir (tam öncelik değil — çeşitlilik/
+        // tekrar oynanabilirlik korunur, sıkıcı bir döngüye girmez).
+        const useWeakLetter = config.weakLetters.length > 0 && Math.random() < 0.5;
+        const targetPool = useWeakLetter ? config.weakLetters : alphabetOrder;
+        const randomTarget = targetPool[Math.floor(Math.random() * targetPool.length)];
         const objects = letterObjects[randomTarget];
         const randomObj = objects[Math.floor(Math.random() * objects.length)];
 
@@ -215,7 +221,14 @@ export default function GameBoard() {
         setOptions(allOptions);
         setStatus('idle');
         setStartTime(Date.now());
-        askLetter(randomTarget).catch(() => {});
+        // 2026-09-14 — denetim bulgusu: yalnızca hedef harf sesli okunuyordu,
+        // ipucu kelimesi (ör. "Uçak") hiç seslendirilmiyordu — yalnızca
+        // ekranda yazı olarak görünüyordu. Çoklu-duyusal pekiştirme için
+        // harf sorusu bitince kelime de art arda seslendirilir (await ile
+        // sıralı — aynı anda iki TTS sesi çakışmasın diye).
+        askLetter(randomTarget)
+            .then(() => speak(randomObj.word))
+            .catch(() => {});
     };
     startRoundRef.current = startRound;
 

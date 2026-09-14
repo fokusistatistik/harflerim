@@ -30,7 +30,7 @@ describe('getAdaptiveConfig', () => {
             sonDenemeOrtalamaTepkiSuresi: 1000,
         });
 
-        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 2, distractorType: 'random' });
+        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 2, distractorType: 'random', weakLetters: [] });
     });
 
     it('increases difficulty (similar distractors) on strong recent performance', async () => {
@@ -56,7 +56,7 @@ describe('getAdaptiveConfig', () => {
             sonDenemeOrtalamaTepkiSuresi: 1500,
         });
 
-        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 4, distractorType: 'random' });
+        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 4, distractorType: 'random', weakLetters: [] });
     });
 
     it('returns the easiest config on weak performance', async () => {
@@ -67,7 +67,7 @@ describe('getAdaptiveConfig', () => {
             sonDenemeOrtalamaTepkiSuresi: 1500,
         });
 
-        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 2, distractorType: 'random' });
+        await expect(getAdaptiveConfig('user-1')).resolves.toEqual({ optionCount: 2, distractorType: 'random', weakLetters: [] });
     });
 });
 

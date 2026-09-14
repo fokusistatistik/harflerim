@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { detectErrorStreak } from '@/lib/skillAnalytics';
 
 /** Faz 2.8b — rozet emojileri. Yeni bir skillKey eklendiğinde buraya da bir satır eklenir. */
 const BADGE_EMOJI: Record<string, string> = {
@@ -103,5 +104,46 @@ export async function getTodaySkillStats(skillKey: string): Promise<TodaySkillSt
         return { correct, total };
     } catch {
         return { correct: 0, total: 0 };
+    }
+}
+
+export interface SkillProgressSummary {
+    skillKey: string;
+    label: string;
+    /** Son 10 denemedeki başarı oranı (0-1), hiç deneme yoksa null. */
+    successRate: number | null;
+    /** Son 10 denemede kaç deneme fiilen vardı (10'dan az olabilir). */
+    attemptCount: number;
+}
+
+/**
+ * 2026-09-14 — denetim bulgusu (moduller/harfavi.md, blok b): ebeveyn
+ * panelinde beceri bazlı ilerleme hiç görünmüyordu, yalnızca genel süre +
+ * rozet vardı. `detectErrorStreak`'in zaten hesapladığı ham göstergeyi
+ * (son 10 deneme başarı oranı) ProgressTab.tsx için toparlar — Faz 3.8'in
+ * ("içgörü raporu") ilk, sade adımı. Yorum/etiket üretmez, ham oran döner.
+ */
+export async function getAllSkillProgress(): Promise<SkillProgressSummary[]> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return [];
+
+        const skills = await db.skill.findMany({ orderBy: { label: 'asc' } });
+
+        const results = await Promise.all(
+            skills.map(async (skill) => {
+                const stats = await detectErrorStreak(user.id, skill.key);
+                return {
+                    skillKey: skill.key,
+                    label: skill.label,
+                    successRate: stats.sonDenemeBasariOrani,
+                    attemptCount: stats.sonDenemeSayisi,
+                };
+            })
+        );
+
+        return results;
+    } catch {
+        return [];
     }
 }

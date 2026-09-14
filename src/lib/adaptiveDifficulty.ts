@@ -12,14 +12,28 @@ import { detectErrorStreak } from '@/lib/skillAnalytics';
 export interface AdaptiveConfig {
     optionCount: number;
     distractorType: 'random' | 'similar';
+    /**
+     * 2026-09-14 — denetim bulgusu: hedef harf seçimi tamamen rastgeleydi,
+     * "hangi harflerde zorlanıyor" bilgisi hiç kullanılmıyordu. Son N
+     * denemede en çok yanlış yapılan harfler (varsa) — GameBoard.tsx bu
+     * listeyi ağırlıklı rastgele seçimde kullanır (tam öncelik değil,
+     * çeşitlilik korunur). Boş dizi = yeterli veri yok / tüm harfler dengeli.
+     */
+    weakLetters: string[];
 }
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 12;
 
 /** Hiç geçmiş yokken (ilk round) — eski Level 1 ile birebir aynı, çocuk asla sıfırdan zor bir round görmez. */
-export const BASE_ADAPTIVE_CONFIG: AdaptiveConfig = { optionCount: MIN_OPTIONS, distractorType: 'random' };
+export const BASE_ADAPTIVE_CONFIG: AdaptiveConfig = { optionCount: MIN_OPTIONS, distractorType: 'random', weakLetters: [] };
 
+/**
+ * `weakLetters` bu SAF fonksiyonun dışında hesaplanır (Event tablosuna
+ * erişim gerektirir, harf-bazlı veri `SkillAttempt`'te değil yalnızca
+ * Harf Avı'na özel `Event` tablosunda tutulur) — çağıran katman
+ * (`src/actions/game.ts`'teki `getAdaptiveRoundConfig`) doldurur.
+ */
 export async function getAdaptiveConfig(userId: string): Promise<AdaptiveConfig> {
     const stats = await detectErrorStreak(userId, 'harf-tanima');
 
@@ -28,21 +42,21 @@ export async function getAdaptiveConfig(userId: string): Promise<AdaptiveConfig>
     // Ardışık yanlış varsa — zorluğu ne olursa olsun hemen en kolay
     // ayara dön. Çocuğu zorlukta tutmamak, ilerlemekten daha öncelikli.
     if (stats.ardisikYanlisSayisi >= 3) {
-        return { optionCount: MIN_OPTIONS, distractorType: 'random' };
+        return { optionCount: MIN_OPTIONS, distractorType: 'random', weakLetters: [] };
     }
 
     const basari = stats.sonDenemeBasariOrani ?? 0;
 
     if (basari >= 0.8) {
         const optionCount = Math.min(MAX_OPTIONS, 6 + Math.round(basari * 6));
-        return { optionCount, distractorType: 'similar' };
+        return { optionCount, distractorType: 'similar', weakLetters: [] };
     }
 
     if (basari >= 0.5) {
-        return { optionCount: 4, distractorType: 'random' };
+        return { optionCount: 4, distractorType: 'random', weakLetters: [] };
     }
 
-    return { optionCount: MIN_OPTIONS, distractorType: 'random' };
+    return { optionCount: MIN_OPTIONS, distractorType: 'random', weakLetters: [] };
 }
 
 export interface MemoryAdaptiveConfig {
