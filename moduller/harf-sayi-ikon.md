@@ -57,7 +57,7 @@
 | cop | `cop.png` | ✅ Entegre | `DrawingBoard.tsx` ("Temizle" butonu) |
 | çarpı | `carpi.png` | ✅ Entegre | `GameIntroCard.tsx` (banner kapatma) |
 | yıldız | `yildiz.png` | ✅ Entegre | `app/page.tsx` (ana sayfa avatar rozeti) |
-| nota | `nota.png` | ⏳ Bağlanmadı | Müzik Köşesi kartının uygun bir JPG'si `diger` klasöründe yoktu, NavGrid'de lucide `Music` kaldı |
+| nota | `nota.png` | ✅ Entegre (2026-09-14) | `navAreas.ts` — Müzik Köşesi NavGrid kartı |
 | yaz | `yaz.png` | ⏳ Bağlanmadı | `nav_writing_practice.png` (aşağıda) bu amaç için kullanıldı, bu orijinal dosya beklemede |
 | play | `play.png` | ⏳ Bağlanmadı | Yalnızca ebeveyn panelinde (`FamilyMembersTab.tsx`) kullanılıyor — kapsam dışı (çocuk ekranı değil) |
 | geri | `geri.png` | ⏳ Bağlanmadı | Net bir kullanım senaryosu bulunamadı (bkz. not aşağıda) |
@@ -66,8 +66,8 @@
 | kupa | `kupa.png` | ⏳ Bağlanmadı | Kodda `Trophy` hiç kullanılmıyor — gelecekteki bir "başarılar" ekranı adayı |
 | madalya | `madalya.png` | ⏳ Bağlanmadı | Kodda `Award` hiç kullanılmıyor — gelecekteki bir "başarılar" ekranı adayı |
 | kalp | `kalp.png` | ⏳ Bağlanmadı | Kodda `Heart` hiç kullanılmıyor — gelecekteki bir "favori/sevdiklerim" adayı |
-| ses_a | `ses_a.png` | ⏳ Bağlanmadı | Hoparlör/ses-seviyesi ikonu; `MagicWordsGame.tsx`'teki `Mic`/`MicOff` KAVRAMSAL OLARAK FARKLI (mikrofon-giriş, hoparlör-çıkış değil) — yanlış eşleşme olmasın diye bağlanmadı |
-| ses_k | `ses_k.png` | ⏳ Bağlanmadı | (yukarıdaki ile aynı gerekçe) |
+| ses_a | `ses_a.png` | ✅ Entegre (2026-09-14) | `navAreas.ts` — Sihirli Kelimeler NavGrid kartı. Not: kavramsal olarak hoparlör (ses-çıkışı) ikonu, oyunun mikrofon (ses-girişi) temasıyla tam örtüşmüyor — kullanıcı onayıyla bilinçli olarak kullanıldı, daha uygun bir mikrofon görseli gelirse değiştirilebilir |
+| ses_k | `ses_k.png` | ⏳ Bağlanmadı | ses_a'nın "sessiz" hali (aynı hoparlör, dalgasız) — henüz bir ses aç/kapat toggle'ı olmadığı için kullanım yeri yok |
 
 **Not — `geri.png`:** GameHud'daki "Geri" butonu aslında "Ana Sayfa"ya dönüş anlamında (`home.png` ile eşleşti). `WritingPractice.tsx`'teki önceki/sonraki harf okları çift yönlü (sol+sağ) ama elimizde yalnızca tek yönlü (sol) bir ok var — tutarsız görünmesin diye o da bağlanmadı. Net bir "geri dön" senaryosu (örn. çok adımlı bir akışta bir önceki adıma dönme) ortaya çıkınca kullanılabilir.
 

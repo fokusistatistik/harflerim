@@ -41,6 +41,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/games/magic-words',
         status: 'active',
         accent: 'petal',
+        imageSrc: '/ikonlar/ses_a.png',
     },
     {
         id: 'memory-match',
@@ -67,6 +68,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/music-corner',
         status: 'active',
         accent: 'rose',
+        imageSrc: '/ikonlar/nota.png',
     },
     {
         id: 'cartoon',
