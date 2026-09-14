@@ -92,14 +92,14 @@ export function IdentitySection() {
     }
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
             <h3 className="text-p-base font-bold text-papatya-ink-soft">Kimlik</h3>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploadingAvatar}
-                    className="relative w-16 h-16 rounded-full shrink-0 group"
+                    className="relative w-14 h-14 rounded-full shrink-0 group"
                     aria-label="Profil fotoğrafını değiştir"
                     title="Profil fotoğrafını değiştir"
                 >
@@ -107,20 +107,20 @@ export function IdentitySection() {
                         <ImageWithFallback
                             src={avatarUrl}
                             alt={firstName}
-                            className="w-16 h-16 rounded-full object-cover border-2 border-papatya-rule"
+                            className="w-14 h-14 rounded-full object-cover border-2 border-papatya-rule"
                             fallback={
-                                <div className="w-16 h-16 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
-                                    <UserIcon className="text-papatya-petal-deep" size={28} />
+                                <div className="w-14 h-14 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
+                                    <UserIcon className="text-papatya-petal-deep" size={24} />
                                 </div>
                             }
                         />
                     ) : (
-                        <div className="w-16 h-16 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
-                            <UserIcon className="text-papatya-petal-deep" size={28} />
+                        <div className="w-14 h-14 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
+                            <UserIcon className="text-papatya-petal-deep" size={24} />
                         </div>
                     )}
                     <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
-                        <Camera size={18} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Camera size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </span>
                 </button>
                 <input
@@ -135,24 +135,24 @@ export function IdentitySection() {
                 </p>
             </div>
 
-            <form onSubmit={handleNameSave} className="flex flex-col gap-3">
-                <div className="flex gap-3">
-                    <label className="flex-1 flex flex-col gap-1">
+            <form onSubmit={handleNameSave} className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                    <label className="flex flex-col gap-1 min-w-0">
                         <span className="text-p-sm text-papatya-ink-soft">Ad</span>
                         <input
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                            className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                         />
                     </label>
-                    <label className="flex-1 flex flex-col gap-1">
+                    <label className="flex flex-col gap-1 min-w-0">
                         <span className="text-p-sm text-papatya-ink-soft">Soyad</span>
                         <input
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                            className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                         />
                     </label>
                 </div>
@@ -167,14 +167,14 @@ export function IdentitySection() {
                 </button>
             </form>
 
-            <form onSubmit={handleUsernameSave} className="flex flex-col gap-2 border-t border-papatya-rule pt-3">
+            <form onSubmit={handleUsernameSave} className="flex flex-col gap-1.5 border-t border-papatya-rule pt-3">
                 <label className="flex flex-col gap-1">
                     <span className="text-p-sm text-papatya-ink-soft">Kullanıcı adı (giriş ekranında kullanılır)</span>
                     <input
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
                 </label>
                 <p className="text-p-sm text-papatya-rose">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music, Film, Palette } from 'lucide-react';
+import { Lock, X, LogOut, Clock, Sparkles, HeartPulse, LineChart, Users, Music, Film, Palette, ScrollText } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { verifyParentPin, changeParentPin } from '@/actions/parentGate';
 import { logout } from '@/actions/auth';
@@ -14,6 +14,7 @@ import { MusicTab } from './parentPanel/MusicTab';
 import { CartoonTab } from './parentPanel/CartoonTab';
 import { DrawingsTab } from './parentPanel/DrawingsTab';
 import { IdentitySection } from './parentPanel/IdentitySection';
+import { AuditLogTab } from './parentPanel/AuditLogTab';
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
@@ -31,6 +32,7 @@ const TABS = [
     { key: 'duyusal', label: 'Duyusal', icon: HeartPulse },
     { key: 'sure', label: 'Ekran Süresi', icon: Clock },
     { key: 'ilerleme', label: 'İlerleme', icon: LineChart },
+    { key: 'kayitlar', label: 'Kayıtlar', icon: ScrollText },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -133,8 +135,8 @@ export function ParentGate() {
             aria-modal="true"
         >
             <div
-                className={`bg-papatya-surface text-papatya-ink rounded-p-lg shadow-2xl w-full p-6 relative ${
-                    isUnlocked ? 'max-w-sm md:max-w-2xl lg:max-w-5xl lg:w-[75vw] max-h-[90vh] overflow-y-auto' : 'max-w-sm'
+                className={`bg-papatya-surface text-papatya-ink rounded-p-lg shadow-2xl w-full p-4 sm:p-6 relative ${
+                    isUnlocked ? 'max-w-md md:max-w-3xl lg:max-w-6xl lg:w-[85vw] max-h-[92vh] overflow-y-auto' : 'max-w-sm'
                 }`}
             >
                 <button
@@ -175,84 +177,97 @@ export function ParentGate() {
                         </button>
                     </form>
                 ) : (
-                    <div className="flex flex-col gap-4 pt-4">
+                    <div className="flex flex-col gap-3 pt-2 sm:pt-4">
                         <h2 className="text-p-lg font-bold text-center">Ebeveyn Yönetim Alanı</h2>
 
-                        <div className="flex flex-wrap gap-1 border-b border-papatya-rule pb-2" role="tablist">
-                            {TABS.map(({ key, label, icon: Icon }) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={activeTab === key}
-                                    onClick={() => setActiveTab(key)}
-                                    className={`flex items-center gap-1 px-3 py-2 rounded-p-md text-p-sm font-bold transition-colors ${
-                                        activeTab === key
-                                            ? 'bg-papatya-sky text-white'
-                                            : 'text-papatya-ink-soft hover:bg-papatya-cream'
-                                    }`}
-                                >
-                                    <Icon size={14} />
-                                    {label}
-                                </button>
-                            ))}
+                        <div className="relative -mx-1">
+                            {/* Sağ kenarda hafif bir gradient — kaydırılabilir sekme çubuğunda
+                                daha fazla sekme olduğunu ima eder (10 sekme dar ekranlarda taşıyor). */}
+                            <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-papatya-surface to-transparent" />
+                            <div
+                                className="flex gap-1 overflow-x-auto border-b border-papatya-rule pb-2 px-1"
+                                role="tablist"
+                            >
+                                {TABS.map(({ key, label, icon: Icon }) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={activeTab === key}
+                                        onClick={() => setActiveTab(key)}
+                                        className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-p-md text-p-sm font-bold whitespace-nowrap transition-colors ${
+                                            activeTab === key
+                                                ? 'bg-papatya-sky text-white'
+                                                : 'text-papatya-ink-soft hover:bg-papatya-cream'
+                                        }`}
+                                    >
+                                        <Icon size={14} className="shrink-0" />
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="min-h-[200px]">
                             {activeTab === 'genel' && (
-                                <div className="flex flex-col gap-5">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
                                     <IdentitySection />
 
-                                    <form onSubmit={handleChangePin} className="flex flex-col gap-3 border-t border-papatya-rule pt-4">
-                                        <h3 className="text-p-base font-bold text-papatya-ink-soft">PIN Değiştir</h3>
-                                        <input
-                                            type="password"
-                                            inputMode="numeric"
-                                            autoComplete="off"
-                                            placeholder="Mevcut PIN"
-                                            value={currentPin}
-                                            onChange={(e) => setCurrentPin(digitsOnly(e.target.value))}
-                                            className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                                        />
-                                        <input
-                                            type="password"
-                                            inputMode="numeric"
-                                            autoComplete="off"
-                                            placeholder="Yeni PIN (4-6 hane)"
-                                            value={newPin}
-                                            onChange={(e) => setNewPin(digitsOnly(e.target.value))}
-                                            className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                                        />
-                                        <input
-                                            type="password"
-                                            inputMode="numeric"
-                                            autoComplete="off"
-                                            placeholder="Yeni PIN (tekrar)"
-                                            value={newPin2}
-                                            onChange={(e) => setNewPin2(digitsOnly(e.target.value))}
-                                            className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                                        />
-                                        {changeError && <p className="text-p-sm text-papatya-rose">{changeError}</p>}
-                                        {changeSuccess && <p className="text-p-sm text-papatya-leaf">PIN güncellendi.</p>}
-                                        <button
-                                            type="submit"
-                                            disabled={isSaving || newPin.length < 4}
-                                            className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
-                                        >
-                                            {isSaving ? 'Kaydediliyor...' : 'Güncelle'}
-                                        </button>
-                                    </form>
+                                    <div className="flex flex-col gap-4">
+                                        <form onSubmit={handleChangePin} className="flex flex-col gap-2">
+                                            <h3 className="text-p-base font-bold text-papatya-ink-soft">PIN Değiştir</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    autoComplete="off"
+                                                    placeholder="Mevcut PIN"
+                                                    value={currentPin}
+                                                    onChange={(e) => setCurrentPin(digitsOnly(e.target.value))}
+                                                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                                                />
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    autoComplete="off"
+                                                    placeholder="Yeni PIN"
+                                                    value={newPin}
+                                                    onChange={(e) => setNewPin(digitsOnly(e.target.value))}
+                                                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                                                />
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    autoComplete="off"
+                                                    placeholder="Yeni PIN (tekrar)"
+                                                    value={newPin2}
+                                                    onChange={(e) => setNewPin2(digitsOnly(e.target.value))}
+                                                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                                                />
+                                            </div>
+                                            <p className="text-p-sm text-papatya-ink-soft">4-6 hane.</p>
+                                            {changeError && <p className="text-p-sm text-papatya-rose">{changeError}</p>}
+                                            {changeSuccess && <p className="text-p-sm text-papatya-leaf">PIN güncellendi.</p>}
+                                            <button
+                                                type="submit"
+                                                disabled={isSaving || newPin.length < 4}
+                                                className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
+                                            >
+                                                {isSaving ? 'Kaydediliyor...' : 'Güncelle'}
+                                            </button>
+                                        </form>
 
-                                    <div className="border-t border-papatya-rule pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={handleLogout}
-                                            disabled={isLoggingOut}
-                                            className="w-full min-h-tap flex items-center justify-center gap-2 bg-papatya-rose/15 text-papatya-rose font-bold rounded-p-md disabled:opacity-50"
-                                        >
-                                            <LogOut size={18} />
-                                            {isLoggingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
-                                        </button>
+                                        <div className="border-t border-papatya-rule pt-4">
+                                            <button
+                                                type="button"
+                                                onClick={handleLogout}
+                                                disabled={isLoggingOut}
+                                                className="w-full min-h-tap flex items-center justify-center gap-2 bg-papatya-rose/15 text-papatya-rose font-bold rounded-p-md disabled:opacity-50"
+                                            >
+                                                <LogOut size={18} />
+                                                {isLoggingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -264,6 +279,7 @@ export function ParentGate() {
                             {activeTab === 'duyusal' && <SensoryTab />}
                             {activeTab === 'sure' && <ScreenTimeTab />}
                             {activeTab === 'ilerleme' && <ProgressTab />}
+                            {activeTab === 'kayitlar' && <AuditLogTab />}
                         </div>
 
                     </div>
