@@ -10,6 +10,8 @@ interface ImageWithFallbackProps {
     fallback: ReactNode;
     /** onError hiç tetiklenmeyen bazı ağ hatalarına karşı güvenlik ağı (ms). Varsayılan 4000. */
     timeoutMs?: number;
+    /** Native `<img loading>` — anlık gösterilen ipucu görselleri gibi yerlerde 'eager' gecikmeyi önler. */
+    loading?: 'eager' | 'lazy';
 }
 
 /**
@@ -24,7 +26,7 @@ interface ImageWithFallbackProps {
  * hatalarında `onError`'un HİÇ tetiklenmediği (isteğin sessizce asılı
  * kaldığı) gözlemlendi — bu yüzden bir zaman aşımı güvenlik ağı da var.
  */
-export function ImageWithFallback({ src, alt, className, fallback, timeoutMs = 4000 }: ImageWithFallbackProps) {
+export function ImageWithFallback({ src, alt, className, fallback, timeoutMs = 4000, loading }: ImageWithFallbackProps) {
     const [failed, setFailed] = useState(false);
     const loadedRef = useRef(false);
 
@@ -45,6 +47,7 @@ export function ImageWithFallback({ src, alt, className, fallback, timeoutMs = 4
             src={src}
             alt={alt}
             className={className}
+            loading={loading}
             onError={() => setFailed(true)}
             onLoad={(e) => {
                 // Bazı sunucular 404 için bile 200 + HTML gövdesi döndürebilir

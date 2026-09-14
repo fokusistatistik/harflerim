@@ -60,6 +60,43 @@ A close-up macro photograph of a single real daisy (Bellis perennis / Leucanthem
 
 ---
 
+## 1b. Harf Avı — 29 Harf Görseli (Türk Alfabesinin Tamamı)
+
+2026-09-14 — kullanıcı raporu: Harf Avı'nda ("linkler patlak") kullanılan eski harf görselleri (`static.fokusistatistik.com/melike/harfler/`) tamamen ölü CDN'e işaret ediyordu, `public/`'te hiç yerel kopyası yoktu. `src/store/gameData.ts`'teki `LETTER_IMAGES` artık yerel yollara (`/harfler/harf_a.png` vb.) işaret ediyor — bu bölümdeki promptlarla üretilen görseller **aşağıdaki dosya adlarıyla** `public/harfler/` klasörüne konmalı. Ayrıca eksik olan **Ğ** harfi hem bu listeye hem oyunun veri katmanına eklendi (29/29 — Türk alfabesinin tamamı).
+
+Stil, Bölüm 0'daki Ortak Kurallar'dan **farklı**: harf görselleri fotoğrafik değil, **büyük/net/tek renkli düz vektör harf kartı** olmalı — oyun bu görseli hem sürüklenebilir bir "harf kartı" hem de hedef çerçevedeki "hayalet harf" olarak kullanıyor (bkz. `DraggableToken.tsx`, `TargetFrame.tsx`), bu yüzden küçük boyutta da (80x80px) okunur kalmalı.
+
+Ortak taban formül (her promptun içine gömülü): *tek büyük harf, düz vektör/flat illustration, kalın yuvarlak hatlı sans-serif harf biçimi, papatya sarısı (#E8B33C) harf rengi, düz krem (#FBF8EF) veya şeffaf zemin, gölge/gradyan/3D efekt yok, dekorasyon yok.*
+
+**Dosya adlandırma:** `src/store/gameData.ts`'teki `LETTER_IMAGES` sözlüğüyle birebir eşleşmeli (Türkçe özel karakterler ASCII'ye çevrilip alt çizgiyle yazılmış):
+
+| Harf | Dosya adı | Harf | Dosya adı | Harf | Dosya adı |
+|---|---|---|---|---|---|
+| A | `harf_a.png` | I | `harf_i_noktasiz.png` | S | `harf_s.png` |
+| B | `harf_b.png` | İ | `harf_i.png` | Ş | `harf_s_noktali.png` |
+| C | `harf_c.png` | J | `harf_j.png` | T | `harf_t.png` |
+| Ç | `harf_c_cedil.png` | K | `harf_k.png` | U | `harf_u.png` |
+| D | `harf_d.png` | L | `harf_l.png` | Ü | `harf_u_noktali.png` |
+| E | `harf_e.png` | M | `harf_m.png` | V | `harf_v.png` |
+| F | `harf_f.png` | N | `harf_n.png` | Y | `harf_y.png` |
+| G | `harf_g.png` | O | `harf_o.png` | Z | `harf_z.png` |
+| Ğ | `harf_g_breve.png` | Ö | `harf_o_noktali.png` | | |
+
+### Tek prompt şablonu (harf değiştirilerek 29 kez kullanılır)
+
+```
+A single large uppercase Turkish letter "{HARF}" as a flat vector illustration, thick rounded friendly sans-serif letterform, solid warm golden-yellow color (#E8B33C), centered in frame, filling about 70% of the canvas, solid soft cream background (#FBF8EF), no gradients, no drop shadows, no 3D effects, no outline, no decoration, no other letters or symbols, extremely simple and instantly legible even at very small sizes (down to 80x80px), square 1:1 aspect ratio, high resolution, calm and non-stimulating aesthetic suitable for an autistic child's letter-learning game.
+```
+
+**Harf listesi (şablondaki `{HARF}` yerine sırayla yazılacak, 29 harf):**
+A, B, C, Ç, D, E, F, G, Ğ, H, I, İ, J, K, L, M, N, O, Ö, P, R, S, Ş, T, U, Ü, V, Y, Z
+
+**Özel karakter notu:** Ç/Ğ/İ/Ö/Ş/Ü üretilirken modele "the Turkish letter" ve tam Unicode karakteri (Ç, Ğ, İ, Ö, Ş, Ü) açıkça verilmeli — bazı modeller aksan işaretini (cedilla/breve/diaeresis) atlayabilir; üretilen görsel oyuna eklenmeden önce doğru harf olduğu gözle kontrol edilmeli (ör. Ğ üzerindeki breve/"şapka" işareti, İ'nin noktası, I'nın noktasız olması).
+
+**Sonraki adım:** Üretilen 29 PNG, yukarıdaki tablodaki dosya adlarıyla birebir `public/harfler/` klasörüne konmalı. Dosya oraya konar konmaz oyun otomatik olarak kullanır — kod tarafında başka bir değişiklik gerekmez (`ImageWithFallback` zaten dosya eksikken zarif bir yer tutucu gösteriyor, dosya eklenince otomatik gerçek görsele geçer).
+
+---
+
 ## 2. Oyun İçerik Kütüphanesi (Hafıza Kartları + Görsel Eşleştirme — ortak havuz, 60 görsel)
 
 Bu görseller hem **Hafıza Kartları** (kart çevirme/eşleştirme) hem de **Görsel Eşleştirme** oyununda içerik havuzu olarak kullanılabilir; ebeveyn bunların arasından çocuğa özel bir alt küme seçebilir. Her görsel tek bir nesneyi/canlıyı net biçimde göstermeli ki kartlar birbirinden kolayca ayırt edilebilsin.

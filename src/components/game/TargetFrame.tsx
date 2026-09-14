@@ -5,6 +5,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { Lock } from 'lucide-react'; // Using Lucide icon for lock effect if needed, though simple shape is requested.
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 
 interface TargetFrameProps {
     id: string;
@@ -43,7 +44,7 @@ export function TargetFrame({ id, targetLetter, status, letterImages }: TargetFr
             >
                 {/* Ghost Letter */}
                 {imgSrc ? (
-                    <img
+                    <ImageWithFallback
                         src={imgSrc}
                         alt={targetLetter}
                         className={clsx(
@@ -51,6 +52,14 @@ export function TargetFrame({ id, targetLetter, status, letterImages }: TargetFr
                             status === 'success' ? "opacity-100 scale-110 drop-shadow-md" : "opacity-20 grayscale",
                             status === 'error' ? "opacity-20 grayscale" : ""
                         )}
+                        fallback={
+                            <span className={clsx(
+                                "text-5xl md:text-8xl font-bold select-none transition-colors duration-300",
+                                status === 'success' ? "text-green-600 scale-110" : "text-gray-200"
+                            )}>
+                                {targetLetter}
+                            </span>
+                        }
                     />
                 ) : (
                     <span className={clsx(

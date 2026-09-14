@@ -4,6 +4,7 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 
 interface DraggableTokenProps {
     letter: string;
@@ -55,10 +56,11 @@ export function DraggableToken({ letter, id, disabled, highlight, letterImages }
                 )}
             >
                 {imgSrc ? (
-                    <img
+                    <ImageWithFallback
                         src={imgSrc}
                         alt={letter}
                         className="w-[80%] h-[80%] object-contain pointer-events-none drop-shadow-sm"
+                        fallback={<span className="pointer-events-none">{letter}</span>}
                     />
                 ) : (
                     letter

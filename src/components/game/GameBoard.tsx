@@ -16,34 +16,47 @@ import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { getAdaptiveRoundConfig } from '@/actions/game';
 import type { AdaptiveConfig } from '@/lib/adaptiveDifficulty';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { DraggableToken } from './DraggableToken';
 import { TargetFrame } from './TargetFrame';
 import { HintImage } from './HintImage';
 import { GameHud } from './GameHud';
 
+// 2026-09-14 — A/G/Ğ/H/J/L hedef harf olduğunda karşılığı hiç yoktu (bu
+// harfler yalnızca BAŞKA harflerin çeldirici listesinde geçiyordu), bu
+// yüzden adaptif zorluk bu 6 harfte sessizce rastgele çeldiriciye
+// düşüyordu — eklendi. Ayrıca ölü rakam değerleri ('8','5','1','7' —
+// `ALPHABET_ORDER`'da hiç yoklar, `startRound`'daki `includes` kontrolünü
+// asla geçemiyorlardı) temizlendi.
 const SIMILAR_MAPPING: Record<string, string[]> = {
+    'A': ['E'],
     'E': ['F', 'L', 'I'],
     'F': ['E', 'P', 'T'],
     'O': ['Ö', 'D', 'C', 'G'],
     'Ö': ['O', 'Ü', 'C', 'G'],
     'Ü': ['U', 'Ö', 'V'],
     'U': ['Ü', 'V', 'J'],
-    'B': ['R', 'P', 'D', '8'],
+    'B': ['R', 'P', 'D'],
     'D': ['B', 'P', 'O', 'C'],
     'P': ['R', 'B', 'D'],
     'R': ['P', 'B', 'K'],
     'M': ['N', 'H'],
     'N': ['M', 'H', 'Z'],
-    'S': ['Ş', 'Z', '5'],
+    'S': ['Ş', 'Z'],
     'Ş': ['S', 'Ç'],
     'C': ['Ç', 'O', 'D'],
     'Ç': ['C', 'S'],
-    'K': ['H', 'R', 'X'],
-    'I': ['İ', '1', 'L'],
+    'G': ['O', 'Ö', 'C', 'Ğ'],
+    'Ğ': ['G'],
+    'H': ['M', 'N', 'K'],
+    'K': ['H', 'R'],
+    'I': ['İ', 'L'],
     'İ': ['I', 'J'],
+    'J': ['İ', 'U'],
+    'L': ['E', 'I'],
     'V': ['Y', 'U'],
     'Y': ['V', 'T'],
-    'Z': ['N', '7'],
+    'Z': ['N'],
     'T': ['Y', 'I']
 };
 
@@ -268,10 +281,11 @@ export default function GameBoard() {
                     {activeId ? (
                         <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center text-7xl font-bold text-indigo-600 shadow-2xl opacity-90 border-4 border-indigo-500 overflow-hidden transform scale-110 rotate-3">
                             {letterImages[activeId.split('-')[1]] ? (
-                                <img
+                                <ImageWithFallback
                                     src={letterImages[activeId.split('-')[1]]}
                                     alt={activeId.split('-')[1]}
                                     className="w-[80%] h-[80%] object-contain"
+                                    fallback={<span>{activeId.split('-')[1]}</span>}
                                 />
                             ) : (
                                 activeId.split('-')[1]
