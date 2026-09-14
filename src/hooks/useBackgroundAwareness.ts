@@ -3,7 +3,10 @@
 import { useEffect, useRef } from 'react';
 import { useNotificationStore } from '@/store/notificationStore';
 
-const BACKGROUND_THRESHOLD_MS = 15_000;
+// 2026-09-14 — kullanıcı raporu: 15 saniyelik eşik çok agresifti, normal
+// kısa sekme değişimlerinde bile tetikleniyordu. 5 dakikaya çıkarıldı —
+// yalnızca gerçekten uzun süre uzakta kalındığında ebeveyne haber gider.
+const BACKGROUND_THRESHOLD_MS = 5 * 60_000;
 
 function formatDuration(ms: number): string {
     const totalSeconds = Math.round(ms / 1000);
