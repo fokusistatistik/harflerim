@@ -16,5 +16,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sounds|icon-|apple-icon|manifest.json).*)'],
+    // 2026-09-14 — kullanıcı bulgusu: giriş sayfasındaki logo kırık
+    // görünüyordu. Kök neden: bu matcher yalnızca birkaç statik yolu
+    // (sounds, icon-, apple-icon, manifest.json) hariç tutuyordu — ama
+    // public/'teki asıl görsel klasörleri (papatya-*-logo.png, ikonlar/,
+    // harfler/, sayilar/, karsilastirma/) listede yoktu. Oturum yokken bu
+    // dosyalara yapılan istek bile /giris'e redirect ediliyordu — giriş
+    // sayfasının KENDİ logosu dahil. Tüm bilinen statik asset yolları eklendi.
+    matcher: [
+        '/((?!api|_next/static|_next/image|favicon.ico|sounds|icon-|apple-icon|manifest.json|papatya-.*\\.png|ikonlar|harfler|sayilar|karsilastirma).*)',
+    ],
 };
