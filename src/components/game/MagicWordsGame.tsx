@@ -219,7 +219,7 @@ export default function MagicWordsGame() {
     if (gameStatus === 'idle' || gameStatus === 'checking') return <WelcomeScreen onStart={handleStartGame} status={gameStatus} />;
 
     return (
-        <div className="min-h-screen bg-papatya-cream flex flex-col items-center relative overflow-hidden">
+        <div className="min-h-app bg-papatya-cream flex flex-col items-center relative overflow-hidden">
 
             {/* HUD — Faz 1.8: paylaşılan GameHud */}
             <div className="w-full p-4 pt-6 lg:p-8 z-20 absolute top-0">
@@ -300,7 +300,7 @@ export default function MagicWordsGame() {
 // Sub-components for cleaner file
 function ErrorScreen({ onRetry }: { onRetry: () => void }) {
     return (
-        <div className="min-h-screen bg-papatya-rose/10 flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-app bg-papatya-rose/10 flex flex-col items-center justify-center p-6 text-center">
             <MicOff size={48} className="text-papatya-rose mb-4" />
             <h1 className="text-2xl lg:text-3xl font-bold mb-2 text-papatya-ink">İzin Gerekli</h1>
             <button onClick={onRetry} className="min-h-tap bg-papatya-sky text-white px-8 py-3 rounded-full font-bold">Tekrar Dene</button>
@@ -310,7 +310,7 @@ function ErrorScreen({ onRetry }: { onRetry: () => void }) {
 
 function WelcomeScreen({ onStart, status }: { onStart: () => void, status: string }) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-papatya-sky to-papatya-leaf flex flex-col items-center justify-center p-4 text-white">
+        <div className="min-h-app bg-gradient-to-br from-papatya-sky to-papatya-leaf flex flex-col items-center justify-center p-4 text-white">
             <div className="bg-papatya-surface p-6 lg:p-8 rounded-full shadow-2xl mb-8 relative animate-float">
                 <Mic size={64} className="text-papatya-sky" />
                 {status === 'checking' && <div className="absolute inset-0 border-4 border-papatya-sky/40 rounded-full animate-spin border-t-transparent"></div>}

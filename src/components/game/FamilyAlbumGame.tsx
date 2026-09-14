@@ -106,7 +106,7 @@ export default function FamilyAlbumGame() {
 
     if (!loaded) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-papatya-cream">
+            <div className="min-h-app flex items-center justify-center bg-papatya-cream">
                 <p className="text-papatya-ink-soft">Yükleniyor...</p>
             </div>
         );
@@ -114,7 +114,7 @@ export default function FamilyAlbumGame() {
 
     if (members.length < 2) {
         return (
-            <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4">
+            <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-4">
                 <GameHud />
                 <div className="flex-1 flex items-center justify-center">
                     <p className="text-center text-papatya-ink-soft max-w-sm">
@@ -127,7 +127,7 @@ export default function FamilyAlbumGame() {
     }
 
     return (
-        <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-6 items-center">
+        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-6 items-center">
             <GameHud />
             <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
             <GameIntroCard gameId="family-album" variant="banner" />

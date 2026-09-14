@@ -2,7 +2,7 @@
 
 > Bu dosya, `moduller/` klasöründeki modül denetim dokümanlarının ilkidir — diğer oyun/araçlar (Hafıza Kartları, Sihirli Kelimeler, Gölge Eşleştirme, Aile Albümü, Çizim Tahtası, Yazı Alıştırması, Müzik Köşesi, AAC Tahtası, Kamera Karakteri, Çizgi Filmim) için de aynı yapı kullanılacak. Amaç: her modülün Faz 2.11 denetim çeklistindeki (bkz. [YOL-HARITASI.md](../YOL-HARITASI.md)) yedi bloğa göre güncel durumunu tek yerde, kanıta dayalı ve güncellenebilir şekilde tutmak.
 >
-> Son güncelleme: 2026-09-14 (denetim önerilerinin tamamı uygulandı).
+> Son güncelleme: 2026-09-14 (2. tur — çift ses, tur sayacı, ardışık-harf tekrarı, günlük round limiti, giriş sayfası logosu düzeltildi).
 
 ## Özet
 
@@ -19,19 +19,22 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ✅ Zorluk kademeli ve güvenli: ilk round her zaman en kolay (`BASE_ADAPTIVE_CONFIG`), 3 ardışık yanlışta anında en kolaya düşer (`adaptiveDifficulty.ts:21,30-32`).
 - ✅ Sakinleştirme modu doğru bağlı: `useCalmingModeMonitor('harf-tanima')` her `handleDragEnd`'de çağrılıyor (`GameBoard.tsx`), 5 ardışık yanlışta tüm sesi kesip ebeveyne bildirim gönderiyor (çocuğa değil) — doğru tasarım.
 - ✅ Rozet mekanizması spam değil: bir beceri yalnızca ilk kez doğru yapıldığında bir kez rozet veriyor (`skills.ts`).
-- ✅ (2026-09-14) **Harf-bazlı zayıflık takibi eklendi.** `getAdaptiveRoundConfig` artık son 20 `Event`'te en yüksek yanlış oranına sahip harfleri (`weakLetters`, en fazla 3) hesaplıyor (`actions/game.ts` → `getWeakLetters`); `GameBoard.tsx` hedef harfi %50 olasılıkla bu listeden seçiyor (tam öncelik değil — çeşitlilik korunuyor, sıkıcı tekrar döngüsüne girmiyor).
+- ✅ (2026-09-14) **Harf-bazlı zayıflık takibi eklendi.** `getAdaptiveRoundConfig` artık son 20 `Event`'te en yüksek yanlış oranına sahip harfleri (`weakLetters`, en fazla 3) hesaplıyor (`actions/game.ts` → `getWeakLetters`); `GameBoard.tsx` hedef harfi %25 olasılıkla bu listeden seçiyor (bkz. aşağıdaki düzeltme — başlangıçta %50'ydi).
+- ✅ (2026-09-14, 2. tur) **"Sürekli aynı harf geliyor" bulgusu — iki katmanlı düzeltme.** İlk düzeltme (olasılığı %50→%25) yalnızca ihtimali azaltıyordu, şans eseri hâlâ art arda gelebiliyordu. İkinci, **kesin** düzeltme: `startRound`'da yeni hedef harf bir önceki round'un hedefiyle (`targetLetter` state'i) aynıysa, havuzda başka seçenek varken (`targetPool.length > 1`) yeniden seçilir (en fazla 10 deneme). Matematiksel simülasyonla doğrulandı: tam 29-harf havuzunda 100.000 round'da **0 ardışık tekrar**. Tek elemanlı bir zayıf-harf havuzunda (kaçınılmaz durum — başka seçenek yok) doğal olarak istisna kalıyor, bu beklenen bir sınır.
 - ⚠️ Pekiştirme her tek doğru cevapta tetikleniyor (ses + konfeti + ⭐ + 1sn sonra ikinci ses) — aralıklı pekiştirme yok, aşırı-uyarıcı olma riski düşük ama var. (Henüz ele alınmadı.)
 
 ---
 
 ## Blok (b) — Ebeveyn deneyimi
 
-**Durum: İyileşti — beceri ilerlemesi artık görünür, zorluk override hâlâ yok.**
+**Durum: Güçlü — beceri ilerlemesi, günlük süre + round limiti ikisi de ebeveyn kontrolünde.**
 
-- ❌ Ebeveyn panelinin hiçbir tab'ında Harf Avı'na özel bir zorluk override'ı veya harf havuzu seçimi yok. (Henüz ele alınmadı — bilinçli bir sonraki adım olabilir.)
+- ❌ Ebeveyn panelinin hiçbir tab'ında Harf Avı'na özel bir harf-bazlı zorluk override'ı (ör. belirli harfleri manuel "sık sor" işaretleme) yok. (Henüz ele alınmadı — bilinçli bir sonraki adım olabilir.)
 - ✅ (2026-09-14) **`ProgressTab.tsx`'e "Beceri ilerlemesi" bölümü eklendi.** Yeni `getAllSkillProgress()` action'ı (`skills.ts`) her becerinin son-10-deneme başarı oranını (`detectErrorStreak`'in ham verisi) ilerleme çubuğuyla gösteriyor — yorum/sıralama içermiyor. Gerçek tarayıcıda doğrulandı (El Yazısı %100, Görsel Hafıza %40 gibi).
 - ✅ Günlük süre limiti (global `levelStore`) doğru çalışıyor, "Başla" butonu bütçe dolunca kilitleniyor.
+- ✅ (2026-09-14, 2. tur) **Günlük round (tur) limiti eklendi.** Süre bütçesine EK, Harf Avı'na özel bir sınır: `UserSettings.dailyLetterHuntLimit` (varsayılan 100, ebeveyn panelinde 25-250 arası ayarlanabilir — Ekran Süresi sekmesi). Limit dolunca yalnızca Harf Avı kilitlenir, diğer oyunlar/global gün-tamamlandı ekranı etkilenmez; başlangıç ekranında açıklayıcı bir mesaj gösterilir ("Bugünkü N turluk hakkın doldu — yarın devam!"). Gerçek tarayıcıda doğrulandı: limit aşılınca "Başla" butonu devre dışı kalıyor.
 - ✅ (2026-09-14) Başlangıç ekranında "Bugün X/Y doğru" özeti var — küçük ama gerçek bir ilerleme sinyali.
+- ✅ (2026-09-14, 2. tur) **Oyun içi "Tur N" göstergesi artık başlangıç ekranındaki günlük toplamla tutarlı.** Önceden component state'inde tutuluyordu (kapatıp açınca hep "Tur 1"e sıfırlanıyordu, "Bugün 33/36 doğru" ile tutarsız görünüyordu — kullanıcı bulgusu). Artık "Bugün N. doğru" formatında, günlük gerçek sayıdan devam ediyor.
 
 **Öneri:** Harf-bazlı zorluk override (ör. ebeveynin belirli harfleri manuel olarak "sık sor" işaretlemesi) hâlâ yok — blok (a)'daki otomatik ağırlıklandırmayı tamamlayıcı bir sonraki adım olabilir.
 
@@ -49,6 +52,7 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ⚠️ Erişilebilirlik etiketleri eksik: sürüklenebilir kartlarda `role`/`aria-label` yok, doğru/yanlış durum değişimi `aria-live` ile duyurulmuyor — ekran okuyucu kullanıcıları için oyun büyük ölçüde erişilemez.
 - ✅ (2026-09-14) `handleDragStart` tip güvenliği düzeltildi (`any` → `DragStartEvent`).
 - ✅ (2026-09-14) **Erişilebilirlik etiketleri eklendi.** `DraggableToken`'a harf-özel `aria-label` ("X harfi, sürüklenebilir"), `TargetFrame`'e `aria-live="polite"` durum duyurusu ("Doğru!"/"Tekrar deneyelim"). Not: dnd-kit zaten `role`/`aria-roledescription`/`tabIndex` gibi temel özellikleri `attributes` ile sağlıyordu — eksik olan asıl harf-özel etiketti.
+- ✅ (2026-09-14, 2. tur) **Gereksiz dikey scroll bug'ı düzeltildi.** `src/app/games/letter-hunt/page.tsx`'in kendi `<main className="min-h-screen">` sarmalayıcısı, içindeki `GameBoard.tsx`'in başlangıç ekranıyla birlikte, `<body>`'nin zaten uyguladığı `pt-16/lg:pt-20 + pb-16` (Header + ParentFooter için ayrılan alan) padding'inin ÜZERİNE `100vh` ekliyordu — görünürde boşluk varken bile scrollbar çıkmasına yol açıyordu (kullanıcı ekran görüntüsüyle bildirdi, aynı desen tüm oyunlarda vardı). Yeni bir `globals.css` utility'si (`.min-h-app` — viewport yüksekliğinden body padding'ini çıkarır) tüm `min-h-screen` kullanımlarının yerini aldı (giriş sayfası hariç — orada `user` yokken body padding'i hiç eklenmiyor, `min-h-screen` orada zaten doğru). Gerçek tarayıcıda doğrulandı: `bodyScrollHeight === viewportHeight`, scroll tamamen kalktı.
 
 **Kalan:** Ekran okuyucu deneyimi kod-seviyesinde iyileşti ama gerçek bir ekran okuyucuyla (VoiceOver/NVDA) uçtan uca test edilmedi — bu bir insan/cihaz adımı.
 
@@ -86,6 +90,7 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - ✅ Client'a sızan hassas veri yok.
 - ⚠️ `getAdaptiveRoundConfig` auth yoksa `redirect` yerine sessizce `BASE_ADAPTIVE_CONFIG` döndürüyor — `getDailySession`'ın (`redirect('/giris')`) tersine bir davranış. Zararsız (en kolay zorluk döner) ama tutarsız. (Bilinçli bir tasarım kararı olarak bırakıldı — çocuk deneyimini bloklamamak için.)
 - ✅ (2026-09-14) **`submitLevelResult`'a sahiplik kontrolü eklendi.** Artık `getCurrentUser()` çağırıp `session.userId === user.id` doğruluyor — önceden yalnızca `sessionId`'nin var olup olmadığına bakılıyordu. 2 yeni test eklendi (auth yok / başka kullanıcının session'ı).
+- ✅ (2026-09-14, 2. tur) **Middleware fazla-kısıtlayıcıydı — giriş sayfasının kendi logosu bile kırık görünüyordu.** `src/middleware.ts`'in `matcher`'ı yalnızca birkaç yolu (sounds, icon-, apple-icon, manifest.json) hariç tutuyordu; `public/`'teki asıl görsel klasörleri (`papatya-*-logo.png`, `ikonlar/`, `harfler/`, `sayilar/`, `karsilastirma/`) listede yoktu — oturum yokken bu dosyalara yapılan istek bile `/giris`'e redirect ediliyordu (kullanıcı ekran görüntüsüyle bildirdi). Bu yollar matcher'dan hariç tutuldu; korunan sayfalar (ana sayfa vb.) hâlâ oturumsuz erişilemiyor, yalnızca statik dosyalar açıldı — güvenlik kaybı yok.
 
 **Kalan:** Auth-yoksa-davranış tutarsızlığı (bir action redirect, diğeri sessiz fallback) bilinçli bir tasarım tercihi olarak değerlendirildi, değiştirilmedi.
 
@@ -124,6 +129,15 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 
 ---
 
+## İkinci tur (2026-09-14) — kullanıcı bulgularıyla ortaya çıkan düzeltmeler
+
+1. ✅ Çift ses çalma hatası (blok g/c) — "Başla"ya basınca hem doğrudan hem `useEffect` üzerinden iki round paralel başlayıp iki ayrı TTS isteği çakışıyordu. `handleStart`'taki gereksiz doğrudan çağrı kaldırıldı, tek sorumlu bırakıldı.
+2. ✅ "Tur N" / "Bugün X/Y doğru" tutarsızlığı (blok b/c) — oyun içi sayaç artık günlük toplam sayıya bağlı, kapatıp açınca geriye sarılmıyor.
+3. ✅ "Sürekli aynı harf geliyor" (blok a) — önce olasılık düşürüldü (%50→%25, yetersiz kaldı), sonra kesin koruma eklendi (ardışık aynı harf asla seçilmez, havuzda alternatif varken).
+4. ✅ Günlük round (tur) limiti (blok b) — süre bütçesine ek, Harf Avı'na özel, ebeveyn panelinden 25-250 arası ayarlanabilir bir sınır (`dailyLetterHuntLimit`, varsayılan 100).
+5. ✅ Giriş sayfası logosu kırıktı (blok f) — middleware'in statik asset matcher'ı eksikti, düzeltildi.
+6. ✅ Gereksiz dikey scroll (blok c) — `min-h-screen` + body padding çakışması, tüm oyunlarda `.min-h-app` utility'sine geçirildi.
+
 ## Bugüne kadar kapatılan işler (özet, tarihli)
 
 - 2026-09-14: Ğ harfi eklendi, `SIMILAR_MAPPING` tüm 29 harfi kapsayacak şekilde tamamlandı, dağılım dengesizlikleri (N/O/Ö/U/V) giderildi, çift-kelimeli kayıtlar temizlendi.
@@ -135,6 +149,7 @@ Sürükle-bırak mekaniğiyle çalışan bir harf tanıma oyunu: hedef harf sesl
 - 2026-09-14: Arka plan bildirimi eşiği 15 saniyeden 5 dakikaya çıkarıldı.
 - 2026-09-14: Denetimde bulunan `AUDIOS.wrong`'un hâlâ ölü CDN'e bağlı kalması ve `handleDragStart`'ın tip güvenliği düzeltildi.
 - 2026-09-14: Kapsamlı denetimin 8 geliştirme önerisinin tamamı uygulandı — erişilebilirlik etiketleri, ipucu kelimesinin seslendirilmesi, `submitLevelResult` yetki kontrolü, `gameData.ts` notu (küçük); harf-bazlı zayıflık takibi, `ProgressTab`'e beceri ilerlemesi (orta); `reduceMotion` → Framer Motion köprüsü — tüm oyunları kapsıyor (mimari).
+- 2026-09-14 (2. tur): Çift ses çalma hatası, "Tur N" tutarsızlığı, ardışık-harf tekrarı (kesin koruma), günlük round limiti (ebeveyn ayarlanabilir), giriş sayfası logosu (middleware), gereksiz dikey scroll (tüm oyunlar) — kullanıcı bulgularıyla tek tek düzeltildi.
 
 ## Açık kalan işler (roadmap referansı)
 

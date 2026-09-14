@@ -21,7 +21,7 @@ export default async function Home() {
     const InterestIcon = getInterestIcon(profile?.interests ?? []);
 
     return (
-        <main className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-16 md:pt-20 lg:pt-8 relative overflow-hidden">
+        <main className="min-h-app bg-cream flex flex-col items-center justify-start p-4 pt-16 md:pt-20 lg:pt-8 relative overflow-hidden">
             <GameInitializer state={session} />
 
             {/* Background Decor */}

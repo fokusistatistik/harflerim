@@ -27,7 +27,7 @@ export function CartoonPlayer() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4">
+        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-4">
             <GameHud />
 
             {activeVideo ? (

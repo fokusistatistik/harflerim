@@ -10,7 +10,7 @@ import { GameIntroCard } from '@/components/ui/GameIntroCard';
  */
 export default function CameraCharacterPage() {
     return (
-        <main className="min-h-screen bg-papatya-cream flex flex-col items-center justify-center p-8 gap-6 text-center">
+        <main className="min-h-app bg-papatya-cream flex flex-col items-center justify-center p-8 gap-6 text-center">
             <div className="absolute top-20 left-4 right-4">
                 <GameHud />
             </div>

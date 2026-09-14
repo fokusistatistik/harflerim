@@ -195,3 +195,19 @@ a:focus-visible {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+/* 2026-09-14 — kullanıcı bulgusu: oyun ekranları `min-h-screen` (100vh)
+   kullanıyordu, ama bu içerik zaten <body>'nin pt-16/lg:pt-20 + pb-16
+   padding'i (Header + ParentFooter için ayrılan alan) İÇİNDE render
+   ediliyor — toplam yükseklik 100vh + padding oluyor, gereksiz bir dikey
+   scroll'a yol açıyordu (görünürde boşluk varken bile). `min-h-screen`
+   yerine bu sınıf kullanılır: viewport yüksekliğinden body padding'ini
+   çıkarır, böylece içerik tam olarak kalan alanı doldurur, taşmaz. */
+.min-h-app {
+  min-height: calc(100vh - 8rem); /* 100vh - (pt-16 + pb-16) */
+}
+@media (min-width: 1024px) {
+  .min-h-app {
+    min-height: calc(100vh - 9rem); /* 100vh - (lg:pt-20 + pb-16) */
+  }
+}

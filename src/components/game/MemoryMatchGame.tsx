@@ -196,7 +196,7 @@ export default function MemoryMatchGame() {
     // --- MOD SEÇİMİ ---
     if (!isPlaying) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-papatya-sky/10 to-papatya-petal/10 flex flex-col items-center justify-center p-4 pb-28 gap-8">
+            <div className="min-h-app bg-gradient-to-b from-papatya-sky/10 to-papatya-petal/10 flex flex-col items-center justify-center p-4 pb-28 gap-8">
                 <h1 className="text-3xl md:text-5xl font-hand font-bold text-papatya-leaf text-center">Hafıza Kartları</h1>
                 <p className="text-papatya-ink-soft text-center max-w-md">Nasıl eşleştirmek istersin?</p>
                 <GameIntroCard gameId="memory-match" />
@@ -238,7 +238,7 @@ export default function MemoryMatchGame() {
 
     // --- OYUN GÖRÜNÜMÜ ---
     return (
-        <div className="min-h-screen bg-papatya-cream flex flex-col items-center relative p-4 lg:p-8">
+        <div className="min-h-app bg-papatya-cream flex flex-col items-center relative p-4 lg:p-8">
             <div className="w-full z-10 mb-6 lg:mb-8">
                 <GameHud
                     onBack={() => setIsPlaying(false)}

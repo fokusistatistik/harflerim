@@ -192,7 +192,21 @@ export default function GameBoard() {
         // sık gelir ama baskın/yorucu olmaz.
         const useWeakLetter = config.weakLetters.length > 0 && Math.random() < 0.25;
         const targetPool = useWeakLetter ? config.weakLetters : alphabetOrder;
-        const randomTarget = targetPool[Math.floor(Math.random() * targetPool.length)];
+        // 2026-09-14 (3. bulgu) — olasılık düşürmek yalnızca İHTİMALİ azaltıyordu,
+        // şans eseri hâlâ art arda aynı harf çıkabiliyordu ("hala ard arda aynı
+        // harf gelebiliyor" bildirimi). Artık KESİN bir koruma: havuzda birden
+        // fazla seçenek varken bir önceki round'un hedefiyle AYNI harf asla
+        // ardışık seçilmez (en fazla 10 deneme — sonsuz döngüye karşı güvenlik;
+        // tek elemanlı bir havuzda zaten kaçış yoktur, o durumda tekrar kabul
+        // edilir).
+        let randomTarget = targetPool[Math.floor(Math.random() * targetPool.length)];
+        if (targetPool.length > 1) {
+            let attempts = 0;
+            while (randomTarget === targetLetter && attempts < 10) {
+                randomTarget = targetPool[Math.floor(Math.random() * targetPool.length)];
+                attempts++;
+            }
+        }
         const objects = letterObjects[randomTarget];
         const randomObj = objects[Math.floor(Math.random() * objects.length)];
 
@@ -307,7 +321,7 @@ export default function GameBoard() {
     // uyarlanabilir motorda artık sabit "seviye" kavramı yok) ---
     if (!isPlaying) {
         return (
-            <div className="min-h-screen bg-papatya-cream flex flex-col items-center justify-center p-8 text-center gap-6">
+            <div className="min-h-app bg-papatya-cream flex flex-col items-center justify-center p-8 text-center gap-6">
                 <h1 className="text-3xl md:text-5xl font-hand font-bold text-papatya-leaf">
                     Bugünün Macerası
                 </h1>

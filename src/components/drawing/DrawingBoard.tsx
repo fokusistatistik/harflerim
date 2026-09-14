@@ -134,7 +134,7 @@ export function DrawingBoard() {
     };
 
     return (
-        <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4 items-center">
+        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-4 items-center">
             <GameHud />
             <h1 className="text-p-2xl font-bold text-center">Çizim Tahtası</h1>
             <GameIntroCard gameId="drawing-board" variant="banner" />

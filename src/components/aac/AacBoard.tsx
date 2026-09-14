@@ -26,7 +26,7 @@ export function AacBoard() {
     };
 
     return (
-        <div className="min-h-screen bg-papatya-cream p-4 flex flex-col gap-4 pt-20">
+        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-4 pt-20">
             <GameHud />
 
             <h1 className="text-p-2xl font-bold text-center text-papatya-ink">İletişim Tahtası</h1>
