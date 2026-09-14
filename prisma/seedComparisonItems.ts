@@ -127,6 +127,19 @@ const ITEMS: ComparisonItemSeed[] = [
     { slug: 'yunus', name: 'Yunus', category: 'hayvan', color: 'gri', approxWeightKg: 200, approxVolumeL: 220, approxSizeCm: 250, sizeCategory: 'kocaman', tags: ['hayvan', 'deniz', 'gri'] },
     { slug: 'zeytin', name: 'Zeytin', category: 'yiyecek', color: 'yeşil-siyah', approxWeightKg: 0.1, approxVolumeL: 0.15, approxSizeCm: 2, sizeCategory: 'kucuk', tags: ['yiyecek', 'yeşil', 'küçük'] },
     { slug: 'zurafa', name: 'Zürafa', category: 'hayvan', color: 'sarı-kahverengi', approxWeightKg: 800, approxVolumeL: 600, approxSizeCm: 500, sizeCategory: 'kocaman', tags: ['hayvan', 'vahşi', 'sarı-kahverengi'] },
+
+    // 2026-09-14 — ikinci tur ekleme (8 görsel), kullanıcının aynı kaynak
+    // klasöre eklediği yeni fotoğraflar. Harf Avı'nın 0-1 kelimeli zayıf
+    // harflerini (L, İ, U, Ü, O, N, V, R vb.) güçlendirmek amacıyla seçildi.
+    { slug: 'sogan', name: 'Soğan', category: 'meyve-sebze', color: 'kahverengi', approxWeightKg: 0.15, approxVolumeL: 0.15, approxSizeCm: 7, sizeCategory: 'kucuk', tags: ['sebze', 'kahverengi', 'yuvarlak'] },
+    { slug: 'limon', name: 'Limon', category: 'meyve-sebze', color: 'sarı', approxWeightKg: 0.1, approxVolumeL: 0.1, approxSizeCm: 6, sizeCategory: 'kucuk', tags: ['meyve', 'sarı', 'ekşi'] },
+    { slug: 'olta', name: 'Olta', category: 'esya', color: 'mavi', approxWeightKg: 0.2, approxVolumeL: 0.3, approxSizeCm: 60, sizeCategory: 'orta', tags: ['balıkçılık', 'mavi', 'oyuncak'] },
+    { slug: 'ordek2', name: 'Ördek', category: 'hayvan', color: 'yeşil-kahverengi', approxWeightKg: 1.2, approxVolumeL: 1.5, approxSizeCm: 25, sizeCategory: 'orta', tags: ['hayvan', 'kuş', 'yeşil'] },
+    { slug: 'ucgen', name: 'Üçgen', category: 'oyuncak', color: 'ahşap', approxWeightKg: 0.05, approxVolumeL: 0.05, approxSizeCm: 8, sizeCategory: 'kucuk', tags: ['oyuncak', 'şekil', 'ahşap'] },
+    { slug: 'otobus', name: 'Otobüs', category: 'oyuncak', color: 'mavi', approxWeightKg: 0.4, approxVolumeL: 2, approxSizeCm: 25, sizeCategory: 'orta', tags: ['oyuncak', 'taşıt', 'mavi'] },
+    { slug: 'jelibon', name: 'Jelibon', category: 'yiyecek', color: 'kırmızı', approxWeightKg: 0.01, approxVolumeL: 0.01, approxSizeCm: 3, sizeCategory: 'kucuk', tags: ['yiyecek', 'şeker', 'kırmızı'] },
+    { slug: 'ceviz', name: 'Ceviz', category: 'yiyecek', color: 'kahverengi', approxWeightKg: 0.01, approxVolumeL: 0.01, approxSizeCm: 4, sizeCategory: 'kucuk', tags: ['yiyecek', 'kuruyemiş', 'kahverengi'] },
+    { slug: 'isik', name: 'Trafik Işığı', category: 'esya', color: 'kırmızı-sarı-yeşil', approxWeightKg: 15, approxVolumeL: 20, approxSizeCm: 200, sizeCategory: 'buyuk', tags: ['trafik', 'renkli', 'oyuncak'] },
 ];
 
 async function main() {

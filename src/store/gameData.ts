@@ -6,22 +6,22 @@ export interface LetterAsset {
 // Collection of objects for each letter
 export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     'A': [
-        { word: 'Araba', img: 'https://static.fokusistatistik.com/melike/gorseller/araba.png' },
-        { word: 'Arı', img: 'https://static.fokusistatistik.com/melike/gorseller/ari.png' },
+        { word: 'Araba', img: '/karsilastirma/araba.jpg' },
+        { word: 'Arı', img: '/karsilastirma/ari.jpg' },
         { word: 'Ayı', img: 'https://static.fokusistatistik.com/melike/gorseller/ayi.png' },
         { word: 'Armut', img: 'https://static.fokusistatistik.com/melike/gorseller/armut.png' },
-        { word: 'Ayakkabı', img: 'https://static.fokusistatistik.com/melike/gorseller/ayakkabi.png' },
+        { word: 'Ayakkabı', img: '/karsilastirma/ayakkabi.jpg' },
         { word: 'Aslan', img: 'https://static.fokusistatistik.com/melike/gorseller/aslan.png' },
         { word: 'Ahtapot', img: 'https://static.fokusistatistik.com/melike/gorseller/ahtapot.png' },
         { word: 'Ay', img: 'https://static.fokusistatistik.com/melike/gorseller/ay.png' },
-        { word: 'Anahtar', img: 'https://static.fokusistatistik.com/melike/gorseller/anahtar.png' },
-        { word: 'At', img: 'https://static.fokusistatistik.com/melike/gorseller/at.png' }
+        { word: 'Anahtar', img: '/karsilastirma/anahtar.jpg' },
+        { word: 'At', img: '/karsilastirma/at.jpg' }
     ],
     'B': [
-        { word: 'Balık', img: 'https://static.fokusistatistik.com/melike/gorseller/balik.png' },
+        { word: 'Balık', img: '/karsilastirma/balik.jpg' },
         { word: 'Bebek', img: 'https://static.fokusistatistik.com/melike/gorseller/bebek.png' },
-        { word: 'Balon', img: 'https://static.fokusistatistik.com/melike/gorseller/balon.png' },
-        { word: 'Bisiklet', img: 'https://static.fokusistatistik.com/melike/gorseller/bisiklet.png' },
+        { word: 'Balon', img: '/karsilastirma/balon.jpg' },
+        { word: 'Bisiklet', img: '/karsilastirma/bisiklet.jpg' },
         { word: 'Bardak', img: 'https://static.fokusistatistik.com/melike/gorseller/bardak.png' },
         { word: 'Bot', img: 'https://static.fokusistatistik.com/melike/gorseller/bot.png' },
         { word: 'Bulut', img: 'https://static.fokusistatistik.com/melike/gorseller/bulut.png' },
@@ -30,9 +30,9 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Battaniye', img: 'https://static.fokusistatistik.com/melike/gorseller/battaniye.png' }
     ],
     'C': [
-        { word: 'Civciv', img: 'https://static.fokusistatistik.com/melike/gorseller/civciv.png' },
+        { word: 'Civciv', img: '/karsilastirma/civciv.jpg' },
         { word: 'Ceket', img: 'https://static.fokusistatistik.com/melike/gorseller/ceket.png' },
-        { word: 'Ceviz', img: 'https://static.fokusistatistik.com/melike/gorseller/ceviz.png' },
+        { word: 'Ceviz', img: '/karsilastirma/ceviz.jpg' },
         { word: 'Cetvel', img: 'https://static.fokusistatistik.com/melike/gorseller/cetvel.png' },
         { word: 'Cüzdan', img: 'https://static.fokusistatistik.com/melike/gorseller/cuzdan.png' },
         { word: 'Cam', img: 'https://static.fokusistatistik.com/melike/gorseller/cam.png' },
@@ -43,9 +43,9 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     ],
     'Ç': [
         { word: 'Çilek', img: 'https://static.fokusistatistik.com/melike/gorseller/cilek.png' },
-        { word: 'Çiçek', img: 'https://static.fokusistatistik.com/melike/gorseller/cicek.png' },
-        { word: 'Çanta', img: 'https://static.fokusistatistik.com/melike/gorseller/canta.png' },
-        { word: 'Çorap', img: 'https://static.fokusistatistik.com/melike/gorseller/corap.png' },
+        { word: 'Çiçek', img: '/karsilastirma/cicek.jpg' },
+        { word: 'Çanta', img: '/karsilastirma/canta.jpg' },
+        { word: 'Çorap', img: '/karsilastirma/corap.jpg' },
         { word: 'Çatal', img: 'https://static.fokusistatistik.com/melike/gorseller/catal.png' },
         { word: 'Çekiç', img: 'https://static.fokusistatistik.com/melike/gorseller/cekic.png' },
         { word: 'Çöp', img: 'https://static.fokusistatistik.com/melike/gorseller/cop.png' },
@@ -54,31 +54,31 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Çay', img: 'https://static.fokusistatistik.com/melike/gorseller/cay.png' }
     ],
     'D': [
-        { word: 'Dondurma', img: 'https://static.fokusistatistik.com/melike/gorseller/dondurma.png' },
-        { word: 'Domates', img: 'https://static.fokusistatistik.com/melike/gorseller/domates.png' },
+        { word: 'Dondurma', img: '/karsilastirma/dondurma.jpg' },
+        { word: 'Domates', img: '/karsilastirma/domates.jpg' },
         { word: 'Düğme', img: 'https://static.fokusistatistik.com/melike/gorseller/dugme.png' },
         { word: 'Davul', img: 'https://static.fokusistatistik.com/melike/gorseller/davul.png' },
         { word: 'Diş', img: 'https://static.fokusistatistik.com/melike/gorseller/dis.png' },
         { word: 'Defter', img: 'https://static.fokusistatistik.com/melike/gorseller/defter.png' },
-        { word: 'Deve', img: 'https://static.fokusistatistik.com/melike/gorseller/deve.png' },
+        { word: 'Deve', img: '/karsilastirma/deve.jpg' },
         { word: 'Dinozor', img: 'https://static.fokusistatistik.com/melike/gorseller/dinozor.png' },
         { word: 'Düdük', img: 'https://static.fokusistatistik.com/melike/gorseller/duduk.png' },
         { word: 'Direksiyon', img: 'https://static.fokusistatistik.com/melike/gorseller/direksiyon.png' }
     ],
     'E': [
-        { word: 'Elma', img: 'https://static.fokusistatistik.com/melike/gorseller/elma.png' },
-        { word: 'Eldiven', img: 'https://static.fokusistatistik.com/melike/gorseller/eldiven.png' },
-        { word: 'Ekmek', img: 'https://static.fokusistatistik.com/melike/gorseller/ekmek.png' },
-        { word: 'Elbise', img: 'https://static.fokusistatistik.com/melike/gorseller/elbise.png' },
+        { word: 'Elma', img: '/karsilastirma/elma.jpg' },
+        { word: 'Eldiven', img: '/karsilastirma/eldiven.jpg' },
+        { word: 'Ekmek', img: '/karsilastirma/ekmek.jpg' },
+        { word: 'Elbise', img: '/karsilastirma/elbise.jpg' },
         { word: 'Ev', img: 'https://static.fokusistatistik.com/melike/gorseller/ev.png' },
-        { word: 'Eşek', img: 'https://static.fokusistatistik.com/melike/gorseller/esek.png' },
+        { word: 'Eşek', img: '/karsilastirma/esek.jpg' },
         { word: 'Elek', img: 'https://static.fokusistatistik.com/melike/gorseller/elek.png' },
         { word: 'Erik', img: 'https://static.fokusistatistik.com/melike/gorseller/erik.png' },
         { word: 'Etek', img: 'https://static.fokusistatistik.com/melike/gorseller/etek.png' },
         { word: 'Emzik', img: 'https://static.fokusistatistik.com/melike/gorseller/emzik.png' }
     ],
     'F': [
-        { word: 'Fil', img: 'https://static.fokusistatistik.com/melike/gorseller/fil.png' },
+        { word: 'Fil', img: '/karsilastirma/fil.jpg' },
         { word: 'Fırça', img: 'https://static.fokusistatistik.com/melike/gorseller/firca.png' },
         { word: 'Fındık', img: 'https://static.fokusistatistik.com/melike/gorseller/findik.png' },
         { word: 'Fener', img: 'https://static.fokusistatistik.com/melike/gorseller/fener.png' },
@@ -90,24 +90,24 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Flüt', img: 'https://static.fokusistatistik.com/melike/gorseller/flut.png' }
     ],
     'G': [
-        { word: 'Güneş', img: 'https://static.fokusistatistik.com/melike/gorseller/gunes.png' },
-        { word: 'Gemi', img: 'https://static.fokusistatistik.com/melike/gorseller/gemi.png' },
+        { word: 'Güneş', img: '/karsilastirma/gunes.jpg' },
+        { word: 'Gemi', img: '/karsilastirma/gemi.jpg' },
         { word: 'Gözlük', img: 'https://static.fokusistatistik.com/melike/gorseller/gozluk.png' },
-        { word: 'Gitar', img: 'https://static.fokusistatistik.com/melike/gorseller/gitar.png' },
+        { word: 'Gitar', img: '/karsilastirma/gitar.jpg' },
         { word: 'Gül', img: 'https://static.fokusistatistik.com/melike/gorseller/gul.png' },
         { word: 'Geyik', img: 'https://static.fokusistatistik.com/melike/gorseller/geyik.png' },
-        { word: 'Gökkuşağı', img: 'https://static.fokusistatistik.com/melike/gorseller/gokkusagi.png' },
+        { word: 'Gökkuşağı', img: '/karsilastirma/gokkusagi.jpg' },
         { word: 'Gömlek', img: 'https://static.fokusistatistik.com/melike/gorseller/gomlek.png' },
         { word: 'Gaga', img: 'https://static.fokusistatistik.com/melike/gorseller/gaga.png' },
         { word: 'Garaj', img: 'https://static.fokusistatistik.com/melike/gorseller/garaj.png' }
     ],
     'Ğ': [
-        { word: 'Ağaç', img: 'https://static.fokusistatistik.com/melike/gorseller/agac.png' },
+        { word: 'Ağaç', img: '/karsilastirma/agac.jpg' },
         { word: 'Dağ', img: 'https://static.fokusistatistik.com/melike/gorseller/dag.png' },
         { word: 'Bağ', img: 'https://static.fokusistatistik.com/melike/gorseller/bag.png' }
     ],
     'H': [
-        { word: 'Havuç', img: 'https://static.fokusistatistik.com/melike/gorseller/havuc.png' },
+        { word: 'Havuç', img: '/karsilastirma/havuc.jpg' },
         { word: 'Helikopter', img: 'https://static.fokusistatistik.com/melike/gorseller/helikopter.png' },
         { word: 'Hediye', img: 'https://static.fokusistatistik.com/melike/gorseller/hediye.png' },
         { word: 'Halı', img: 'https://static.fokusistatistik.com/melike/gorseller/hali.png' },
@@ -122,14 +122,14 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Ispanak', img: 'https://static.fokusistatistik.com/melike/gorseller/ispanak.png' },
         { word: 'Izgara', img: 'https://static.fokusistatistik.com/melike/gorseller/izgara.png' },
         { word: 'Islık', img: 'https://static.fokusistatistik.com/melike/gorseller/islik.png' },
-        { word: 'Işık', img: 'https://static.fokusistatistik.com/melike/gorseller/isik.png' },
+        { word: 'Işık', img: '/karsilastirma/isik.jpg' },
         { word: 'Istakoz', img: 'https://static.fokusistatistik.com/melike/gorseller/istakoz.png' },
         { word: 'Irmak', img: 'https://static.fokusistatistik.com/melike/gorseller/irmak.png' },
         { word: 'Isıtıcı', img: 'https://static.fokusistatistik.com/melike/gorseller/isitici.png' },
         { word: 'Islak', img: 'https://static.fokusistatistik.com/melike/gorseller/islak.png' }
     ],
     'İ': [
-        { word: 'İnek', img: 'https://static.fokusistatistik.com/melike/gorseller/inek.png' },
+        { word: 'İnek', img: '/karsilastirma/inek.jpg' },
         { word: 'İncir', img: 'https://static.fokusistatistik.com/melike/gorseller/incir.png' },
         { word: 'İp', img: 'https://static.fokusistatistik.com/melike/gorseller/ip.png' },
         { word: 'İtfaiye', img: 'https://static.fokusistatistik.com/melike/gorseller/itfaiye.png' },
@@ -146,25 +146,25 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Jöle', img: 'https://static.fokusistatistik.com/melike/gorseller/jole.png' },
         { word: 'Jaguvar', img: 'https://static.fokusistatistik.com/melike/gorseller/jaguvar.png' },
         { word: 'Jilet', img: 'https://static.fokusistatistik.com/melike/gorseller/jilet.png' },
-        { word: 'Jelibon', img: 'https://static.fokusistatistik.com/melike/gorseller/jelibon.png' },
+        { word: 'Jelibon', img: '/karsilastirma/jelibon.jpg' },
         { word: 'Jak', img: 'https://static.fokusistatistik.com/melike/gorseller/jak.png' },
         { word: 'Jant', img: 'https://static.fokusistatistik.com/melike/gorseller/jant.png' },
         { word: 'Jarse', img: 'https://static.fokusistatistik.com/melike/gorseller/jarse.png' }
     ],
     'K': [
-        { word: 'Kedi', img: 'https://static.fokusistatistik.com/melike/gorseller/kedi.png' },
-        { word: 'Köpek', img: 'https://static.fokusistatistik.com/melike/gorseller/kopek.png' },
+        { word: 'Kedi', img: '/karsilastirma/kedi.jpg' },
+        { word: 'Köpek', img: '/karsilastirma/kopek.jpg' },
         { word: 'Kitap', img: 'https://static.fokusistatistik.com/melike/gorseller/kitap.png' },
         { word: 'Kalem', img: 'https://static.fokusistatistik.com/melike/gorseller/kalem.png' },
-        { word: 'Karpuz', img: 'https://static.fokusistatistik.com/melike/gorseller/karpuz.png' },
+        { word: 'Karpuz', img: '/karsilastirma/karpuz.jpg' },
         { word: 'Kapı', img: 'https://static.fokusistatistik.com/melike/gorseller/kapi.png' },
         { word: 'Kuş', img: 'https://static.fokusistatistik.com/melike/gorseller/kus.png' },
-        { word: 'Kaplumbağa', img: 'https://static.fokusistatistik.com/melike/gorseller/kaplumbaga.png' },
+        { word: 'Kaplumbağa', img: '/karsilastirma/kaplumbaga.jpg' },
         { word: 'Kova', img: 'https://static.fokusistatistik.com/melike/gorseller/kova.png' },
         { word: 'Kar', img: 'https://static.fokusistatistik.com/melike/gorseller/kar.png' }
     ],
     'L': [
-        { word: 'Limon', img: 'https://static.fokusistatistik.com/melike/gorseller/limon.png' },
+        { word: 'Limon', img: '/karsilastirma/limon.jpg' },
         { word: 'Leylek', img: 'https://static.fokusistatistik.com/melike/gorseller/leylek.png' },
         { word: 'Lale', img: 'https://static.fokusistatistik.com/melike/gorseller/lale.png' },
         { word: 'Leğen', img: 'https://static.fokusistatistik.com/melike/gorseller/legen.png' },
@@ -173,8 +173,8 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     ],
     'M': [
         { word: 'Maymun', img: 'https://static.fokusistatistik.com/melike/gorseller/maymun.png' },
-        { word: 'Muz', img: 'https://static.fokusistatistik.com/melike/gorseller/muz.png' },
-        { word: 'Masa', img: 'https://static.fokusistatistik.com/melike/gorseller/masa.png' },
+        { word: 'Muz', img: '/karsilastirma/muz.jpg' },
+        { word: 'Masa', img: '/karsilastirma/masa.jpg' },
         { word: 'Makas', img: 'https://static.fokusistatistik.com/melike/gorseller/makas.png' },
         { word: 'Merdiven', img: 'https://static.fokusistatistik.com/melike/gorseller/merdiven.png' },
         { word: 'Mantar', img: 'https://static.fokusistatistik.com/melike/gorseller/mantar.png' },
@@ -183,7 +183,7 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Marul', img: 'https://static.fokusistatistik.com/melike/gorseller/marul.png' }
     ],
     'N': [
-        { word: 'Nar', img: 'https://static.fokusistatistik.com/melike/gorseller/nar.png' },
+        { word: 'Nar', img: '/karsilastirma/nar.jpg' },
         { word: 'Nane', img: 'https://static.fokusistatistik.com/melike/gorseller/nane.png' },
         { word: 'Nohut', img: 'https://static.fokusistatistik.com/melike/gorseller/nohut.png' },
         { word: 'Nemlendirici', img: 'https://static.fokusistatistik.com/melike/gorseller/nemlendirici.png' },
@@ -191,15 +191,15 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Nilüfer', img: 'https://static.fokusistatistik.com/melike/gorseller/nilufer.png' }
     ],
     'O': [
-        { word: 'Otobüs', img: 'https://static.fokusistatistik.com/melike/gorseller/otobus.png' },
-        { word: 'Olta', img: 'https://static.fokusistatistik.com/melike/gorseller/olta.png' },
+        { word: 'Otobüs', img: '/karsilastirma/otobus.jpg' },
+        { word: 'Olta', img: '/karsilastirma/olta.jpg' },
         { word: 'Okul', img: 'https://static.fokusistatistik.com/melike/gorseller/okul.png' },
         { word: 'Orman', img: 'https://static.fokusistatistik.com/melike/gorseller/orman.png' },
         { word: 'Oyuncak', img: 'https://static.fokusistatistik.com/melike/gorseller/oyuncak.png' },
         { word: 'Ocak', img: 'https://static.fokusistatistik.com/melike/gorseller/ocak.png' }
     ],
     'Ö': [
-        { word: 'Ördek', img: 'https://static.fokusistatistik.com/melike/gorseller/ordek.png' },
+        { word: 'Ördek', img: '/karsilastirma/ordek2.jpg' },
         { word: 'Örümcek', img: 'https://static.fokusistatistik.com/melike/gorseller/orumcek.png' },
         { word: 'Örgü', img: 'https://static.fokusistatistik.com/melike/gorseller/orgu.png' },
         { word: 'Örtü', img: 'https://static.fokusistatistik.com/melike/gorseller/ortu.png' },
@@ -207,13 +207,13 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Ödül', img: 'https://static.fokusistatistik.com/melike/gorseller/odul.png' }
     ],
     'P': [
-        { word: 'Portakal', img: 'https://static.fokusistatistik.com/melike/gorseller/portakal.png' },
+        { word: 'Portakal', img: '/karsilastirma/portakal.jpg' },
         { word: 'Peynir', img: 'https://static.fokusistatistik.com/melike/gorseller/peynir.png' },
-        { word: 'Pantolon', img: 'https://static.fokusistatistik.com/melike/gorseller/pantolon.png' },
-        { word: 'Penguen', img: 'https://static.fokusistatistik.com/melike/gorseller/penguen.png' },
-        { word: 'Pasta', img: 'https://static.fokusistatistik.com/melike/gorseller/pasta.png' },
+        { word: 'Pantolon', img: '/karsilastirma/pantolon.jpg' },
+        { word: 'Penguen', img: '/karsilastirma/penguen.jpg' },
+        { word: 'Pasta', img: '/karsilastirma/pasta.jpg' },
         { word: 'Para', img: 'https://static.fokusistatistik.com/melike/gorseller/para.png' },
-        { word: 'Piyano', img: 'https://static.fokusistatistik.com/melike/gorseller/piyano.png' },
+        { word: 'Piyano', img: '/karsilastirma/piyano.jpg' },
         { word: 'Papatya', img: 'https://static.fokusistatistik.com/melike/gorseller/papatya.png' },
         { word: 'Pil', img: 'https://static.fokusistatistik.com/melike/gorseller/pil.png' },
         { word: 'Pijama', img: 'https://static.fokusistatistik.com/melike/gorseller/pijama.png' }
@@ -223,22 +223,23 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Robot', img: 'https://static.fokusistatistik.com/melike/gorseller/robot.png' },
         { word: 'Reçel', img: 'https://static.fokusistatistik.com/melike/gorseller/recel.png' },
         { word: 'Rende', img: 'https://static.fokusistatistik.com/melike/gorseller/rende.png' },
-        { word: 'Raket', img: 'https://static.fokusistatistik.com/melike/gorseller/raket.png' },
+        { word: 'Raket', img: '/karsilastirma/raket.jpg' },
         { word: 'Ruj', img: 'https://static.fokusistatistik.com/melike/gorseller/ruj.png' }
     ],
     'S': [
         { word: 'Süt', img: 'https://static.fokusistatistik.com/melike/gorseller/sut.png' },
-        { word: 'Saat', img: 'https://static.fokusistatistik.com/melike/gorseller/saat.png' },
+        { word: 'Saat', img: '/karsilastirma/saat.jpg' },
         { word: 'Su', img: 'https://static.fokusistatistik.com/melike/gorseller/su.png' },
-        { word: 'Sandalye', img: 'https://static.fokusistatistik.com/melike/gorseller/sandalye.png' },
+        { word: 'Sandalye', img: '/karsilastirma/sandalye.jpg' },
         { word: 'Sepet', img: 'https://static.fokusistatistik.com/melike/gorseller/sepet.png' },
         { word: 'Sabun', img: 'https://static.fokusistatistik.com/melike/gorseller/sabun.png' },
         { word: 'Silgi', img: 'https://static.fokusistatistik.com/melike/gorseller/silgi.png' },
-        { word: 'Simit', img: 'https://static.fokusistatistik.com/melike/gorseller/simit.png' }
+        { word: 'Simit', img: '/karsilastirma/simit.jpg' },
+        { word: 'Soğan', img: '/karsilastirma/sogan.jpg' }
     ],
     'Ş': [
-        { word: 'Şemsiye', img: 'https://static.fokusistatistik.com/melike/gorseller/semsiye.png' },
-        { word: 'Şapka', img: 'https://static.fokusistatistik.com/melike/gorseller/sapka.png' },
+        { word: 'Şemsiye', img: '/karsilastirma/semsiye.jpg' },
+        { word: 'Şapka', img: '/karsilastirma/sapka.jpg' },
         { word: 'Şeker', img: 'https://static.fokusistatistik.com/melike/gorseller/seker.png' },
         { word: 'Şişe', img: 'https://static.fokusistatistik.com/melike/gorseller/sise.png' },
         { word: 'Şort', img: 'https://static.fokusistatistik.com/melike/gorseller/sort.png' },
@@ -247,28 +248,28 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Şampuan', img: 'https://static.fokusistatistik.com/melike/gorseller/sampuan.png' }
     ],
     'T': [
-        { word: 'Tavşan', img: 'https://static.fokusistatistik.com/melike/gorseller/tavsan.png' },
-        { word: 'Top', img: 'https://static.fokusistatistik.com/melike/gorseller/top.png' },
+        { word: 'Tavşan', img: '/karsilastirma/tavsan.jpg' },
+        { word: 'Top', img: '/karsilastirma/top.jpg' },
         { word: 'Telefon', img: 'https://static.fokusistatistik.com/melike/gorseller/telefon.png' },
         { word: 'Tarak', img: 'https://static.fokusistatistik.com/melike/gorseller/tarak.png' },
-        { word: 'Tavuk', img: 'https://static.fokusistatistik.com/melike/gorseller/tavuk.png' },
+        { word: 'Tavuk', img: '/karsilastirma/tavuk.jpg' },
         { word: 'Tren', img: 'https://static.fokusistatistik.com/melike/gorseller/tren.png' },
-        { word: 'Tencere', img: 'https://static.fokusistatistik.com/melike/gorseller/tencere.png' },
+        { word: 'Tencere', img: '/karsilastirma/tencere.jpg' },
         { word: 'Terlik', img: 'https://static.fokusistatistik.com/melike/gorseller/terlik.png' },
         { word: 'Timsah', img: 'https://static.fokusistatistik.com/melike/gorseller/timsah.png' },
         { word: 'Turşu', img: 'https://static.fokusistatistik.com/melike/gorseller/tursu.png' }
     ],
     'U': [
-        { word: 'Uçak', img: 'https://static.fokusistatistik.com/melike/gorseller/ucak.png' },
+        { word: 'Uçak', img: '/karsilastirma/ucak.jpg' },
         { word: 'Uçurtma', img: 'https://static.fokusistatistik.com/melike/gorseller/ucurtma.png' },
         { word: 'Un', img: 'https://static.fokusistatistik.com/melike/gorseller/un.png' },
         { word: 'Uydu', img: 'https://static.fokusistatistik.com/melike/gorseller/uydu.png' },
         { word: 'Uzay', img: 'https://static.fokusistatistik.com/melike/gorseller/uzay.png' }
     ],
     'Ü': [
-        { word: 'Üzüm', img: 'https://static.fokusistatistik.com/melike/gorseller/uzum.png' },
+        { word: 'Üzüm', img: '/karsilastirma/uzum.jpg' },
         { word: 'Ütü', img: 'https://static.fokusistatistik.com/melike/gorseller/utu.png' },
-        { word: 'Üçgen', img: 'https://static.fokusistatistik.com/melike/gorseller/ucgen.png' },
+        { word: 'Üçgen', img: '/karsilastirma/ucgen.jpg' },
         { word: 'Üniforma', img: 'https://static.fokusistatistik.com/melike/gorseller/uniforma.png' },
         { word: 'Ülke', img: 'https://static.fokusistatistik.com/melike/gorseller/ulke.png' },
         { word: 'Üflemek', img: 'https://static.fokusistatistik.com/melike/gorseller/uflemek.png' },
@@ -283,12 +284,12 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
         { word: 'Vantilatör', img: 'https://static.fokusistatistik.com/melike/gorseller/vantilator.png' }
     ],
     'Y': [
-        { word: 'Yumurta', img: 'https://static.fokusistatistik.com/melike/gorseller/yumurta.png' },
-        { word: 'Yıldız', img: 'https://static.fokusistatistik.com/melike/gorseller/yildiz.png' },
+        { word: 'Yumurta', img: '/karsilastirma/yumurta.jpg' },
+        { word: 'Yıldız', img: '/karsilastirma/yildiz.jpg' },
         { word: 'Yastık', img: 'https://static.fokusistatistik.com/melike/gorseller/yastik.png' },
-        { word: 'Yaprak', img: 'https://static.fokusistatistik.com/melike/gorseller/yaprak.png' },
-        { word: 'Yatak', img: 'https://static.fokusistatistik.com/melike/gorseller/yatak.png' },
-        { word: 'Yunus', img: 'https://static.fokusistatistik.com/melike/gorseller/yunus.png' },
+        { word: 'Yaprak', img: '/karsilastirma/yaprak.jpg' },
+        { word: 'Yatak', img: '/karsilastirma/yatak.jpg' },
+        { word: 'Yunus', img: '/karsilastirma/yunus.jpg' },
         { word: 'Yüzük', img: 'https://static.fokusistatistik.com/melike/gorseller/yuzuk.png' },
         { word: 'Yoğurt', img: 'https://static.fokusistatistik.com/melike/gorseller/yogurt.png' },
         { word: 'Yılan', img: 'https://static.fokusistatistik.com/melike/gorseller/yilan.png' }
@@ -296,8 +297,8 @@ export const LETTER_OBJECTS: Record<string, LetterAsset[]> = {
     'Z': [
         { word: 'Zebra', img: 'https://static.fokusistatistik.com/melike/gorseller/zebra.png' },
         { word: 'Zil', img: 'https://static.fokusistatistik.com/melike/gorseller/zil.png' },
-        { word: 'Zeytin', img: 'https://static.fokusistatistik.com/melike/gorseller/zeytin.png' },
-        { word: 'Zürafa', img: 'https://static.fokusistatistik.com/melike/gorseller/zurafa.png' },
+        { word: 'Zeytin', img: '/karsilastirma/zeytin.jpg' },
+        { word: 'Zürafa', img: '/karsilastirma/zurafa.jpg' },
         { word: 'Zar', img: 'https://static.fokusistatistik.com/melike/gorseller/zar.png' },
         { word: 'Zincir', img: 'https://static.fokusistatistik.com/melike/gorseller/zincir.png' },
         { word: 'Zarf', img: 'https://static.fokusistatistik.com/melike/gorseller/zarf.png' }
