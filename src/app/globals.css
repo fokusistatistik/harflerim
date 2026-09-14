@@ -197,17 +197,32 @@ a:focus-visible {
 }
 
 /* 2026-09-14 — kullanıcı bulgusu: oyun ekranları `min-h-screen` (100vh)
-   kullanıyordu, ama bu içerik zaten <body>'nin pt-16/lg:pt-20 + pb-16
-   padding'i (Header + ParentFooter için ayrılan alan) İÇİNDE render
-   ediliyor — toplam yükseklik 100vh + padding oluyor, gereksiz bir dikey
-   scroll'a yol açıyordu (görünürde boşluk varken bile). `min-h-screen`
-   yerine bu sınıf kullanılır: viewport yüksekliğinden body padding'ini
-   çıkarır, böylece içerik tam olarak kalan alanı doldurur, taşmaz. */
+   kullanıyordu, ama bu içerik zaten <body>'nin pt-16/lg:pt-20 padding'i
+   (Header için ayrılan alan) İÇİNDE render ediliyor — toplam yükseklik
+   100vh + padding oluyor, gereksiz bir dikey scroll'a yol açıyordu
+   (görünürde boşluk varken bile). `min-h-screen` yerine bu sınıf
+   kullanılır: viewport yüksekliğinden body padding'ini çıkarır, böylece
+   içerik tam olarak kalan alanı doldurur, taşmaz.
+   2026-09-14 — ayrı sabit ParentFooter alt çubuğu kaldırıldı (kullanıcı
+   isteği: "ekstra bir footer alanı olmasın", süre/kilit Header'a taşındı),
+   bu yüzden pb-16 çıkarımı da kaldırıldı. */
 .min-h-app {
-  min-height: calc(100vh - 8rem); /* 100vh - (pt-16 + pb-16) */
+  min-height: calc(100vh - 4rem); /* 100vh - pt-16 */
 }
 @media (min-width: 1024px) {
   .min-h-app {
-    min-height: calc(100vh - 9rem); /* 100vh - (lg:pt-20 + pb-16) */
+    min-height: calc(100vh - 5rem); /* 100vh - lg:pt-20 */
+  }
+}
+
+/* Ana sayfa kart başlıkları — text-p-base/text-p-lg'nin 2px küçültülmüş
+   karşılığı (kullanıcı isteği). Global tipografi tokenlerini değiştirmez,
+   yalnızca bu başlığa özeldir. */
+.nav-card-title {
+  font-size: clamp(0.875rem, 0.815rem + 0.3vw, 1rem); /* text-p-base (16-18px) - 2px */
+}
+@media (min-width: 1024px) {
+  .nav-card-title {
+    font-size: clamp(1rem, 0.875rem + 0.6vw, 1.25rem); /* text-p-lg (18-22px) - 2px */
   }
 }

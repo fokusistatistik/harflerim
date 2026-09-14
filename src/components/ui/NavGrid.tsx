@@ -80,7 +80,7 @@ function CardShell({ area, children }: { area: NavArea; children: React.ReactNod
         >
             {children}
             <div className="flex flex-col items-center text-center w-full px-2">
-                <span className="text-p-base lg:text-p-lg font-bold text-papatya-ink leading-tight">{area.label}</span>
+                <span className="nav-card-title font-bold text-papatya-ink leading-tight">{area.label}</span>
                 <span className={`text-xs ${isSoon ? 'text-papatya-ink-soft' : accent.subtitleText}`}>{area.subtitle}</span>
             </div>
         </div>
@@ -120,28 +120,28 @@ function CardShell({ area, children }: { area: NavArea; children: React.ReactNod
 
 export function NavGrid() {
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-5 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-5 w-full">
             {NAV_AREAS.map((area) => {
                 const accent = ACCENT_CLASSES[area.accent];
                 const Icon = ICONS[area.id];
 
                 return (
                     <CardShell key={area.id} area={area}>
-                        <div className="w-20 h-20 lg:w-24 lg:h-24 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 relative">
+                        <div className="w-[60px] h-[60px] lg:w-[72px] lg:h-[72px] flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 relative">
                             {area.imageSrc ? (
                                 <ImageWithFallback
                                     src={area.imageSrc}
                                     alt={area.label}
                                     className="w-full h-full object-cover rounded-full shadow-lg"
                                     fallback={
-                                        <div className={`${accent.iconBg} ${accent.iconText} p-4 rounded-full`}>
-                                            <Icon size={40} strokeWidth={2} />
+                                        <div className={`${accent.iconBg} ${accent.iconText} p-3 rounded-full`}>
+                                            <Icon size={30} strokeWidth={2} />
                                         </div>
                                     }
                                 />
                             ) : (
-                                <div className={`${accent.iconBg} ${accent.iconText} p-4 rounded-full`}>
-                                    <Icon size={40} strokeWidth={2} />
+                                <div className={`${accent.iconBg} ${accent.iconText} p-3 rounded-full`}>
+                                    <Icon size={30} strokeWidth={2} />
                                 </div>
                             )}
                             {area.status === 'soon' && (

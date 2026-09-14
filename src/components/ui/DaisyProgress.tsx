@@ -59,8 +59,14 @@ export function DaisyProgress({ filledCount, size = 40, className }: DaisyProgre
                         ry={petalLength / 2}
                         style={{
                             fill: isFilled ? 'rgb(var(--papatya-petal))' : 'rgb(var(--papatya-rule))',
-                            transformBox: 'fill-box',
-                            transformOrigin: 'center',
+                            // transform-box: fill-box + transform-origin: center her
+                            // elipsi KENDİ bounding box'ının merkezine göre döndürüyordu
+                            // (papatyanın merkezine göre değil) — 8 yaprak da neredeyse
+                            // aynı noktada kalıp üst üste yığılıyordu (kullanıcı bulgusu:
+                            // "3/8 iken tek yaprak görünüyor"). view-box + papatyanın
+                            // gerçek merkezi (center,center) doğru çember dağılımını verir.
+                            transformBox: 'view-box',
+                            transformOrigin: `${center}px ${center}px`,
                             transform: `rotate(${angle}deg) scale(${mounted ? 1 : 0})`,
                             transitionProperty: 'transform, fill',
                             transitionDuration: 'var(--papatya-duration-base)',

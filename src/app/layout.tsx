@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Andika, Patrick_Hand } from 'next/font/google';
 import { AudioProvider } from '@/components/AudioProvider';
-import { ParentFooter } from '@/components/ui/ParentFooter';
 import { Header } from '@/components/ui/Header';
 import { DayComplete } from '@/components/ui/DayComplete';
 import { CalmingMode } from '@/components/ui/CalmingMode';
@@ -73,7 +72,7 @@ export default async function RootLayout({
             // sistem tercihinden bağımsız krem/açık modda kilitler.
             data-theme="light"
         >
-            <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pb-16 pt-16 lg:pt-20' : ''}`}>
+            <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pt-16 lg:pt-20' : ''}`}>
                 <MotionPreference reduceMotion={settings?.reduceMotion ?? false}>
                     <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
                         {user && <Header />}
@@ -84,7 +83,6 @@ export default async function RootLayout({
                         {user && <DayComplete />}
                         {user && <CalmingMode />}
                     </AudioProvider>
-                    {user && <ParentFooter />}
                 </MotionPreference>
             </body>
         </html>

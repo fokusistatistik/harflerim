@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLevelStore } from '@/store/levelStore';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Lock, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useParentGateStore } from '@/store/parentGateStore';
@@ -12,7 +12,7 @@ import { getTodaySummary } from '@/actions/todaySummary';
 const TOTAL_PETALS = 8;
 
 export function Header() {
-    const { isDayComplete } = useLevelStore();
+    const { isDayComplete, dailyScreenSeconds, dailyScreenLimit } = useLevelStore();
     // 2026-09-14 — kullanıcı bulgusu: "3/8 tamamlandı" yazıyor ama sadece 1
     // yaprak doluydu. Kök neden: bu gösterge Faz 1.9'un geçici zaman-oranı
     // hesabını (dailyScreenSeconds/dailyScreenLimit) kullanıyordu, Faz 2.8'in
@@ -47,6 +47,16 @@ export function Header() {
         return () => clearInterval(interval);
     }, []);
 
+    // 2026-09-14 — ayrı bir sabit ParentFooter alt çubuğu kaldırıldı (kullanıcı
+    // isteği: "ekstra bir footer alanı olmasın"), süre/kilit bilgisi buraya
+    // taşındı. dailyScreenSeconds client-only store'dan geldiği için `mounted`
+    // olmadan gösterilirse hydration mismatch riski var — time/dateStr'deki
+    // ile aynı desen.
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    const usedMin = Math.floor(dailyScreenSeconds / 60);
+    const limitMin = Math.round(dailyScreenLimit / 60);
+
     return (
         <header className="fixed top-0 left-0 w-full h-16 lg:h-20 bg-papatya-surface/90 backdrop-blur-md shadow-sm z-40 flex items-center justify-between px-4 md:px-8 lg:px-12 xl:px-16 border-b border-papatya-rule">
 
@@ -75,8 +85,15 @@ export function Header() {
                 {dateStr}
             </div>
 
-            {/* Right: Daisy progress / Level / DayNight */}
-            <div className="flex items-center gap-3 lg:gap-6">
+            {/* Right: süre özeti / Daisy progress / gün durumu / ebeveyn kilidi */}
+            <div className="flex items-center gap-3 md:gap-4 lg:gap-6">
+                {mounted && (
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs lg:text-sm text-papatya-ink-soft font-semibold whitespace-nowrap">
+                        <Timer size={14} className="text-papatya-sky shrink-0" />
+                        <span>{isDayComplete ? 'Tamamlandı 🎉' : `${usedMin}/${limitMin} dk`}</span>
+                    </div>
+                )}
+
                 <DaisyProgress filledCount={filledPetals} size={36} className="lg:w-11 lg:h-11" />
 
                 {/* 2026-09-13 — UX denetiminde kullanıcı bunu bir tema anahtarı
@@ -91,6 +108,18 @@ export function Header() {
                 >
                     {isDayComplete ? <Moon size={24} className="fill-papatya-sky lg:w-7 lg:h-7" /> : <Sun size={24} className="text-papatya-petal lg:w-7 lg:h-7" />}
                 </div>
+
+                {/* Faz 3 UX düzeltmesi (2026-09-13) — Header'ın 700ms uzun-basma
+                    jestiyle AYNI eylemi (openPinPrompt) tetikleyen görünür bir
+                    düğme; eskiden ayrı ParentFooter'daydı. */}
+                <button
+                    type="button"
+                    onClick={() => openPinPrompt()}
+                    className="pl-3 lg:pl-4 border-l border-papatya-rule min-w-tap min-h-tap flex items-center justify-center text-papatya-ink-soft hover:text-papatya-ink transition-colors"
+                    aria-label="Ebeveyn kilidini aç"
+                >
+                    <Lock size={18} className="lg:w-5 lg:h-5" />
+                </button>
             </div>
         </header>
     );

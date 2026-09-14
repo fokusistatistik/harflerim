@@ -27,7 +27,7 @@ export default async function Home() {
             {/* Hero Section — 2026-09-13: masaüstünde avatar+başlık yan yana
                 (lg:flex-row), üstteki dikey boşluk azaltıldı (kullanıcı UX
                 geri bildirimi: "üstteki boşluğu azalt"). */}
-            <div className="z-10 flex flex-col items-center gap-4 lg:gap-5 max-w-6xl xl:max-w-7xl w-full px-4">
+            <div className="z-10 flex flex-col items-center gap-4 lg:gap-5 max-w-6xl lg:max-w-[90rem] w-full px-4">
 
                 <div className="flex flex-col lg:flex-row items-center gap-3 lg:gap-6">
                     {/* Profil fotoğrafı — kullanıcıya dinamik bağlı (bkz. HomeAvatar) */}
