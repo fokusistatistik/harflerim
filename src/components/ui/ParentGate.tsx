@@ -24,13 +24,13 @@ const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 6);
  */
 const TABS = [
     { key: 'genel', label: 'Genel', icon: Lock },
-    { key: 'aile', label: 'Aile Bireyleri', icon: Users },
+    { key: 'aile', label: 'Aile', icon: Users },
     { key: 'muzik', label: 'Müzik', icon: Music },
     { key: 'video', label: 'Videolar', icon: Film },
     { key: 'cizimler', label: 'Çizimler', icon: Palette },
-    { key: 'profil', label: 'Çocuk Profili', icon: Sparkles },
+    { key: 'profil', label: 'Profil', icon: Sparkles },
     { key: 'duyusal', label: 'Duyusal', icon: HeartPulse },
-    { key: 'sure', label: 'Ekran Süresi', icon: Clock },
+    { key: 'sure', label: 'Süre', icon: Clock },
     { key: 'ilerleme', label: 'İlerleme', icon: LineChart },
     { key: 'kayitlar', label: 'Kayıtlar', icon: ScrollText },
 ] as const;
@@ -136,7 +136,7 @@ export function ParentGate() {
         >
             <div
                 className={`bg-papatya-surface text-papatya-ink rounded-p-lg shadow-2xl w-full p-4 sm:p-6 relative ${
-                    isUnlocked ? 'max-w-md md:max-w-3xl lg:max-w-6xl lg:w-[85vw] max-h-[92vh] overflow-y-auto' : 'max-w-sm'
+                    isUnlocked ? 'max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl max-h-[92vh] overflow-y-auto' : 'max-w-sm'
                 }`}
             >
                 <button
@@ -180,32 +180,24 @@ export function ParentGate() {
                     <div className="flex flex-col gap-3 pt-2 sm:pt-4">
                         <h2 className="text-p-lg font-bold text-center">Ebeveyn Yönetim Alanı</h2>
 
-                        <div className="relative -mx-1">
-                            {/* Sağ kenarda hafif bir gradient — kaydırılabilir sekme çubuğunda
-                                daha fazla sekme olduğunu ima eder (10 sekme dar ekranlarda taşıyor). */}
-                            <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-papatya-surface to-transparent" />
-                            <div
-                                className="flex gap-1 overflow-x-auto border-b border-papatya-rule pb-2 px-1"
-                                role="tablist"
-                            >
-                                {TABS.map(({ key, label, icon: Icon }) => (
-                                    <button
-                                        key={key}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={activeTab === key}
-                                        onClick={() => setActiveTab(key)}
-                                        className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-p-md text-p-sm font-bold whitespace-nowrap transition-colors ${
-                                            activeTab === key
-                                                ? 'bg-papatya-sky text-white'
-                                                : 'text-papatya-ink-soft hover:bg-papatya-cream'
-                                        }`}
-                                    >
-                                        <Icon size={14} className="shrink-0" />
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
+                        <div className="flex flex-wrap gap-1 border-b border-papatya-rule pb-2" role="tablist">
+                            {TABS.map(({ key, label, icon: Icon }) => (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={activeTab === key}
+                                    onClick={() => setActiveTab(key)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-p-md text-p-sm font-bold whitespace-nowrap transition-colors ${
+                                        activeTab === key
+                                            ? 'bg-papatya-sky text-white'
+                                            : 'text-papatya-ink-soft hover:bg-papatya-cream'
+                                    }`}
+                                >
+                                    <Icon size={15} className="shrink-0" />
+                                    {label}
+                                </button>
+                            ))}
                         </div>
 
                         <div className="min-h-[200px]">

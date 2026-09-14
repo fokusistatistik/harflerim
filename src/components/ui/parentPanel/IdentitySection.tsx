@@ -94,12 +94,12 @@ export function IdentitySection() {
     return (
         <div className="flex flex-col gap-4">
             <h3 className="text-p-base font-bold text-papatya-ink-soft">Kimlik</h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploadingAvatar}
-                    className="relative w-14 h-14 rounded-full shrink-0 group"
+                    className="relative w-28 h-28 rounded-full shrink-0 group"
                     aria-label="Profil fotoğrafını değiştir"
                     title="Profil fotoğrafını değiştir"
                 >
@@ -107,20 +107,20 @@ export function IdentitySection() {
                         <ImageWithFallback
                             src={avatarUrl}
                             alt={firstName}
-                            className="w-14 h-14 rounded-full object-cover border-2 border-papatya-rule"
+                            className="w-28 h-28 rounded-full object-cover border-2 border-papatya-rule"
                             fallback={
-                                <div className="w-14 h-14 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
-                                    <UserIcon className="text-papatya-petal-deep" size={24} />
+                                <div className="w-28 h-28 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
+                                    <UserIcon className="text-papatya-petal-deep" size={48} />
                                 </div>
                             }
                         />
                     ) : (
-                        <div className="w-14 h-14 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
-                            <UserIcon className="text-papatya-petal-deep" size={24} />
+                        <div className="w-28 h-28 rounded-full border-2 border-papatya-rule bg-papatya-petal/20 flex items-center justify-center">
+                            <UserIcon className="text-papatya-petal-deep" size={48} />
                         </div>
                     )}
                     <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
-                        <Camera size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Camera size={28} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </span>
                 </button>
                 <input

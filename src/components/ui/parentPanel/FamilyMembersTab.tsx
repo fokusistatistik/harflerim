@@ -120,56 +120,61 @@ export function FamilyMembersTab() {
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            {members.length > 0 && (
-                <ul className="flex flex-col gap-2">
-                    {members.map((m) => (
-                        <li
-                            key={m.id}
-                            className="flex items-center gap-3 bg-papatya-cream rounded-p-md p-2"
-                        >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={m.photoPath}
-                                alt={m.name}
-                                className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <div className="flex-1">
-                                <p className="font-bold text-p-sm">{m.name}</p>
-                                <p className="text-p-sm text-papatya-ink-soft">{m.relation}</p>
-                            </div>
-                            {m.voicePath && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="flex flex-col gap-2">
+                <h3 className="text-p-base font-bold text-papatya-ink-soft">Kayıtlı aile bireyleri</h3>
+                {members.length > 0 ? (
+                    <ul className="flex flex-col gap-2">
+                        {members.map((m) => (
+                            <li
+                                key={m.id}
+                                className="flex items-center gap-3 bg-papatya-cream rounded-p-md p-2"
+                            >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={m.photoPath}
+                                    alt={m.name}
+                                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-p-sm truncate">{m.name}</p>
+                                    <p className="text-p-sm text-papatya-ink-soft truncate">{m.relation}</p>
+                                </div>
+                                {m.voicePath && (
+                                    <button
+                                        type="button"
+                                        onClick={() => new Audio(m.voicePath!).play()}
+                                        className="min-w-tap min-h-tap flex items-center justify-center text-papatya-sky shrink-0"
+                                        aria-label={`${m.name} sesini oynat`}
+                                    >
+                                        <Play size={16} />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
-                                    onClick={() => new Audio(m.voicePath!).play()}
-                                    className="min-w-tap min-h-tap flex items-center justify-center text-papatya-sky"
-                                    aria-label={`${m.name} sesini oynat`}
+                                    onClick={() => startEdit(m)}
+                                    className="min-w-tap min-h-tap flex items-center justify-center text-papatya-ink-soft shrink-0"
+                                    aria-label={`${m.name} kaydını düzenle`}
                                 >
-                                    <Play size={16} />
+                                    <Pencil size={16} />
                                 </button>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => startEdit(m)}
-                                className="min-w-tap min-h-tap flex items-center justify-center text-papatya-ink-soft"
-                                aria-label={`${m.name} kaydını düzenle`}
-                            >
-                                <Pencil size={16} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleDelete(m.id)}
-                                className="min-w-tap min-h-tap flex items-center justify-center text-papatya-rose"
-                                aria-label={`${m.name} kaydını sil`}
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(m.id)}
+                                    className="min-w-tap min-h-tap flex items-center justify-center text-papatya-rose shrink-0"
+                                    aria-label={`${m.name} kaydını sil`}
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-p-sm text-papatya-ink-soft">Henüz aile bireyi eklenmedi.</p>
+                )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:border-l lg:border-papatya-rule lg:pl-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-p-base font-bold text-papatya-ink-soft">
                         {editingId ? 'Aile bireyini düzenle' : 'Yeni aile bireyi ekle'}
@@ -184,20 +189,22 @@ export function FamilyMembersTab() {
                         </button>
                     )}
                 </div>
-                <input
-                    type="text"
-                    placeholder="Ad"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
-                <input
-                    type="text"
-                    placeholder="Yakınlık derecesi (ör. Anne, Baba, Abla)"
-                    value={relation}
-                    onChange={(e) => setRelation(e.target.value)}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                        type="text"
+                        placeholder="Ad"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Yakınlık derecesi (ör. Anne, Baba)"
+                        value={relation}
+                        onChange={(e) => setRelation(e.target.value)}
+                        className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                </div>
                 <label className="flex flex-col gap-1">
                     {editingId && <span className="text-p-sm text-papatya-ink-soft">Yeni fotoğraf (boş bırakırsan mevcut kalır)</span>}
                     <input

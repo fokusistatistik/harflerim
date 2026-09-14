@@ -50,46 +50,48 @@ export function ScreenTimeTab() {
     }
 
     return (
-        <form onSubmit={handleSave} className="flex flex-col gap-3">
-            <label className="text-p-sm text-papatya-ink-soft" htmlFor="daily-limit">
-                Günlük ekran süresi limiti (dakika)
-            </label>
-            <input
-                id="daily-limit"
-                type="number"
-                min={10}
-                max={240}
-                step={5}
-                value={minutes}
-                onChange={(e) => setMinutes(Number(e.target.value))}
-                className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-            />
-            <label className="text-p-sm text-papatya-ink-soft mt-2" htmlFor="letter-hunt-limit">
-                Harf Avı günlük tur limiti
-            </label>
-            <input
-                id="letter-hunt-limit"
-                type="number"
-                min={25}
-                max={250}
-                step={5}
-                value={letterHuntLimit}
-                onChange={(e) => setLetterHuntLimit(Number(e.target.value))}
-                className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-            />
-            <label className="text-p-sm text-papatya-ink-soft mt-2" htmlFor="memory-match-limit">
-                Hafıza Kartları günlük tur limiti
-            </label>
-            <input
-                id="memory-match-limit"
-                type="number"
-                min={10}
-                max={50}
-                step={5}
-                value={memoryMatchLimit}
-                onChange={(e) => setMemoryMatchLimit(Number(e.target.value))}
-                className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-            />
+        <form onSubmit={handleSave} className="flex flex-col gap-3 max-w-3xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className="flex flex-col gap-1">
+                    <span className="text-p-sm text-papatya-ink-soft">Günlük ekran süresi (dakika)</span>
+                    <input
+                        id="daily-limit"
+                        type="number"
+                        min={10}
+                        max={240}
+                        step={5}
+                        value={minutes}
+                        onChange={(e) => setMinutes(Number(e.target.value))}
+                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                    />
+                </label>
+                <label className="flex flex-col gap-1">
+                    <span className="text-p-sm text-papatya-ink-soft">Harf Avı günlük tur limiti</span>
+                    <input
+                        id="letter-hunt-limit"
+                        type="number"
+                        min={25}
+                        max={250}
+                        step={5}
+                        value={letterHuntLimit}
+                        onChange={(e) => setLetterHuntLimit(Number(e.target.value))}
+                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                    />
+                </label>
+                <label className="flex flex-col gap-1">
+                    <span className="text-p-sm text-papatya-ink-soft">Hafıza Kartları günlük tur limiti</span>
+                    <input
+                        id="memory-match-limit"
+                        type="number"
+                        min={10}
+                        max={50}
+                        step={5}
+                        value={memoryMatchLimit}
+                        onChange={(e) => setMemoryMatchLimit(Number(e.target.value))}
+                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
+                    />
+                </label>
+            </div>
             {error && <p className="text-p-sm text-papatya-rose">{error}</p>}
             {saved && <p className="text-p-sm text-papatya-leaf">Kaydedildi.</p>}
             <button

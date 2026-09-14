@@ -85,13 +85,13 @@ export function ChildProfileTab() {
     }
 
     return (
-        <form onSubmit={handleSave} className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto pr-1">
+        <form onSubmit={handleSave} className="flex flex-col gap-4 max-w-3xl max-h-[60vh] overflow-y-auto pr-1">
             <p className="text-p-sm text-papatya-ink-soft">
                 Bu bilgiler bir tanı aracı değildir; yalnızca kişiselleştirme içindir. Hiçbir alan zorunlu değil.
             </p>
 
-            <div className="flex gap-3">
-                <label className="flex-1 flex flex-col gap-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label className="flex flex-col gap-1 min-w-0">
                     <span className="text-p-sm text-papatya-ink-soft">Yaş</span>
                     <input
                         type="number"
@@ -99,105 +99,107 @@ export function ChildProfileTab() {
                         max={25}
                         value={data.age ?? ''}
                         onChange={(e) => setData({ ...data, age: e.target.value === '' ? null : Number(e.target.value) })}
-                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
                 </label>
-                <label className="flex-1 flex flex-col gap-1">
+                <label className="flex flex-col gap-1 min-w-0">
                     <span className="text-p-sm text-papatya-ink-soft">Favori renk</span>
                     <input
                         type="text"
                         value={data.favoriteColor}
                         onChange={(e) => setData({ ...data, favoriteColor: e.target.value })}
-                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
+                </label>
+                <label className="flex flex-col gap-1 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">Öğrenme kanalı</span>
+                    <select
+                        value={data.learningChannel}
+                        onChange={(e) => setData({ ...data, learningChannel: e.target.value })}
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    >
+                        <option value="">Belirtilmedi</option>
+                        {LEARNING_CHANNELS.map((c) => (
+                            <option key={c} value={c}>{LEARNING_LABELS[c]}</option>
+                        ))}
+                    </select>
+                </label>
+                <label className="flex flex-col gap-1 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">İletişim düzeyi</span>
+                    <select
+                        value={data.communicationLevel}
+                        onChange={(e) => setData({ ...data, communicationLevel: e.target.value })}
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    >
+                        <option value="">Belirtilmedi</option>
+                        {COMMUNICATION_LEVELS.map((c) => (
+                            <option key={c} value={c}>{COMMUNICATION_LABELS[c]}</option>
+                        ))}
+                    </select>
                 </label>
             </div>
 
-            <label className="flex flex-col gap-1">
-                <span className="text-p-sm text-papatya-ink-soft">İlgi alanları (virgülle ayır)</span>
-                <input
-                    type="text"
-                    placeholder="kedi, gezegenler, dinozorlar"
-                    value={listToText(data.interests)}
-                    onChange={(e) => setData({ ...data, interests: textToList(e.target.value) })}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-p-sm text-papatya-ink-soft">Öğrenme kanalı</span>
-                <select
-                    value={data.learningChannel}
-                    onChange={(e) => setData({ ...data, learningChannel: e.target.value })}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                >
-                    <option value="">Belirtilmedi</option>
-                    {LEARNING_CHANNELS.map((c) => (
-                        <option key={c} value={c}>{LEARNING_LABELS[c]}</option>
-                    ))}
-                </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-p-sm text-papatya-ink-soft">İletişim düzeyi</span>
-                <select
-                    value={data.communicationLevel}
-                    onChange={(e) => setData({ ...data, communicationLevel: e.target.value })}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                >
-                    <option value="">Belirtilmedi</option>
-                    {COMMUNICATION_LEVELS.map((c) => (
-                        <option key={c} value={c}>{COMMUNICATION_LABELS[c]}</option>
-                    ))}
-                </select>
-            </label>
-
-            <div className="flex flex-col gap-2">
-                <span className="text-p-sm text-papatya-ink-soft">Duyusal hassasiyet</span>
-                {(['sound', 'light', 'touch'] as const).map((dim) => (
-                    <div key={dim} className="flex items-center justify-between gap-2">
-                        <span className="text-p-base">{SENSORY_LABELS[dim]}</span>
-                        <select
-                            value={data.sensoryProfile[dim] ?? ''}
-                            onChange={(e) =>
-                                setData({
-                                    ...data,
-                                    sensoryProfile: {
-                                        ...data.sensoryProfile,
-                                        [dim]: (e.target.value || undefined) as SensitivityLevel | undefined,
-                                    },
-                                })
-                            }
-                            className="border-2 border-papatya-rule rounded-p-md px-2 py-1 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                        >
-                            <option value="">Belirtilmedi</option>
-                            {SENSITIVITY_LEVELS.map((level) => (
-                                <option key={level} value={level}>{level}</option>
-                            ))}
-                        </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">İlgi alanları (virgülle ayır)</span>
+                    <input
+                        type="text"
+                        placeholder="kedi, gezegenler, dinozorlar"
+                        value={listToText(data.interests)}
+                        onChange={(e) => setData({ ...data, interests: textToList(e.target.value) })}
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                </label>
+                <div className="flex flex-col gap-2 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">Duyusal hassasiyet</span>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(['sound', 'light', 'touch'] as const).map((dim) => (
+                            <label key={dim} className="flex flex-col gap-1 min-w-0">
+                                <span className="text-p-sm">{SENSORY_LABELS[dim]}</span>
+                                <select
+                                    value={data.sensoryProfile[dim] ?? ''}
+                                    onChange={(e) =>
+                                        setData({
+                                            ...data,
+                                            sensoryProfile: {
+                                                ...data.sensoryProfile,
+                                                [dim]: (e.target.value || undefined) as SensitivityLevel | undefined,
+                                            },
+                                        })
+                                    }
+                                    className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-1 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky text-p-sm"
+                                >
+                                    <option value="">—</option>
+                                    {SENSITIVITY_LEVELS.map((level) => (
+                                        <option key={level} value={level}>{level}</option>
+                                    ))}
+                                </select>
+                            </label>
+                        ))}
                     </div>
-                ))}
+                </div>
             </div>
 
-            <label className="flex flex-col gap-1">
-                <span className="text-p-sm text-papatya-ink-soft">Tetikleyiciler (virgülle ayır)</span>
-                <input
-                    type="text"
-                    value={listToText(data.triggers)}
-                    onChange={(e) => setData({ ...data, triggers: textToList(e.target.value) })}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-p-sm text-papatya-ink-soft">Sakinleştiriciler (virgülle ayır)</span>
-                <input
-                    type="text"
-                    value={listToText(data.calmers)}
-                    onChange={(e) => setData({ ...data, calmers: textToList(e.target.value) })}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
-            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">Tetikleyiciler (virgülle ayır)</span>
+                    <input
+                        type="text"
+                        value={listToText(data.triggers)}
+                        onChange={(e) => setData({ ...data, triggers: textToList(e.target.value) })}
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                </label>
+                <label className="flex flex-col gap-1 min-w-0">
+                    <span className="text-p-sm text-papatya-ink-soft">Sakinleştiriciler (virgülle ayır)</span>
+                    <input
+                        type="text"
+                        value={listToText(data.calmers)}
+                        onChange={(e) => setData({ ...data, calmers: textToList(e.target.value) })}
+                        className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                </label>
+            </div>
 
             {error && <p className="text-p-sm text-papatya-rose">{error}</p>}
             {saved && <p className="text-p-sm text-papatya-leaf">Kaydedildi.</p>}

@@ -37,21 +37,23 @@ export function SensoryTab() {
     };
 
     return (
-        <div className="flex flex-col gap-3">
-            {TOGGLES.map((toggle) => (
-                <label
-                    key={toggle.key}
-                    className="flex items-center justify-between gap-3 min-h-tap px-1"
-                >
-                    <span className="text-p-base">{toggle.label}</span>
-                    <input
-                        type="checkbox"
-                        checked={prefs[toggle.key]}
-                        onChange={() => handleToggle(toggle.key)}
-                        className="w-6 h-6 accent-papatya-sky"
-                    />
-                </label>
-            ))}
+        <div className="flex flex-col gap-3 max-w-3xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {TOGGLES.map((toggle) => (
+                    <label
+                        key={toggle.key}
+                        className="flex items-center justify-between gap-3 min-h-tap px-3 py-2 bg-papatya-cream rounded-p-md"
+                    >
+                        <span className="text-p-base">{toggle.label}</span>
+                        <input
+                            type="checkbox"
+                            checked={prefs[toggle.key]}
+                            onChange={() => handleToggle(toggle.key)}
+                            className="w-6 h-6 accent-papatya-sky shrink-0"
+                        />
+                    </label>
+                ))}
+            </div>
             {saved && <p className="text-p-sm text-papatya-leaf">Kaydedildi.</p>}
         </div>
     );

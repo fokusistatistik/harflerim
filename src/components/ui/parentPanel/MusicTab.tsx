@@ -107,42 +107,49 @@ export function MusicTab() {
                 </ul>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3 max-w-3xl">
                 <h3 className="text-p-base font-bold text-papatya-ink-soft">Yeni şarkı ekle</h3>
-                <input
-                    type="text"
-                    placeholder="YouTube linki"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                />
-                <label className="flex items-center justify-between gap-3">
-                    <span className="text-p-sm text-papatya-ink-soft">Günlük tekrar hakkı</span>
-                    <input
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={loopLimit}
-                        onChange={(e) => setLoopLimit(Number(e.target.value))}
-                        className="w-20 border-2 border-papatya-rule rounded-p-md px-2 py-1 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                    />
-                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+                    <label className="flex flex-col gap-1 min-w-0">
+                        <span className="text-p-sm text-papatya-ink-soft">YouTube linki</span>
+                        <input
+                            type="text"
+                            placeholder="YouTube linki"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                        <span className="text-p-sm text-papatya-ink-soft whitespace-nowrap">Günlük tekrar hakkı</span>
+                        <input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={loopLimit}
+                            onChange={(e) => setLoopLimit(Number(e.target.value))}
+                            className="w-24 border-2 border-papatya-rule rounded-p-md px-2 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        />
+                    </label>
+                </div>
 
                 <div className="flex flex-col gap-1 bg-papatya-petal/10 rounded-p-md p-3">
                     <p className="text-p-sm font-bold text-papatya-ink-soft">İçerik kontrol listesi</p>
-                    {CHECKLIST_ITEMS.map((item, i) => (
-                        <label key={item} className="flex items-center gap-2 text-p-sm">
-                            <input
-                                type="checkbox"
-                                checked={checked[i]}
-                                onChange={() =>
-                                    setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)))
-                                }
-                                className="w-5 h-5 accent-papatya-sky"
-                            />
-                            {item}
-                        </label>
-                    ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {CHECKLIST_ITEMS.map((item, i) => (
+                            <label key={item} className="flex items-center gap-2 text-p-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={checked[i]}
+                                    onChange={() =>
+                                        setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)))
+                                    }
+                                    className="w-5 h-5 accent-papatya-sky shrink-0"
+                                />
+                                {item}
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 {error && <p className="text-p-sm text-papatya-rose">{error}</p>}
