@@ -132,7 +132,7 @@ export function NavGrid() {
                                 <ImageWithFallback
                                     src={area.imageSrc}
                                     alt={area.label}
-                                    className="w-full h-full object-contain drop-shadow-lg"
+                                    className="w-full h-full object-cover rounded-full shadow-lg"
                                     fallback={
                                         <div className={`${accent.iconBg} ${accent.iconText} p-4 rounded-full`}>
                                             <Icon size={40} strokeWidth={2} />
