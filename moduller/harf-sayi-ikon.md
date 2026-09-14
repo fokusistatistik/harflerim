@@ -32,6 +32,8 @@
 
 **Durum:** ✅ Tamamlandı, entegre. Faz 3.16 ("Harf Avı güçlendirilecek harfler" — roadmap) bu maddeyle **kapatıldı**; Harf Avı'nın harf kartları artık tamamen özgün.
 
+**2026-09-14 bulgu + düzeltme:** Harf Avı'nın gerçek harf görseli kaynağı `gameData.ts`'teki `LETTER_IMAGES` sabiti **değil**, veritabanındaki `ContentSet.imageUrl` alanı (`src/actions/content.ts` → `getGameContent()`, `prisma/seedContent.ts` ile doldurulur — dosya başındaki uyarı yorumunda zaten "yalnızca seed kaynağı" diye belirtilmişti). 29 PNG kod tarafına eklendiğinde `seedContent.ts` yeniden çalıştırılmamıştı, bu yüzden Harf Avı'nda kartlar görsel yerine düz renkli metne (`ImageWithFallback`'in `fallback`'i) düşüyordu. `npx tsx prisma/seedContent.ts` çalıştırılıp (idempotent upsert, 29/29 harf + 71/71 kelime) veritabanı senkronize edildi — kod değişikliği gerekmedi, sadece veri taşıma adımı atlanmıştı.
+
 ---
 
 ## B) Sayılar (10/10 — public'te hazır, henüz kullanım yeri yok)
