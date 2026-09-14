@@ -14,6 +14,7 @@ import { useHintTimer } from '@/hooks/useHintTimer';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { getAdaptiveRoundConfig } from '@/actions/game';
+import { getTodaySkillStats, type TodaySkillStats } from '@/actions/skills';
 import type { AdaptiveConfig } from '@/lib/adaptiveDifficulty';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
@@ -76,7 +77,29 @@ export default function GameBoard() {
     const advanceLevel = useLevelStore((s) => s.advanceLevel);
     const checkCalmingMode = useCalmingModeMonitor('harf-tanima'); // Faz 3.2b
 
-    const [isPlaying, setIsPlaying] = useState(false);
+    // 2026-09-14 — kullanıcı bulgusu: sayfa yenilenince/tekrar girilince oyun
+    // hep "Başla" ekranından açılıyordu, oyun ortasındaki bir çocuk için
+    // gereksiz bir sürtünme. `isPlaying` niyeti sessionStorage'a yazılır (tam
+    // round durumu değil — kasıtlı olarak basit tutuldu, bkz. aşağıdaki
+    // useEffect); sekme kapanınca/farklı cihazda otomatik sıfırlanır.
+    const PLAYING_STORAGE_KEY = 'papatya-playing-letter-hunt';
+    const [isPlaying, setIsPlayingState] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        try {
+            return window.sessionStorage.getItem(PLAYING_STORAGE_KEY) === '1';
+        } catch {
+            return false;
+        }
+    });
+    const setIsPlaying = (playing: boolean) => {
+        setIsPlayingState(playing);
+        try {
+            if (playing) window.sessionStorage.setItem(PLAYING_STORAGE_KEY, '1');
+            else window.sessionStorage.removeItem(PLAYING_STORAGE_KEY);
+        } catch {
+            /* sessionStorage yoksa sessizce yalnızca bu oturumda devam et */
+        }
+    };
     // 2026-09-14 — kullanıcı bulgusu: her doğru cevaptan sonra oyun
     // setIsPlaying(false) ile başlangıç ekranına dönüyordu — Faz 3.2'nin
     // "sonsuz round" ilkesiyle çelişen, eski 24-seviyeli sistemden kalma bir
@@ -84,6 +107,13 @@ export default function GameBoard() {
     // sonrası günlük bütçe dolmadıkça otomatik yeni round başlıyor, oyun
     // yalnızca "Ana Sayfa" düğmesiyle ya da günlük bütçe dolunca kapanıyor.
     const [roundsCompleted, setRoundsCompleted] = useState(0);
+    // 2026-09-14 — kullanıcı isteğiyle: başlangıç ekranında "bugün kaç doğru
+    // yaptın" özeti. Yalnızca başlangıç ekranındayken görünür, oyun sırasında
+    // güncellenmez (sıralama/rekabet hissi vermemek için bilerek sade).
+    const [todayStats, setTodayStats] = useState<TodaySkillStats | null>(null);
+    useEffect(() => {
+        getTodaySkillStats('harf-tanima').then(setTodayStats).catch(() => {});
+    }, [isPlaying]);
     // Faz 3.2 — bir sonraki round'un zorluğu artık sabit bir "seviye" değil,
     // her round başında sunucudan tazece sorulan uyarlanabilir bir konfig.
     const [difficulty, setDifficulty] = useState<AdaptiveConfig>(FALLBACK_DIFFICULTY);
@@ -117,6 +147,23 @@ export default function GameBoard() {
     // false döner. İpucun sürükleme BAŞLARKEN görünür olup olmadığını bir
     // ref'te ayrıca tutuyoruz ki recordSkillAttempt'e doğru değer gitsin.
     const hintWasVisibleRef = useRef(false);
+    // startRound her render'da yeniden tanımlanıyor (options/content'e bağımlı);
+    // aşağıdaki useEffect onu closure'a hapsetmeden en güncel haliyle
+    // çağırabilsin diye bir ref üzerinden erişiliyor.
+    const startRoundRef = useRef<() => void>(() => {});
+
+    // 2026-09-14 — content yüklenince, eğer sessionStorage'dan "oyundaydın"
+    // bilgisi geldiyse (isPlaying=true) ama henüz bu sekmede hiç round
+    // başlatılmadıysa (options boş), Başla ekranını atlayıp otomatik yeni
+    // bir round başlatır. Tam round durumu (hangi harf/görsel) SAKLANMAZ —
+    // kasıtlı: yeni bir harfle devam eder, ama en azından Başla'ya tekrar
+    // basmaya gerek kalmaz.
+    useEffect(() => {
+        if (isPlaying && content && options.length === 0) {
+            startRoundRef.current?.();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPlaying, content]);
 
     // Loading state — hem oturum hem içerik (Faz 1.4: veritabanından) hazır olmalı
     if (!sessionId || !content) return <div className="flex h-screen items-center justify-center text-softIndigo">Yükleniyor...</div>;
@@ -170,6 +217,7 @@ export default function GameBoard() {
         setStartTime(Date.now());
         askLetter(randomTarget).catch(() => {});
     };
+    startRoundRef.current = startRound;
 
     const handleStart = () => {
         setRoundsCompleted(0);
@@ -240,6 +288,13 @@ export default function GameBoard() {
                     {firstName ? `${firstName} ile Harfleri Keşfet` : 'Harfleri Keşfet'}
                 </p>
                 <GameIntroCard gameId="letter-hunt" />
+                {todayStats && todayStats.total > 0 && (
+                    <div className="flex items-center gap-2 bg-papatya-leaf/10 px-5 py-2 rounded-full border border-papatya-leaf/30">
+                        <span className="text-papatya-leaf font-bold">
+                            Bugün {todayStats.correct}/{todayStats.total} doğru
+                        </span>
+                    </div>
+                )}
                 <button
                     type="button"
                     onClick={handleStart}

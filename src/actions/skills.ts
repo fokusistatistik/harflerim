@@ -66,3 +66,42 @@ export async function recordSkillAttempt(
         // bu da beklenen, zararsız bir durumdur.
     }
 }
+
+export interface TodaySkillStats {
+    correct: number;
+    total: number;
+}
+
+/**
+ * 2026-09-14 — kullanıcı isteğiyle: oyunun başlangıç ekranında "bugün kaç
+ * doğru/yanlış yaptım" özeti gösterebilmek için. Puan/sıralama değildir —
+ * yalnızca o günkü SkillAttempt sayımı, todaySummary.ts'teki aynı
+ * `todayRange()` deseniyle tutarlı.
+ */
+export async function getTodaySkillStats(skillKey: string): Promise<TodaySkillStats> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return { correct: 0, total: 0 };
+
+        const skill = await db.skill.findUnique({ where: { key: skillKey } });
+        if (!skill) return { correct: 0, total: 0 };
+
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+
+        const [total, correct] = await Promise.all([
+            db.skillAttempt.count({
+                where: { userId: user.id, skillId: skill.id, createdAt: { gte: start, lt: end } },
+            }),
+            db.skillAttempt.count({
+                where: { userId: user.id, skillId: skill.id, isCorrect: true, createdAt: { gte: start, lt: end } },
+            }),
+        ]);
+
+        return { correct, total };
+    } catch {
+        return { correct: 0, total: 0 };
+    }
+}
