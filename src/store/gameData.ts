@@ -177,9 +177,11 @@ export const LETTER_IMAGES: Record<string, string> = {
 };
 
 export const AUDIOS = {
-    correct: 'https://cdn.freesound.org/previews/270/270402_5123851-lq.mp3',
+    // 2026-09-14 — kullanıcı raporu: eski correct/complete sesleri (freesound.org
+    // CDN, uzun ve rahatsız edici) daha soft iki yerel dosyayla değiştirildi.
+    correct: '/sounds/win.mp3',
     wrong: 'https://cdn.freesound.org/previews/415/415209_5121236-lq.mp3',
-    complete: 'https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3',
+    complete: '/sounds/bonus.mp3',
     // UX düzeltmesi (2026-09-13) — eski freesound.org linki 404 veriyordu
     // (kullanıcı testinde bulundu). Diğer oyunların zaten kullandığı yerel
     // dosyaya (public/sounds/error.wav) taşındı — "yanlış/pas" hissi için uygun.

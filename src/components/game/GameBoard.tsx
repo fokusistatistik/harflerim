@@ -254,8 +254,8 @@ export default function GameBoard() {
 
     // GAME BOARD
     return (
-        <div className="h-full w-full bg-cream flex flex-col md:flex-row overflow-hidden relative">
-            <div className="absolute top-20 left-4 right-4 z-50">
+        <div className="h-full w-full bg-cream flex flex-col overflow-hidden relative">
+            <div className="w-full p-4 lg:p-8 pb-0 shrink-0">
                 <GameHud
                     onBack={() => setIsPlaying(false)}
                     center={
@@ -272,32 +272,34 @@ export default function GameBoard() {
                 onDragEnd={handleDragEnd}
                 modifiers={[restrictToWindowEdges]}
             >
-                <div className="flex-[4] md:flex-1 flex flex-col items-center justify-center gap-2 md:gap-6 lg:gap-8 p-4 lg:p-8 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-indigo-100 bg-white/40 pt-4 md:pt-20">
-                    <HintImage
-                        src={currentObject?.img || ''}
-                        alt={currentObject?.word || ''}
-                    />
-                    <TargetFrame
-                        id="target-frame"
-                        targetLetter={targetLetter}
-                        status={status}
-                        letterImages={letterImages}
-                    />
-                    <p className="text-xl md:text-2xl text-softIndigo font-bold">{currentObject?.word}</p>
-                </div>
+                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                    <div className="flex-[4] md:flex-1 flex flex-col items-center justify-center gap-2 md:gap-6 lg:gap-8 p-4 lg:p-8 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-indigo-100 bg-white/40">
+                        <HintImage
+                            src={currentObject?.img || ''}
+                            alt={currentObject?.word || ''}
+                        />
+                        <TargetFrame
+                            id="target-frame"
+                            targetLetter={targetLetter}
+                            status={status}
+                            letterImages={letterImages}
+                        />
+                        <p className="text-xl md:text-2xl text-softIndigo font-bold">{currentObject?.word}</p>
+                    </div>
 
-                <div className="flex-[6] md:flex-1 flex flex-wrap content-start md:content-center items-center justify-center gap-2 sm:gap-4 md:gap-8 lg:gap-10 p-2 md:p-4 lg:p-8 bg-cream relative pt-4 md:pt-20 overflow-y-auto w-full">
-                    {options.map((opt, index) => (
-                        <div key={`${opt}-${index}`} className="relative p-2">
-                            <DraggableToken
-                                id={`token-${opt}-${index}`}
-                                letter={opt}
-                                disabled={status === 'success'}
-                                highlight={showHint && opt === targetLetter}
-                                letterImages={letterImages}
-                            />
-                        </div>
-                    ))}
+                    <div className="flex-[6] md:flex-1 flex flex-wrap content-start md:content-center items-center justify-center gap-2 sm:gap-4 md:gap-8 lg:gap-10 p-2 md:p-4 lg:p-8 bg-cream relative overflow-y-auto w-full">
+                        {options.map((opt, index) => (
+                            <div key={`${opt}-${index}`} className="relative p-2">
+                                <DraggableToken
+                                    id={`token-${opt}-${index}`}
+                                    letter={opt}
+                                    disabled={status === 'success'}
+                                    highlight={showHint && opt === targetLetter}
+                                    letterImages={letterImages}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
