@@ -4,7 +4,6 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { Lock } from 'lucide-react'; // Using Lucide icon for lock effect if needed, though simple shape is requested.
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 
 interface TargetFrameProps {

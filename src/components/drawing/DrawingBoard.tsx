@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Undo2, Trash2, Save } from 'lucide-react';
+import { Undo2, Save } from 'lucide-react';
 import { GameHud } from '@/components/game/GameHud';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
@@ -178,7 +178,8 @@ export function DrawingBoard() {
                     onClick={handleClear}
                     className="min-h-tap px-4 flex items-center gap-2 bg-papatya-surface rounded-p-md font-bold text-papatya-ink-soft"
                 >
-                    <Trash2 size={18} /> Temizle
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/cop.png" alt="" className="w-[18px] h-[18px]" /> Temizle
                 </button>
                 <button
                     type="button"

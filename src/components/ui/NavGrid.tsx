@@ -11,7 +11,6 @@ import {
     PenLine,
     MessageSquare,
     ShieldCheck,
-    Lock,
     Puzzle,
     Target,
 } from 'lucide-react';
@@ -147,7 +146,8 @@ export function NavGrid() {
                             )}
                             {area.status === 'soon' && (
                                 <div className="absolute -bottom-1 -right-1 bg-papatya-surface border-2 border-papatya-rule rounded-full p-1.5 text-papatya-ink-soft">
-                                    <Lock size={14} />
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="/ikonlar/kilit.png" alt="" className="w-[14px] h-[14px]" />
                                 </div>
                             )}
                         </div>

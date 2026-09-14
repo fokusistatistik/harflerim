@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { AUDIOS } from '@/store/gameData';
 import useSound from 'use-sound';
-import { Home, LayoutGrid, Sparkles, User } from 'lucide-react';
+import { LayoutGrid, Sparkles, User } from 'lucide-react';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import clsx from 'clsx';
 import { useAudio } from '@/components/AudioProvider';
@@ -228,7 +228,8 @@ export default function MemoryMatchGame() {
                 </div>
 
                 <Link href="/" className="fixed bottom-8 left-1/2 -translate-x-1/2 min-h-tap bg-papatya-surface px-8 py-3 rounded-full shadow-xl text-papatya-leaf font-bold z-50 flex items-center gap-2 border border-papatya-rule hover:scale-105 transition">
-                    <Home size={20} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/home.png" alt="" className="w-5 h-5" />
                     Ana Sayfaya Dön
                 </Link>
             </div>

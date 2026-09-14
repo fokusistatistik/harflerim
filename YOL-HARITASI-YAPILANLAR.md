@@ -129,3 +129,17 @@ Kullanıcının "Faz 1-2'den eksik/bozuk bir şey kaldı mı" talebiyle yapılan
 3. **Tam gerçek-cihaz QA** → **Faz 3'ün "Tam gerçek-cihaz QA" notuna birleştirildi** — telefon/tablet/PC'de eksiksiz interaktif click-through henüz yapılmadı (bu oturumda kısmi Playwright doğrulaması yapıldı).
 
 Faz 1-2'nin geri kalan HER maddesi artık kod + gerçek tarayıcı doğrulamasıyla kapalı, hiçbir açık kalem taşımıyor. YOL-HARITASI.md'den itibaren yalnızca Faz 3+ açık iş içeriyor.
+
+---
+
+## Harf/Sayı/İkon varlıkları (2026-09-14, roadmap numarası dışı) — bkz. [moduller/harf-sayi-ikon.md](moduller/harf-sayi-ikon.md)
+
+Kullanıcının hazırladığı özgün (kırmızı-mercan tonu, düz vektör, şeffaf PNG) 29 harf + 10 sayı + 16 ikon seti işlenip entegre edildi:
+
+- **29 harf** (`public/harfler/`) — `LETTER_IMAGES`'ın zaten beklediği dosya adlarıyla birebir eşleşti, kod değişikliği gerekmedi. Harf Avı'nın harf kartları artık tamamen özgün görsellerle çalışıyor (not: bu, 3.16'daki nesne/kelime görseli eksikliğinden AYRI bir konu — 3.16 hâlâ açık).
+- **10 sayı** (`public/sayilar/`) — yalnızca depolandı, kod tarafında yeni bir kullanım yeri açılmadı (bilinçli kapsam sınırı — projede henüz sayı/matematik oyunu yok).
+- **16 ikon + 9 ek NavGrid ikonu** (`public/ikonlar/`) — kapsam **çocuğun gördüğü oyun ekranlarıyla** sınırlandı (ebeveyn paneli dışarıda bırakıldı, kasıtlı). `GameHud`, `Header`, `DrawingBoard`, `GameIntroCard`, ana sayfa avatar rozeti güncellendi. Ayrıca ikinci bir kaynak klasörden (`diger/`) 9 JPG daha işlenip NavGrid'in ana sayfa kartlarına (Harf Avı, Hafıza Kartları, Gölge Eşleştirme, İletişim Tahtası, Çizgi Filmim, Aile Albümü, Çizim Tahtası, Yazı Alıştırması, Ebeveyn Alanı) bağlandı — bu süreçte `letter-hunt` kartının hâlâ ölü CDN'e bağlı `imageSrc`'i de düzeltildi (ayrı bir gözden kaçmış bulgu).
+
+**Bilerek bağlanmayan/hazırda bekleyen:** nota, yaz (orijinal), play, geri, ayarlar, arama, kupa, madalya, kalp, ses_a, ses_k — net bir kullanım senaryosu yok ya da (ses_a/ses_k → mikrofon ikonlarıyla) kavramsal karışıklık riski taşıyor, yanlış eşleştirme yapmaktansa boş bırakıldı. Ayrıntılı gerekçe ve gelecekteki aday kullanım senaryoları `moduller/harf-sayi-ikon.md`'de.
+
+tsc temiz, 240/240 test geçti, gerçek tarayıcıda doğrulandı.

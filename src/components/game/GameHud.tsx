@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Home } from 'lucide-react';
 
 interface GameHudProps {
     /** Verilirse geri düğmesi bir `onClick` olur (ör. harita görünümüne dön); verilmezse ana sayfaya `Link`. */
@@ -29,7 +28,8 @@ export function GameHud({ onBack, center, right }: GameHudProps) {
                     className="min-w-tap min-h-tap flex items-center justify-center bg-papatya-surface/90 backdrop-blur p-3 rounded-full shadow-sm hover:shadow-md transition-all"
                     aria-label="Geri"
                 >
-                    <Home size={22} className="text-papatya-ink-soft" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/home.png" alt="" className="w-[22px] h-[22px]" />
                 </button>
             ) : (
                 <Link
@@ -37,7 +37,8 @@ export function GameHud({ onBack, center, right }: GameHudProps) {
                     className="min-w-tap min-h-tap flex items-center justify-center bg-papatya-surface/90 backdrop-blur p-3 rounded-full shadow-sm hover:shadow-md transition-all"
                     aria-label="Ana Sayfa"
                 >
-                    <Home size={22} className="text-papatya-ink-soft" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/home.png" alt="" className="w-[22px] h-[22px]" />
                 </Link>
             )}
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLevelStore } from '@/store/levelStore';
-import { Moon, Sun, Home } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useParentGateStore } from '@/store/parentGateStore';
@@ -46,7 +46,8 @@ export function Header() {
                     className="inline-flex items-center justify-center min-w-tap min-h-tap p-2 bg-papatya-petal/15 rounded-xl text-papatya-petal-deep hover:bg-papatya-petal/25 hover:scale-105 transition-all shadow-sm border border-papatya-petal/30"
                     title="Ana Sayfa"
                 >
-                    <Home size={24} strokeWidth={2.5} className="lg:w-7 lg:h-7" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/home.png" alt="" className="w-6 h-6 lg:w-7 lg:h-7" />
                 </Link>
 
                 <div className="flex flex-col">

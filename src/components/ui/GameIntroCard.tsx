@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { GAME_INTROS } from '@/config/gameIntros';
 
 interface GameIntroCardProps {
@@ -83,7 +83,8 @@ export function GameIntroCard({ gameId, variant = 'inline' }: GameIntroCardProps
                     className="min-w-tap min-h-tap flex items-center justify-center shrink-0 text-papatya-ink-soft/60 hover:text-papatya-ink-soft"
                     aria-label="Kapat"
                 >
-                    <X size={16} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ikonlar/carpi.png" alt="" className="w-4 h-4" />
                 </button>
             </div>
         );

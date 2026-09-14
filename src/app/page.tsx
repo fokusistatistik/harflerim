@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import { HomeAvatar } from '@/components/ui/HomeAvatar';
 import { getDailySession } from '@/actions/game';
 import { GameInitializer } from '@/components/game/GameInitializer';
@@ -42,7 +41,8 @@ export default async function Home() {
                     <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-28 lg:h-28 animate-float shrink-0">
                         <HomeAvatar avatarUrl={user?.avatarUrl ?? null} firstName={firstName} />
                         <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg">
-                            <Star className="text-white fill-white" size={24} />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/ikonlar/yildiz.png" alt="" className="w-6 h-6" />
                         </div>
                         {hasInterest && (
                             <div className="absolute -top-2 -left-2 bg-papatya-sky p-2 rounded-full shadow-lg">

@@ -28,7 +28,11 @@ export const NAV_AREAS: NavArea[] = [
         href: '/games/letter-hunt',
         status: 'active',
         accent: 'sky',
-        imageSrc: 'https://static.fokusistatistik.com/melike/harfler/harf_m.png',
+        // 2026-09-14 — eski static.fokusistatistik.com CDN'i ölüydü (tüm
+        // harf görselleri 404 veriyordu, kullanıcı testinde bulundu).
+        // Özgün ikon setinden (moduller/harf-sayi-ikon.md) yerel görsele
+        // taşındı.
+        imageSrc: '/ikonlar/nav_letter_hunt.png',
     },
     {
         id: 'magic-words',
@@ -45,6 +49,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/games/memory-match',
         status: 'active',
         accent: 'leaf',
+        imageSrc: '/ikonlar/nav_memory_match.png',
     },
     {
         id: 'visual-match',
@@ -53,6 +58,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/games/visual-match',
         status: 'active',
         accent: 'rose',
+        imageSrc: '/ikonlar/nav_visual_match.png',
     },
     {
         id: 'music-corner',
@@ -62,7 +68,15 @@ export const NAV_AREAS: NavArea[] = [
         status: 'active',
         accent: 'rose',
     },
-    { id: 'cartoon', label: 'Çizgi Filmim', subtitle: 'Videolar', href: '/cartoon', status: 'active', accent: 'sky' },
+    {
+        id: 'cartoon',
+        label: 'Çizgi Filmim',
+        subtitle: 'Videolar',
+        href: '/cartoon',
+        status: 'active',
+        accent: 'sky',
+        imageSrc: '/ikonlar/nav_cartoon.png',
+    },
     {
         id: 'family-album',
         label: 'Aile Albümü',
@@ -70,6 +84,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/games/family-album',
         status: 'active',
         accent: 'leaf',
+        imageSrc: '/ikonlar/nav_family_album.png',
     },
     {
         id: 'drawing-board',
@@ -78,6 +93,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/drawing-board',
         status: 'active',
         accent: 'petal',
+        imageSrc: '/ikonlar/nav_drawing_board.png',
     },
     {
         id: 'writing-practice',
@@ -86,6 +102,7 @@ export const NAV_AREAS: NavArea[] = [
         href: '/writing-practice',
         status: 'active',
         accent: 'rose',
+        imageSrc: '/ikonlar/nav_writing_practice.png',
     },
     {
         id: 'aac-board',
@@ -94,6 +111,14 @@ export const NAV_AREAS: NavArea[] = [
         href: '/aac-board',
         status: 'active',
         accent: 'sky',
+        imageSrc: '/ikonlar/nav_aac_board.png',
     },
-    { id: 'parent-area', label: 'Ebeveyn Alanı', subtitle: 'PIN gerekli', status: 'parent-gate', accent: 'leaf' },
+    {
+        id: 'parent-area',
+        label: 'Ebeveyn Alanı',
+        subtitle: 'PIN gerekli',
+        status: 'parent-gate',
+        accent: 'leaf',
+        imageSrc: '/ikonlar/nav_parent_area.png',
+    },
 ];
