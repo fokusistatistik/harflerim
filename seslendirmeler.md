@@ -1,17 +1,18 @@
-# Seslendirmeler — ElevenLabs'a Geçiş Envanteri
+# Seslendirmeler — Statik Ses Envanteri
 
-> Bu dosya, projedeki TÜM seslendirme (TTS) noktalarının envanteri ve ElevenLabs ile kademeli olarak gerçek insan-kalitesinde sese geçiş planıdır. `PROMPTLAR.md`'nin (görsel üretim) sesteki karşılığı — kopyala-yapıştır hazır olmayı hedefler ama ElevenLabs bir prompt değil, ses+metin çifti gerektirdiği için format ona göre uyarlandı.
+> Bu dosya, projedeki TÜM seslendirme (TTS) noktalarının envanteri ve statik ses dosyalarıyla eşleştirmesidir. `PROMPTLAR.md`'nin (görsel üretim) sesteki karşılığı.
 >
-> Oluşturulma: 2026-09-14.
+> Oluşturulma: 2026-09-14. **2026-09-15 güncellemesi:** ElevenLabs yerine kullanıcının kendi kaydettiği 105 ses dosyası (`public/sounds/tts/`) statik katman olarak entegre edildi — aşağıdaki mimari artık UYGULANDI (önceki "henüz uygulanmadı" notu geçersiz).
 
-## Şu anki mimari (değişmeden kalacak kısım)
+## Şu anki mimari
 
-Projede **iki katmanlı bir TTS zinciri** var, `src/hooks/useTurkishSpeech.ts` üzerinden:
+Projede **üç katmanlı bir TTS zinciri** var, `src/hooks/useTurkishSpeech.ts` üzerinden (`speak(text)` çağrıldığında sırayla denenir):
 
-1. **Piper TTS (birincil)** — kendi barındırılan Python servisi (`python/services/tts_service.py`), model `tr_TR-dfki-medium.onnx` (tek konuşmacılı, DFKI Türkçe veri seti). `/api/tts` route'u üzerinden proxy'lenir, sonuç disk üzerinde SHA-256 hash'li dosya adıyla önbelleklenir (`python/cache/tts/*.wav`).
-2. **Tarayıcı `speechSynthesis` (fallback)** — Piper başarısız olursa sessizce buna düşülür, ses seçimi kontrolsüz (yalnızca `lang=tr-TR`, cihaza bağlı).
+1. **Statik yerel dosya (birincil, 2026-09-15 eklendi)** — `src/lib/ttsManifest.ts`'teki tam-metin eşleştirme tablosu (`pickTtsAsset`). `speak()` çağrılan metin tabloda varsa `public/sounds/tts/` altındaki gerçek ses kaydı doğrudan çalınır, API çağrısı yapılmaz. Birden fazla kaydı olan metinler (ör. harf şablonlarının bazı varyantları) arasından rastgele biri seçilir.
+2. **Piper TTS (ikincil)** — kendi barındırılan Python servisi (`python/services/tts_service.py`), model `tr_TR-dfki-medium.onnx` (tek konuşmacılı, DFKI Türkçe veri seti). `/api/tts` route'u üzerinden proxy'lenir, sonuç disk üzerinde SHA-256 hash'li dosya adıyla önbelleklenir (`python/cache/tts/*.wav`). Statik dosya bulunamazsa (dinamik metin — nesne adları gibi) buraya düşülür.
+3. **Tarayıcı `speechSynthesis` (fallback)** — Piper de başarısız olursa sessizce buna düşülür, ses seçimi kontrolsüz (yalnızca `lang=tr-TR`, cihaza bağlı).
 
-**ElevenLabs bu zincirin NERESİNE girecek?** Öneri: Piper'ın **önüne** üçüncü bir katman olarak — sabit/önceden bilinen metinler (bu dosyadaki C ve E bölümleri) için ElevenLabs'ta üretilmiş gerçek ses dosyaları statik olarak `public/sounds/tts/` altında tutulur, oynatılırken önce oraya bakılır; yalnızca dinamik/bilinmeyen metin (nesne adları gibi, B bölümü) hâlâ Piper'a düşer. Böylece hem doğal ses kalitesi (sabit, sık duyulan cümlelerde) hem de esneklik (her yeni kelime için API çağrısı gerekmez) korunur. **Bu mimari karar henüz uygulanmadı — bu dosya yalnızca envanter ve ses/metin ataması, kod değişikliği ayrı bir tur.**
+**Kayıt kaynağı:** Kullanıcının kendi kaydettiği sesler (`sesler_part1` klasörü) — ses karakteri KARIŞIK (bazı metinler farklı seslerle okunmuş, tek bir "Papatya"/"Coşkun" karakter ayrımı garanti değil, aşağıdaki A/B bölümlerindeki karakter ataması artık yalnızca METİN KATEGORİSİ anlamına geliyor, ses kimliği garantisi değil). Dosyalar `public/sounds/tts/` altında TEK düz klasörde, dosya adı önekiyle kategorize (`harf-*`, `aile-*`, `aac-*`, `kutlama-*`, `tesvik-*`, `ekstra-*`).
 
 ---
 
@@ -34,9 +35,9 @@ Projede **iki katmanlı bir TTS zinciri** var, `src/hooks/useTurkishSpeech.ts` �
 
 ## A) Kadın Ses — "Papatya" — Metin Listesi
 
-### A1. Harf sorma şablonları (B1 — `{{harf}}` interpolasyonlu, harf her okunuşta değişir)
+### A1. Harf sorma şablonları (`{{harf}}` interpolasyonlu, harf her okunuşta değişir)
 
-Bu 3 cümle şablon olduğu için ElevenLabs'ta **harf ismi olmadan tam cümle** üretilemez — 29 harfin her biri × 3 şablon = 87 varyasyon gerekir (bkz. not aşağıda). Alternatif: yalnızca taşıyıcı cümleyi üretip harf adını ayrı bir kısa ses klibi olarak birleştirmek (audio splicing) — bu kod tarafında ayrı bir iş.
+**Durum: 29 harfin HEPSİ en az bir şablonda kayıtlı, ama hiçbir harf için 3 şablonun TAMAMI yok (kasıtlı — kullanıcı kararı, her harf 1-2 varyantla kayıtlı).** `src/lib/ttsManifest.ts`'e entegre edildi, Playwright ile doğrulandı (2026-09-15).
 
 ```
 1. Hadi {{harf}} harfini bulalım!
@@ -44,9 +45,20 @@ Bu 3 cümle şablon olduğu için ElevenLabs'ta **harf ismi olmadan tam cümle**
 3. Bakalım, {{harf}} harfini bulabilecek misin?
 ```
 
-**Not (önemli, ElevenLabs'a geçmeden önce karar gerektirir):** Bu 3 şablon × 29 harf = 87 ayrı ses dosyası üretmek gerekir (pratik ama çok sayıda dosya) YA DA harf isimlerini (`A`, `Be`, `Ce`... 29 tanesi) ayrı üretip kod tarafında cümleye "yapıştırmak" gerekir (daha az dosya, ama gerçek zamanlı ses birleştirme/crossfade işi). Bu dosya yalnızca envanteri veriyor — hangi yolun seçileceği ayrı bir teknik karar.
+**Harf başına hangi şablon(lar) kayıtlı:**
+| Harf | Hadi | Nerede | Bakalım |
+|---|---|---|---|
+| A,B,C,D,F | ✅ | ✅ | ❌ |
+| Ç,E,G,H | ✅ | ✅ | ✅ |
+| Ğ,I,İ,J,Ö,P | ❌ | ❌ | ✅ |
+| K,L,M,N,O,U,Y,Z | ❌ | ✅ | ✅ |
+| R | ✅ | ❌ | ❌ |
+| S,Ş,T | ✅ | ✅ | ❌ |
+| Ü,V | ❌ | ❌ | ✅ |
 
-**Harf isimleri (Türk alfabesi, 29 harf — ayrı üretilecekse):**
+Eksik kombinasyonlar için kod otomatik olarak Piper/tarayıcı zincirine düşer (bkz. `ttsManifest.ts`, tam metin eşleşmezse `null` döner) — round hiç bozulmaz, sadece o an ses biraz daha az doğal olur. **K ve V harfleri için 2'şer varyant** var (K: "K"/"Ke" okunuşu, V: normal/fazladan-harfli kayıt) — kullanıcı onayıyla ikisi de tutuldu, çalışta rastgele seçilir.
+
+**Harf isimleri (Türk alfabesi, 29 harf — ayrı kaydedilmedi, yalnızca referans):**
 ```
 A, Be, Ce, Çe, De, E, Fe, Ge, Yumuşak Ge, He, I, İ, Je, Ke, Le, Me, Ne, O, Ö, Pe, Re, Se, Şe, Te, U, Ü, Ve, Ye, Ze
 ```
@@ -57,126 +69,124 @@ A, Be, Ce, Çe, De, E, Fe, Ge, Yumuşak Ge, He, I, İ, Je, Ke, Le, Me, Ne, O, Ö
 16. Bu kim?
 ```
 
-### A4. Aile Albümü — yakınlık derecesi kelimeleri (2026-09-15 eklendi)
+**Durum: ✅ kayıtlı ve entegre** (`aile-bu-kim.mp3`), Playwright ile round başında gerçekten çaldığı doğrulandı.
 
-Oyun artık özel ad değil yakınlık derecesi soruyor/gösteriyor (`src/config/familyRelations.ts`, 21 sabit seçenek — "Diğer" hariç, o serbest metin). Bu liste SABİT olduğu için (proje-geneli, ebeveyn ekleyip çıkaramaz) dinamik değil, ElevenLabs'a UYGUN — D bölümündeki "gerçek dinamik içerik" (DB'den gelen nesne/kelime adları) kategorisine girmiyor. İki kullanım noktası var: (1) doğru cevap toast'ı `"Bu senin {{yakınlık}}!"`, (2) sesli ipucu butonu `"Bu senin {{yakınlık}}"`. Taşıyıcı cümle sabit, yalnızca `{{yakınlık}}` değişiyor — A1'deki harf şablonlarıyla aynı desen (87-dosya vs. ses-birleştirme kararı burada da geçerli, ama yalnızca 21 kelime × 1 taşıyıcı cümle = çok daha az varyasyon, muhtemelen tam-cümle üretimi pratik).
+### A4. Aile Albümü — yakınlık derecesi kelimeleri (2026-09-15 eklendi, aynı gün entegre edildi)
 
-**Taşıyıcı cümle şablonu:**
+Oyun artık özel ad değil yakınlık derecesi soruyor/gösteriyor (`src/config/familyRelations.ts`, 21 sabit seçenek — "Diğer" hariç, o serbest metin). Üç kullanım noktası var: (1) sesli ipucu butonu `speak("Bu senin {{yakınlık}}")`, (2) doğru-cevap toast'ı (yalnızca görsel, seslendirilmiyor), (3) ebeveyn panelindeki "Dinle" butonu `speak("{{yakınlık}}")` (tek kelime, cümle değil).
+
+**Taşıyıcı cümle şablonu (sesli ipucu):**
 ```
 17. Bu senin {{yakınlık}}!
 ```
 
-**21 yakınlık kelimesi (`familyRelations.ts` ile birebir aynı sırada):**
-```
-Anne
-Baba
-Abla
-Ağabey
-Kız Kardeş
-Erkek Kardeş
-Anneanne
-Babaanne
-Dede (anne tarafı)
-Dede (baba tarafı)
-Teyze
-Hala
-Dayı
-Amca
-Kuzen
-Yenge
-Enişte
-Arkadaş
-Öğretmen
-Bakıcı
-Komşu
-```
+**21 yakınlık kelimesi — kayıt durumu:**
+| Yakınlık | Cümle formu (`Bu senin X`) | Tek kelime (ebeveyn "Dinle") |
+|---|---|---|
+| Anne | ✅ | ❌ |
+| Baba | ✅ | ✅ |
+| Abla | ✅ | ✅ |
+| Ağabey | ✅ | ✅ |
+| Kız Kardeş | ✅ | ✅ |
+| Erkek Kardeş | ✅ | ✅ |
+| Anneanne | ✅ | ❌ |
+| Babaanne | ✅ | ❌ |
+| Dede (anne/baba tarafı) | ✅ (tek kayıt, Türkiye'de iki tarafa da "dede" deniyor — kullanıcı kararı, iki seçenekte de aynı dosya kullanılıyor) | ❌ |
+| Teyze | ✅ | ✅ |
+| Hala | ✅ | ❌ |
+| Dayı | ✅ | ✅ |
+| Amca | ✅ | ✅ |
+| Kuzen | ✅ | ❌ |
+| Yenge | ✅ | ❌ |
+| Enişte | ✅ | ✅ |
+| Arkadaş | ✅ | ✅ |
+| Öğretmen | ✅ | ✅ |
+| Bakıcı | ❌ | ❌ |
+| Komşu | ❌ | ✅ |
 
-**Not:** "Diğer" ile serbest metin girilen kayıtlar (örn. "Aile dostu") bu sabit listede yer almaz — bunlar her zaman dinamik kalır, Piper'a düşer (D bölümündeki mantıkla aynı).
+**Not:** "Diğer" ile serbest metin girilen kayıtlar (örn. "Aile dostu") bu sabit listede yer almaz — bunlar her zaman dinamik kalır, Piper'a düşer (D bölümündeki mantıkla aynı). "Bakıcı" ve "Komşu" cümle formu eksik — bu iki yakınlık için sesli ipucu Piper'a düşer, oyunu bozmaz.
 
-**Kod entegrasyonu (henüz uygulanmadı, ayrı bir iş):** `FamilyAlbumGame.tsx`'teki `speak(\`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}\`)` çağrısı şu an Piper/tarayıcı zincirinden geçiyor (`useAudio().speak`) — ElevenLabs statik dosyaları hazır olduğunda, `target.relation` bu 21 sabit kelimeden biriyse yerel dosya çalınır, "Diğer" ile serbest girilmişse Piper'a düşülür (üstteki mimari önerideki aynı örüntü).
+**Kod entegrasyonu: ✅ TAMAMLANDI (2026-09-15).** `src/lib/ttsManifest.ts` + `useTurkishSpeech.ts`'teki `speak()` fonksiyonuna eklenen `speakWithLocalFile` katmanı — Piper'dan önce denenir. `FamilyAlbumGame.tsx`'teki `speak(\`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}\`)` ve `FamilyMembersTab.tsx`'teki `speak(relation)` çağrıları hiç değişmedi, otomatik olarak yerel dosyadan faydalanıyor. Playwright ile doğrulandı: "Sesli ipucu" butonuna tıklanınca `aile-cumle-anne.mp3` doğru çaldı.
+
+**İkinci kullanım noktası — Ebeveyn Paneli, "Dinle" butonu (2026-09-15, tespit edildi/eklendi):** `FamilyMembersTab.tsx:273` — aile bireyi eklerken/düzenlerken yakınlık derecesi seçilince (`relation !== 'Diğer'`), o kelimenin nasıl okunduğunu duyabilmek için `speak(relation)` çağrılan ayrı bir "Dinle" (hoparlör) butonu var. Bu, A4'teki 21 kelimenin AYNI ses varlığını kullanıyor — yeni bir metin üretimi gerektirmiyor, sadece kod tarafında ikinci bir çağrı noktası (oyun içi toast/ipucu + ebeveyn panelindeki önizleme). ElevenLabs entegrasyonunda tek bir yerel dosya her iki noktada da paylaşılabilir.
 
 ### A3. AAC Tahtası — 18 kelime (`src/store/aacData.ts`, her biri tek başına okunuyor, interpolasyon yok)
 
+**Durum: 15/18 kayıtlı ve entegre edildi, 3 eksik (Piper'a düşer).**
+
 **İhtiyaçlar (6):**
 ```
-İstiyorum
-Su
-Tuvalet
-Yardım
-Açım
-Susadım
+İstiyorum ✅   Su ✅   Tuvalet ✅   Yardım ✅   Açım ✅   Susadım ✅
 ```
 
 **Duygular (6):**
 ```
-Mutluyum
-Üzgünüm
-Yorgunum
-Kızgınım
-Hastayım
-Sakinim
+Mutluyum ✅   Üzgünüm ✅   Yorgunum ✅   Kızgınım ✅   Hastayım ✅   Sakinim ❌
 ```
 
 **Günlük Yaşam (6):**
 ```
-Dur
-Evet
-Hayır
-Lütfen
-Oynamak
-Uyumak
+Dur ✅   Evet ✅   Hayır ✅   Lütfen ✅   Oynamak ❌   Uyumak ❌
 ```
 
-**Toplam Kadın Ses üretimi: 3 şablon (+ 29 harf ismi opsiyonel) + 1 sabit cümle + 18 AAC kelimesi + 21 yakınlık kelimesi (1 taşıyıcı cümleyle) = 43 zorunlu metin (+ 29 opsiyonel harf ismi).**
+**Kod entegrasyonu: ✅ TAMAMLANDI (2026-09-15).** `AacBoard.tsx`'teki `speak(symbol.word)` çağrısı değişmedi, `ttsManifest.ts` üzerinden otomatik yerel dosyaya yönleniyor. "Sakinim"/"Oynamak"/"Uyumak" için kayıt yok — bu üçü Piper'a düşmeye devam ediyor, oyunu bozmuyor.
 
 ---
 
 ## B) Erkek Ses — "Coşkun" — Metin Listesi
 
+> **Not (2026-09-15):** Gerçek kayıtların ses karakteri karışık geldi (kullanıcı: "sesler karma kimisi erkek kimisi kadın") — bu bölüm başlığı yalnızca METİN KATEGORİSİ anlamına geliyor, kayıtlı dosyanın gerçekten erkek sesiyle okunduğu garanti değil.
+
 ### B1. Kutlama/başarı (6 — `celebrateSuccess()` ile rastgele biri okunur)
 
+**Durum: 4/6 kayıtlı ve entegre edildi, "Aferin!"/"Bravo!" eksik (Piper'a düşer).**
+
 ```
-4. Harika!
-5. Çok güzel!
-6. Aferin!
-7. Mükemmel!
-8. Süpersin!
-9. Bravo!
+4. Harika! ✅
+5. Çok güzel! ✅
+6. Aferin! ❌
+7. Mükemmel! ✅
+8. Süpersin! ✅
+9. Bravo! ❌
 ```
 
 ### B2. Teşvik/tekrar (3 — `encourageRetry()` ile rastgele biri okunur)
 
+**Durum: ✅ 3/3 TAM, entegre edildi.**
+
 ```
-10. Tekrar deneyelim mi?
-11. Bir daha bakalım
-12. Birlikte bulalım
+10. Tekrar deneyelim mi? ✅
+11. Bir daha bakalım ✅
+12. Birlikte bulalım ✅
 ```
 
-**Toplam Erkek Ses üretimi: 9 sabit metin.**
+**B1+B2 kod entegrasyonu: ✅ TAMAMLANDI (2026-09-15).** `useTurkishSpeech.ts`'teki `celebrateSuccess()`/`encourageRetry()` değişmedi (hâlâ `tr.json`'dan rastgele metin seçiyor), `speak()` içindeki yerel-dosya katmanı metni tanıyorsa otomatik yerel dosyayı çalıyor. Playwright ile "Bir daha bakalım"/"Birlikte bulalım" gerçekten yerel dosyadan çaldığı doğrulandı.
 
 ---
 
 ## C) Şu an kullanılmayan / gelecekte değerlendirilecek metinler
 
-Bu metinler `src/locales/tr.json`'da tanımlı ama kod hiçbir yerde bunları bir TTS fonksiyonuna vermiyor (ölü içerik) — ElevenLabs'a geçerken ya kullanılmaya başlanır ya da temizlenir, şimdilik üretilmiyor:
+Bu metinler `src/locales/tr.json`'da tanımlı ama kod hiçbir yerde bunları bir TTS fonksiyonuna vermiyor (ölü içerik) — kullanılmaya başlanırsa diye ses kaydı zaten alınmış (✅), ama entegre edilmedi (kod hâlâ bu metinleri hiç seslendirmiyor):
 
 ```
-13. Çok yaklaştın!
-14. Devam et!
-15. Sen yaparsın!
+13. Çok yaklaştın! ✅ (kayıtlı, kullanılmıyor)
+14. Devam et! ✅ (kayıtlı, kullanılmıyor)
+15. Sen yaparsın! ✅ (kayıtlı, kullanılmıyor)
 ```
 
-Ayrıca ekranda gösterilen ama hiç seslendirilmeyen metinler var (bilinçli bir ürün kararı olabilir, ElevenLabs'a geçerken tekrar değerlendirilmeli):
+Bu üçü `ttsManifest.ts`'e BİLİNÇLİ OLARAK eklenmedi — kod onları hiç `speak()`'e vermediği için ekleseydik ölü kod olurdu. Bu metinler kullanılmaya başlanırsa (`ekstra-cok-yaklastin.mp3` vb. zaten `public/sounds/tts/` altında hazır) manifest'e eklenmesi yeterli.
+
+Ayrıca ekranda gösterilen ama hiç seslendirilmeyen metinler var (bilinçli bir ürün kararı olabilir, tekrar değerlendirilmeli):
 - `CalmingMode.tsx`: "Nefes al...", "Nefes ver..." — sakinleştirme modunda sesin OLMAMASI kasıtlı olabilir (sessizlik terapötik), dokunulmadan bırakılması önerilir.
-- `DayComplete.tsx`: "Harfler Uyudu. Yarın Görüşürüz!", "Bugün harika bir iş çıkardın. Şimdi dinlenme zamanı." — gün sonu ekranı, seslendirilmesi iyi bir aday olabilir (Kadın ses, sakin ton).
+- `DayComplete.tsx`: "Harfler Uyudu. Yarın Görüşürüz!", "Bugün harika bir iş çıkardın. Şimdi dinlenme zamanı." — gün sonu ekranı, seslendirilmesi iyi bir aday olabilir, henüz kayıt yok.
 
 ---
 
-## D) Dinamik metinler — ElevenLabs'a UYGUN DEĞİL, Piper'da kalmalı
+## D) Dinamik metinler — statik kayda UYGUN DEĞİL, Piper'da kalmalı
 
-Bu metinler çalışma zamanında değişen içerik (nesne/kelime adları, DB'den geliyor) — ElevenLabs'ta önceden üretilemez, Piper (ya da gelecekte ElevenLabs'ın gerçek-zamanlı API'si, ayrı bir maliyet/mimari karar) TTS zincirinde kalmalı:
+Bu metinler çalışma zamanında değişen içerik (nesne/kelime adları, DB'den geliyor) — önceden kaydedilemez, Piper TTS zincirinde kalmalı:
 
-- Harf Avı'nın ipucu kelimesi (`GameBoard.tsx` → `speak(randomObj.word)`) — `LETTER_OBJECTS`'teki ~240 kelime, DB'den geliyor, ebeveyn tarafından genişletilebilir.
+- Harf Avı'nın ipucu kelimesi (`GameBoard.tsx` → `speak(randomObj.word)`) — `LETTER_OBJECTS`'teki ~240 kelime, DB'den geliyor, ebeveyn tarafından genişletilebilir. Bilinçli olarak `ttsManifest.ts`'e eklenmedi.
 
 ---
 
@@ -198,17 +208,70 @@ Bu dosyalar insan sesi değil, oyun efekti — ElevenLabs kapsamı dışında am
 
 ---
 
-## Uygulama sırası önerisi (kademeli geçiş)
+## Kayıt durumu özeti (2026-09-15 itibarıyla)
 
-1. **Faz 1 (en yüksek etki, en düşük risk):** B bölümündeki 9 erkek ses cümlesi + A2'deki "Bu kim?" — bunlar sabit, kısa, sık duyulan cümleler; ilk ElevenLabs üretimi burada yapılabilir.
-2. **Faz 2:** A3'teki 18 AAC kelimesi — çocuğun "kendi sesi" gibi davranan, iletişim için kritik önemde metinler.
-3. **Faz 2b (2026-09-15 eklendi):** A4'teki 21 yakınlık kelimesi (1 taşıyıcı cümleyle) — Aile Albümü'nün sesli ipucu butonu ve doğru-cevap toast'ı için, A3 ile benzer öncelikte (sık duyulan, sabit, kısa).
-4. **Faz 3 (teknik karar gerektirir):** A1'deki harf sorma şablonları — 87-dosya mı yoksa ses-birleştirme mi kararı verilmeli, sonra üretilmeli.
-5. **Kod entegrasyonu:** Her faz üretildikçe `useTurkishSpeech.ts`'e (veya yeni bir `useElevenLabsAudio.ts`'e) sabit-metin-eşleştirmeli bir önbellek katmanı eklenir — metin tanınırsa yerel dosya çalınır, tanınmazsa (dinamik kelimeler) Piper'a düşülür.
+| Bölüm | Toplam metin | Kayıtlı | Entegre | Eksik |
+|---|---|---|---|---|
+| A1 — Harf şablonları | 87 (29×3) | 53 kombinasyon (harf başına 1-2/3) | ✅ | 34 kombinasyon (kasıtlı, Piper'a düşer) |
+| A2 — "Bu kim?" | 1 | 1 | ✅ | — |
+| A4 — Yakınlık cümlesi | 21 | 19 | ✅ | Bakıcı, Komşu |
+| A4 — Yakınlık tek kelime (ebeveyn) | 21 | 12 | ✅ | 9 (Piper'a düşer) |
+| A3 — AAC | 18 | 15 | ✅ | Sakinim, Oynamak, Uyumak |
+| B1 — Kutlama | 6 | 4 | ✅ | Aferin!, Bravo! |
+| B2 — Teşvik | 3 | 3 | ✅ | — |
+| C — Kullanılmayan | 3 | 3 (kayıtlı ama entegre edilmedi, kod onları hiç seslendirmiyor) | — | — |
+| Rakamlar (kapsam dışı, D/E değil) | 0-10 | 11 | — (hiçbir oyun kullanmıyor, envanterde duruyor) | — |
+
+**Kaynak klasör:** kullanıcının kendi kaydettiği `sesler_part1` (Windows: `Desktop/melike/sesler_part1`) — 113 ham dosya, 105'i `public/sounds/tts/` altına kopyalandı (kalan 8'i: 2 yazım-hatalı-ama-geçerli varyant zaten v2 olarak tutuldu, aslında hepsi kopyalandı — bkz. `src/lib/ttsManifest.ts` tam liste).
+
+**Bilinen tuhaflıklar (kod tarafında zararsız, gelecekte kayıt tazelenirken hatırlanmalı):**
+- "K harfi nerede" ve "Ke harfi nerede" iki farklı kayıt (harfin okunuşu farklı) — ikisi de tutuldu, rastgele seçiliyor.
+- "Bakalım V harfini bulabilecek misin(n)" ve "Hadi Ş harfini bulalım(m)" için fazladan harfli isimlendirilmiş ikinci bir kayıt var — kullanıcı onayladı, farklı ses denemeleri, ikisi de tutuldu.
+- Ğ, Ö, Ü harflerinin kendi ayrı "Bakalım" kayıtları var (`Bakalım Ğ/Ö/Ü harfini bulabilecek misin.mp3`) — benzer sesli harften (G/O/U) paylaştırma YAPILMADI, her biri kendi dosyasına gidiyor, manifest'te doğru eşleşti.
+
+---
+
+## F) Görsel envanteri — Karşılaştırma görselleri / Harf Avı nesne kartları (2026-09-15 eklendi)
+
+> Kullanıcı isteğiyle eklendi: "elimizdeki görsellerin tek tek listele dokumana ekle onların hepsi eksik" — Harf Avı'nın "kartları" ile Hafıza Kartları'nın karşılaştırma görselleri AYNI havuzu paylaşıyor (Harf Avı kendi ayrı görsel setine sahip değil, `LETTER_OBJECTS` — `src/store/gameData.ts` — doğrudan `/karsilastirma/*.jpg` yollarına referans veriyor). Bu yüzden tek bir envanter yeterli.
+
+**Durum: 100/100 görsel `public/karsilastirma/` altında, DB'deki (`ComparisonItem`) 100 kayıtla birebir eşleşiyor (dosya↔kayıt karşılıklı kontrol edildi, ne fazla ne eksik dosya var).** Format `.jpg`, dosya adı = DB `slug` alanı.
+
+**Hayvan (27):** Arı, At, Balık, Civciv, Deve, Eşek, Fil, Hindi, Kaplumbağa, Karınca, Kedi, Kelebek, Kirpi, Koyun, Kurbağa, Kuzu, Köpek, Muhabbet Kuşu, Panda, Penguen, Tavuk, Tavşan, Yunus, Zürafa, Ördek, Ördek Yavrusu, İnek
+
+**Eşya (18):** Anahtar, Diş Fırçası, Gitar, Güneş Gözlüğü, Kalemler, Kaşık, Olta, Piyano, Raket, Saat, Tabak, Tencere, Toka, Trafik Işığı, Valiz, Çanta, İp, Şemsiye
+
+**Meyve-Sebze (15):** Ananas, Domates, Elma, Havuç, Karpuz, Kavun, Kayısı, Kivi, Limon, Muz, Nar, Patates, Portakal, Soğan, Üzüm
+
+**Oyuncak (11):** Araba, Ayıcık, Balon, Gemi, Otobüs, Paten, Top, Traktör, Uçak, Vinç, Üçgen
+
+**Yiyecek (10):** Ceviz, Dondurma, Donut, Ekmek, Jelibon, Pasta, Simit, Yumurta, Zeytin, Çikolata
+
+**Giyim (6):** Ayakkabı, Elbise, Eldiven, Pantolon, Çorap, Şapka
+
+**Doğa (5):** Ağaç, Gökkuşağı, Lale, Yaprak, Çiçek
+
+**Gezegen/Gökyüzü (4):** Dünya, Güneş, Satürn, Yıldız
+
+**Mobilya (3):** Masa, Sandalye, Yatak
+
+**Araç (1):** Bisiklet
+
+**Kullanım noktaları:**
+- **Hafıza Kartları** (`memory-match`) — `src/actions/comparisonPairs.ts` üzerinden `ComparisonItem` havuzundan çift seçiyor (ilgi alanı ağırlıklandırmalı, bkz. `moduller/hafizakartlari.md`).
+- **Harf Avı** (`letter-hunt`) — `LETTER_OBJECTS` (`src/store/gameData.ts`) harf başına 1-5 nesne referans veriyor, HEPSİ bu 100 görselden bir alt küme (yalnızca `prisma/seedContent.ts`'in DB tohumlama kaynağı, çalışma zamanı DB'den okunuyor — bkz. dosya başındaki uyarı yorumu).
+- Görsellerin kendisi ElevenLabs/ses envanteriyle ilgisiz — bu bölüm yalnızca kullanıcının "eksik" dediği görsel envanterini tamamlamak için buraya eklendi, ses/TTS kapsamına girmiyor.
+
+**Not:** "Hepsi eksik" ifadesi muhtemelen bu envanterin daha önce hiç bu dosyada listelenmemiş olmasına işaret ediyor (görsellerin kendisi zaten `public/karsilastirma/` altında mevcut ve kullanımda) — eksik olan doküman kaydıydı, görsel dosyaları değil. Gerçekten eksik/istenen yeni bir görsel varsa ayrıca belirtilmesi gerekir.
+
+---
+
+## Kod entegrasyonu (TAMAMLANDI, 2026-09-15)
+
+`src/lib/ttsManifest.ts` (tam-metin → dosya yolu eşleştirmesi, `pickTtsAsset()`) + `src/hooks/useTurkishSpeech.ts`'teki `speak()` fonksiyonuna eklenen `speakWithLocalFile` katmanı (Piper'dan önce denenir). Hiçbir oyun dosyası değişmedi — tüm `speak()`/`askLetter()`/`celebrateSuccess()`/`encourageRetry()` çağrıları olduğu gibi kaldı, katman şeffaf çalışıyor. `tsc --noEmit` ve `eslint` temiz, Playwright ile Harf Avı ve Aile Albümü'nde gerçek tarayıcıda doğrulandı (network istekleri izlenerek, yerel dosyanın gerçekten çaldığı teyit edildi).
 
 ## Açık kalan kararlar
 
-- ElevenLabs API maliyeti/kota yönetimi nasıl olacak? (Faz 3.10 "Token havuzu altyapısı" ile ilişkili olabilir.)
-- Harf sorma şablonları için "87 dosya" mı "ses birleştirme" mi tercih edilecek?
-- `DayComplete.tsx`'in seslendirilip seslendirilmeyeceği (şu an sessiz, bilinçli mi değil mi netleşmedi).
-- Üretilen ses dosyalarının saklanacağı klasör yapısı (`public/sounds/tts/kadin/`, `public/sounds/tts/erkek/` gibi bir öneri, kesinleşmedi).
+- Eksik kayıtlar (Sakinim/Oynamak/Uyumak, Aferin/Bravo, Bakıcı/Komşu/Anne-tek-kelime/Anneanne-tek-kelime vb.) ne zaman tamamlanacak?
+- `DayComplete.tsx`'in seslendirilip seslendirilmeyeceği (şu an sessiz, kayıt da yok).
+- C bölümündeki 3 metin ("Çok yaklaştın!" vb.) gerçekten kullanılmaya başlanacak mı, yoksa `tr.json`'dan temizlenecek mi?

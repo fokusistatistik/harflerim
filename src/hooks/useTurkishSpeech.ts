@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AudioConfig } from '@/types/game';
 import { tArray, interpolate } from '@/lib/i18n';
+import { pickTtsAsset } from '@/lib/ttsManifest';
 
 interface UseTurkishSpeechReturn {
     speak: (text: string) => Promise<void>;
@@ -54,7 +55,33 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
         };
     }, []);
 
-    // Faz 3.5 — Piper TTS önce denenir (daha doğal/kaliteli Türkçe ses,
+    // 2026-09-15 — gerçek insan sesiyle önceden kaydedilmiş sabit metinler
+    // (bkz. seslendirmeler.md, src/lib/ttsManifest.ts) Piper'dan ÖNCE denenir
+    // — tam metin eşleşirse (ör. "Bu kim?", harf soru şablonları, AAC
+    // kelimeleri) doğrudan bu dosya çalınır, API çağrısı gerekmez. Dinamik
+    // metinler (nesne adları gibi) manifest'te yoktur, Piper zincirine düşer.
+    const speakWithLocalFile = useCallback(async (text: string): Promise<boolean> => {
+        const assetPath = pickTtsAsset(text);
+        if (!assetPath) return false;
+
+        try {
+            const audio = new Audio(assetPath);
+            currentAudioRef.current = audio;
+            await new Promise<void>((resolve, reject) => {
+                audio.onended = () => resolve();
+                audio.onpause = () => resolve();
+                audio.onerror = () => reject(new Error('local tts asset playback failed'));
+                audio.play().catch(reject);
+            });
+            currentAudioRef.current = null;
+            return true;
+        } catch {
+            currentAudioRef.current = null;
+            return false;
+        }
+    }, []);
+
+    // Faz 3.5 — Piper TTS ikinci sırada denenir (daha doğal/kaliteli Türkçe ses,
     // önceden üretilip önbelleklenen sabit külliyat için gecikmesiz). Başarısız
     // olursa (servis kapalı, ağ hatası vb.) mevcut tarayıcı speechSynthesis'ine
     // SESSİZCE düşülür — bu yüzden speak() asla reddedilmez/oyunu bozmaz.
@@ -101,6 +128,12 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
             }
 
             setIsSpeaking(true);
+            const localFileWorked = await speakWithLocalFile(text);
+            if (localFileWorked) {
+                setIsSpeaking(false);
+                return;
+            }
+
             const piperWorked = await speakWithPiper(text);
             setIsSpeaking(false);
             if (piperWorked) return;
@@ -134,7 +167,7 @@ export function useTurkishSpeech(enabled: boolean = true): UseTurkishSpeechRetur
                 synthRef.current!.speak(utterance);
             });
         },
-        [config, isSupported, enabled, speakWithPiper]
+        [config, isSupported, enabled, speakWithLocalFile, speakWithPiper]
     );
 
     // Faz 1.21 — bu cümleler artık src/locales/tr.json'dan okunuyor (tek
