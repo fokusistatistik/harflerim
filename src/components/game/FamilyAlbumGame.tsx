@@ -66,6 +66,13 @@ export default function FamilyAlbumGame() {
     // (istenmeyen tekrar/beklenmedik ses otizmli çocuklar için rahatsız
     // edici olabilir, bu yüzden BUTON — otomatik değil).
     const [showVoiceHintButton, dismissVoiceHintButton] = useHintTimer([target?.id], 10000);
+    // 2026-09-15 — kullanıcı bulgusu: sesli ipucu butonuna basılınca cihazın
+    // hoparlöründen çıkan "Bu senin annen" sesi mikrofona geri yansıyıp
+    // (aynı cihazda hoparlör+mikrofon varsa yankı/geri besleme) yanlışlıkla
+    // doğru cevap olarak algılanabilirdi. Çözüm: ipucu konuşurken ve birkaç
+    // saniye sonrasında (konuşma bitince mikrofonun hâlâ kısa bir yankı
+    // yakalama riski için tampon süre) sözlü onay geçici olarak durdurulur.
+    const [isVoiceHintPlaying, setIsVoiceHintPlaying] = useState(false);
     const previousTargetIdRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -139,6 +146,16 @@ export default function FamilyAlbumGame() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loaded, members]);
 
+    const handlePlayVoiceHint = async () => {
+        if (!target || isVoiceHintPlaying) return;
+        setIsVoiceHintPlaying(true);
+        await speak(`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}`).catch(() => {});
+        // Konuşma bitince mikrofonun hâlâ kısa bir yankı yakalama riski için
+        // ek bir tampon süre — hoparlörden çıkan sesin mikrofona karışıp
+        // yanlışlıkla "doğru cevap" olarak algılanmasını önler.
+        setTimeout(() => setIsVoiceHintPlaying(false), 1200);
+    };
+
     const handleSelect = (candidate: FamilyMemberData) => {
         if (isLocked || !target || dayBudget?.isDayComplete || dailyLimit?.isFamilyAlbumLimitReached) return;
 
@@ -167,16 +184,48 @@ export default function FamilyAlbumGame() {
         }
     };
 
+    // 2026-09-15 — kullanıcı isteği: 30sn içinde cevap verilmezse round
+    // otomatik geçer. "Yanlış" olarak kaydedilir (kullanıcı kararı) —
+    // günlük round sayacına dahil olsun diye, aynı zamanda başarı oranını
+    // da etkiler (5 ardışık yanlışta sakinleştirme modu tetiklenebilir,
+    // "cevap vermeden geçildi" durumu bilinçli olarak bu şekilde ele alınır).
+    // Herhangi bir seçenek özel olarak "yanlış tıklandı" işaretlenmez
+    // (wrongPickId null kalır) — çocuk hiçbir şeye dokunmadı.
+    const handleTimeout = useCallback(() => {
+        if (isLocked || !target || dayBudget?.isDayComplete || dailyLimit?.isFamilyAlbumLimitReached) return;
+
+        setIsLocked(true);
+        dismissHint();
+        dismissVoiceHintButton();
+        recordSkillAttempt('sosyal-tanima', 'family-album', false).catch(() => {});
+        checkCalmingMode(false);
+        setFeedback('wrong');
+        encourageRetry().catch(() => {});
+        setTimeout(() => {
+            startRound(members);
+        }, 900);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLocked, target, dayBudget?.isDayComplete, dailyLimit?.isFamilyAlbumLimitReached, members]);
+
+    // 30sn round süresi — her yeni hedefte sıfırlanır, cevap verilince
+    // (handleSelect zaten isLocked'ı true yapar) veya round değişince temizlenir.
+    useEffect(() => {
+        if (!target || isLocked) return;
+        const timer = setTimeout(handleTimeout, 30000);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [target?.id, isLocked]);
+
     // Faz 2.9 — sözlü onay: doğru ismi söylemek de dokunmakla aynı sonucu
     // verir (kimin konuştuğunu ayırt etmez, bilinçli bir ara adım — bkz.
     // useVoiceConfirm doc-comment'i). Dokunmatik yol HER ZAMAN çalışmaya
     // devam eder; bu yalnızca ek bir alternatif, tek yol değil.
-    useVoiceConfirm(
+    const { isListening: isMicListening, isSupported: isMicSupported } = useVoiceConfirm(
         target?.relation ?? null,
         () => {
             if (target) handleSelect(target);
         },
-        !isLocked && !!target && !dayBudget?.isDayComplete && !dailyLimit?.isFamilyAlbumLimitReached
+        !isLocked && !!target && !dayBudget?.isDayComplete && !dailyLimit?.isFamilyAlbumLimitReached && !isVoiceHintPlaying
     );
 
     if (!loaded) {
@@ -223,10 +272,22 @@ export default function FamilyAlbumGame() {
                             </div>
                         ) : undefined
                     }
+                    right={
+                        isMicSupported ? (
+                            <div
+                                className={`flex items-center gap-2 px-3 py-2 lg:px-4 rounded-full font-bold text-p-sm ${
+                                    isMicListening ? 'bg-papatya-leaf/15 text-papatya-leaf' : 'bg-papatya-rose/15 text-papatya-rose'
+                                }`}
+                            >
+                                <div className={`w-2.5 h-2.5 rounded-full ${isMicListening ? 'bg-papatya-leaf animate-pulse' : 'bg-papatya-rose'}`} />
+                                <span className="hidden sm:inline">{isMicListening ? 'Dinliyor' : 'Bekliyor'}</span>
+                            </div>
+                        ) : undefined
+                    }
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center gap-6 overflow-y-auto py-2">
+            <div className="flex-1 flex flex-col items-center gap-4 md:gap-6 overflow-y-auto py-2">
                 <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
                 <GameIntroCard gameId="family-album" variant="banner" />
 
@@ -244,9 +305,9 @@ export default function FamilyAlbumGame() {
                         <ImageWithFallback
                             src={target.photoPath}
                             alt="Aile bireyi"
-                            className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 object-cover rounded-p-lg shadow-lg"
+                            className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[26rem] xl:h-[26rem] object-cover rounded-p-lg shadow-lg"
                             fallback={
-                                <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 rounded-p-lg shadow-lg bg-papatya-petal/20 flex items-center justify-center">
+                                <div className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[26rem] xl:h-[26rem] rounded-p-lg shadow-lg bg-papatya-petal/20 flex items-center justify-center">
                                     <UserIcon className="text-papatya-petal-deep" size={64} />
                                 </div>
                             }
@@ -255,8 +316,9 @@ export default function FamilyAlbumGame() {
                         {showVoiceHintButton && !isLocked && (
                             <button
                                 type="button"
-                                onClick={() => speak(`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}`).catch(() => {})}
-                                className="flex items-center gap-2 min-h-tap px-5 py-2 bg-papatya-sky/15 text-papatya-sky rounded-full font-bold text-p-sm shadow-sm hover:bg-papatya-sky/25 transition-colors"
+                                onClick={handlePlayVoiceHint}
+                                disabled={isVoiceHintPlaying}
+                                className="flex items-center gap-2 min-h-tap px-5 py-2 bg-papatya-sky/15 text-papatya-sky rounded-full font-bold text-p-sm shadow-sm hover:bg-papatya-sky/25 transition-colors disabled:opacity-70"
                                 aria-label="Sesli ipucu dinle"
                             >
                                 <Volume2 size={18} /> Sesli ipucu

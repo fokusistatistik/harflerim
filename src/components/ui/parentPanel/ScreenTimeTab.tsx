@@ -15,7 +15,7 @@ export function ScreenTimeTab() {
     const [letterHuntLimit, setLetterHuntLimit] = useState(100);
     const [memoryMatchLimit, setMemoryMatchLimit] = useState(20);
     const [visualMatchLimit, setVisualMatchLimit] = useState(20);
-    const [familyAlbumLimit, setFamilyAlbumLimit] = useState(20);
+    const [familyAlbumLimit, setFamilyAlbumLimit] = useState(25);
     const [loaded, setLoaded] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -130,7 +130,7 @@ export function ScreenTimeTab() {
                         id="family-album-limit"
                         type="number"
                         min={10}
-                        max={50}
+                        max={100}
                         step={5}
                         value={familyAlbumLimit}
                         onChange={(e) => setFamilyAlbumLimit(Number(e.target.value))}

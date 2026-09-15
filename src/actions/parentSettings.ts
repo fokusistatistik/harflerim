@@ -116,8 +116,8 @@ export async function updateFamilyAlbumLimit(rounds: number): Promise<{ ok: bool
     const user = await getCurrentUser();
     if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
 
-    if (!Number.isFinite(rounds) || rounds < 10 || rounds > 50) {
-        return { ok: false, error: 'Aile Albümü tur limiti 10-50 arasında olmalı.' };
+    if (!Number.isFinite(rounds) || rounds < 10 || rounds > 100) {
+        return { ok: false, error: 'Aile Albümü tur limiti 10-100 arasında olmalı.' };
     }
 
     await db.userSettings.update({

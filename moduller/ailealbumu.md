@@ -2,11 +2,11 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (dördüncü tur — otizm-temelli pedagojik değişiklik: oyun artık özel ad değil yakınlık derecesi gösteriyor/soruyor; masaüstü boşluk düzeltmesi; ebeveyn formunda yakınlık kelimesini TTS ile dinleme).
+> Son güncelleme: 2026-09-15 (beşinci tur — minimum 3 seçenek, görsel boyutu büyütme, masaüstü boşluk düzeltmesi (kesinleştirildi), mikrofon durumu rozeti, 30sn round süresi, günlük limit varsayılanı/aralığı Aile Albümü'ne özel 25/10-100'e çekildi).
 
 ## Özet
 
-Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (2. turdan itibaren adaptif zorluğa göre 2-4 arası) **yakınlık derecesi** seçeneği arasından doğru cevabı seçer (dokunarak ya da yakınlık kelimesini söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). 4. turdan itibaren seçenekler ÖZEL AD değil YAKINLIK DERECESİ gösteriyor (örn. "Hatice" değil "Babaanne") — okuma-yazma bilmeyen/henüz konuşmayan bir çocuk için özel ad anlamsız, çocuğun o kişiye seslendiği kelime anlamlı; kullanıcı isteğiyle değiştirildi. Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
+Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (adaptif zorluğa göre 3-4 arası, taban 2'den 3'e çekildi) **yakınlık derecesi** seçeneği arasından doğru cevabı seçer (dokunarak, yakınlık kelimesini söyleyerek, veya 30sn içinde cevap verilmezse otomatik geçilerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). 4. turdan itibaren seçenekler ÖZEL AD değil YAKINLIK DERECESİ gösteriyor (örn. "Hatice" değil "Babaanne") — okuma-yazma bilmeyen/henüz konuşmayan bir çocuk için özel ad anlamsız, çocuğun o kişiye seslendiği kelime anlamlı; kullanıcı isteğiyle değiştirildi. Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
 
 **Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`, `getFamilyAlbumDailyState`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts`, `useCalmingModeMonitor.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/lib/adaptiveDifficulty.ts` (`getAdaptiveFamilyAlbumConfig`) · `src/config/familyRelations.ts` (kategorik yakınlık derecesi listesi) · `src/store/parentGateStore.ts` (`requestedTab` — oyundan doğrudan sekmeye yönlendirme) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
 
@@ -187,6 +187,25 @@ Test verileri ("Test Dayı", "Test Komşu Çocuğu", "Test Ses Kişisi" + geçic
 - İkinci turda (bug düzeltmesi sonrası) 2× "Amca" içeren bilinçli çakışma senaryosuyla 20 round oynandı — HİÇBİRİNDE aynı yazılı iki buton görülmedi, "Amca" geçen 14 round'un hepsinde tam olarak bir "Amca" vardı. PASS.
 
 Test verileri (toplam 40+ geçici kayıt, iki turda) tamamen temizlendi, `dailyFamilyAlbumLimit` geçici olarak değiştirilip 20'ye geri döndürüldü, `FamilyMember`/`SkillAttempt(family-album)` count 0.
+
+## Genel geliştirme önerileri — 5. tur (kullanıcı doğrudan talebi)
+
+1. ✅ **Minimum seçenek sayısı 2'den 3'e çekildi** — `MIN_FAMILY_OPTIONS = 3` (`adaptiveDifficulty.ts`), Gölge Eşleştirme'deki "her round en az 3 alternatif" ilkesiyle aynı (blok a).
+2. ✅ **Fotoğraf boyutu büyütüldü** — `w-48`→`xl:w-80`'den `w-56`→`xl:w-[26rem]`'e, her kademe ~32-96px büyüdü (blok c).
+3. ✅ **Masaüstü boşluk sorunu kesin çözüldü.** Önceki turda `min-h-app`→`h-app overflow-hidden` geçişi tek başına yeterli olmamıştı — kullanıcı ekran görüntüsüyle GameHud ile "Bu Kim?" başlığı arasında hâlâ büyük boşluk olduğunu gösterdi. Kök neden: içerik bloğunda `justify-center` kullanılıyordu, içerik (1 fotoğraf + kısa buton satırı) `h-app`'in toplam yüksekliğinden çok daha küçük kaldığı için üstte/altta eşit büyük boşluk oluşuyordu. Çözüm: `justify-center` kaldırıldı, içerik artık GameHud'a yakın üstten başlıyor (doğal flex-start davranışı) (blok c).
+4. ✅ **Mikrofon durumu rozeti eklendi** — Sihirli Kelimeler'deki (`MagicWordsGame.tsx`) deseni birebir kopyalandı: yeşil dolgun nokta+pulse+"Dinliyor" / kırmızı sabit nokta+"Bekliyor". `useVoiceConfirm`'ün döndürdüğü `isListening`/`isSupported` kullanılıyor, tarayıcı desteklemiyorsa rozet hiç gösterilmiyor. GameHud'ın `right` prop'unda (blok a/c).
+5. ✅ **30 saniyelik round süresi eklendi.** Cevap verilmezse round otomatik bir sonraki hedefe geçer. Kullanıcı kararı: bu "yanlış" olarak kaydedilir (`recordSkillAttempt(..., false)`) — hem günlük round sayacına dahil olsun hem başarı oranını etkilesin diye (SkillAttempt tablosu ikisini de aynı kayıttan hesaplıyor, ayrıştırma büyük bir mimari değişiklik gerektirirdi). Hiçbir seçenek "tıklandı" olarak vurgulanmaz (`wrongPickId` null kalır) — çocuk hiçbir şeye dokunmadı (blok a).
+6. ✅ **Günlük limit Aile Albümü'ne özel 25/10-100'e çekildi.** Kullanıcı kararı: "her oyunun sınırı ayrı olmalı" — diğer üç oyun (Harf Avı/Hafıza Kartları/Gölge Eşleştirme, 20/10-50) kasıtlı olarak DEĞİŞTİRİLMEDİ, yalnızca Aile Albümü farklı bir varsayılan/aralığa taşındı. Migration (`20260915123015_update_family_album_limit_default`) + `updateFamilyAlbumLimit` action'ının aralık kontrolü + `ScreenTimeTab.tsx`'in input min/max'ı + `getFamilyAlbumDailyState`'in fallback değeri hepsi güncellendi. Mevcut kullanıcının önceden hiç değiştirmediği 20 değeri de yeni varsayılana (25) taşındı (blok b).
+
+**Doğrulama (5. tur):** `tsc --noEmit` ve `eslint` temiz, migration uygulandı. Gerçek tarayıcıda (Playwright, `dev:agent`/3042, mikrofon izni verilmiş context) 6 madde tek tek doğrulandı, HEPSİ PASS:
+- İlk round'da (geçmiş yokken) her zaman 3 seçenek geldi, asla 2 değil.
+- 1920x1080'de fotoğraf 416×416px (yeni `xl:w-[26rem]`), taşma/scroll yok.
+- GameHud ile "Bu Kim?" arası boşluk normalleşti (~118px, aşırı boşluk yok); 375/800px'te de regresyonsuz.
+- Mikrofon rozeti sayfa yüklenince "Dinliyor" (yeşil, pulse) durumuna geçti.
+- **30sn timeout gerçek zamanlı test edildi** (31 saniye gerçekten beklendi, kısayol kullanılmadı): round otomatik yeni hedefe geçti, hiçbir seçenek "tıklandı" olarak vurgulanmadı (0 buton `wrongPickId` stilinde), günlük sayaç 3/25 → 4/25 (+1) arttı — `recordSkillAttempt(..., false)` doğru kaydedildiği doğrulandı.
+- Günlük limit formu `min=10 max=100`, varsayılan 25 doğru geldi; hem tarayıcı native kısıtı hem sunucu tarafı (5 ve 150 gibi sınır dışı değerlerle) "10-100 arasında olmalı" hatasıyla doğru reddetti.
+
+**Kritik doğrulama:** Test sırasında DB'de zaten "Emre" (Baba) dahil 4 aile bireyi kaydı vardı (kullanıcının önceki oturumlarda eklediği gerçek veriler) — test için yeni kayıt eklenmedi, "Emre" kaydına KESİNLİKLE dokunulmadığı ayrıca doğrulandı (id ile teyit edildi). Gerçek bir hata bulunmadı.
 
 ## Açık kalan işler (roadmap referansı)
 

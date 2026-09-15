@@ -144,10 +144,15 @@ export interface FamilyAlbumAdaptiveConfig {
     optionCount: number;
 }
 
-const MIN_FAMILY_OPTIONS = 2;
+// 2026-09-15 (2. tur) — kullanıcı isteği: her round en az 3 seçenek olsun
+// (Gölge Eşleştirme'deki "her round en az 3 alternatif" kararıyla aynı ilke) —
+// bu yüzden taban 2 değil 3 (1 doğru + en az 2 çeldirici). Tek kartlı/iki
+// kartlı round hiç olmasın. Zorluk hâlâ üst sınıra doğru artabiliyor,
+// yalnızca taban yükseltildi.
+const MIN_FAMILY_OPTIONS = 3;
 const MAX_FAMILY_OPTIONS = 4;
 
-/** Hiç geçmiş yokken (ilk round) — en kolay ayar, 2 seçenek (1 doğru + 1 çeldirici). */
+/** Hiç geçmiş yokken (ilk round) — en kolay ayar, taban seçenek sayısı (bkz. yukarıdaki not). */
 export const BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG: FamilyAlbumAdaptiveConfig = { optionCount: MIN_FAMILY_OPTIONS };
 
 /**

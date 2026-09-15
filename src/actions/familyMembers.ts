@@ -43,11 +43,11 @@ async function countTodaysFamilyAlbumAttempts(userId: string, skillId: string): 
 export async function getFamilyAlbumDailyState(): Promise<FamilyAlbumDailyState> {
     const user = await getCurrentUser();
     if (!user) {
-        return { ...BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG, roundsPlayedToday: 0, dailyFamilyAlbumLimit: 20, isFamilyAlbumLimitReached: false };
+        return { ...BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG, roundsPlayedToday: 0, dailyFamilyAlbumLimit: 25, isFamilyAlbumLimitReached: false };
     }
 
     const skill = await db.skill.findUnique({ where: { key: 'sosyal-tanima' } });
-    const dailyFamilyAlbumLimit = user.settings?.dailyFamilyAlbumLimit ?? 20;
+    const dailyFamilyAlbumLimit = user.settings?.dailyFamilyAlbumLimit ?? 25;
 
     const [config, roundsPlayedToday] = await Promise.all([
         getAdaptiveFamilyAlbumConfig(user.id),
