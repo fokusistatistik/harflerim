@@ -172,6 +172,10 @@ const TTS_MANIFEST: Record<string, string[]> = {
     Havuç: ['/sounds/tts/nesne-havuc.mp3'],
     Hindi: ['/sounds/tts/nesne-hindi.mp3'],
     Işık: ['/sounds/tts/nesne-trafik-isigi.mp3'],
+    // 'Işık' Harf Avı'nın (LETTER_OBJECTS) speak() metni, 'Trafik Işığı' ise
+    // ComparisonItem DB kaydının tam adı (Hafıza Kartları/Gölge Eşleştirme
+    // speak(item.name) çağırırsa bu anahtarı arar) — aynı ses dosyası, iki alias.
+    'Trafik Işığı': ['/sounds/tts/nesne-trafik-isigi.mp3'],
     Jelibon: ['/sounds/tts/nesne-jelibon.mp3'],
     Kalemler: ['/sounds/tts/nesne-kalemler.mp3'],
     Kaplumbağa: ['/sounds/tts/nesne-kaplumbaga.mp3'],

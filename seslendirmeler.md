@@ -2,13 +2,13 @@
 
 > Bu dosya, projedeki TÜM seslendirme (TTS) noktalarının envanteri ve statik ses dosyalarıyla eşleştirmesidir. `PROMPTLAR.md`'nin (görsel üretim) sesteki karşılığı.
 >
-> Oluşturulma: 2026-09-14. **2026-09-15 1. tur:** ElevenLabs yerine kullanıcının kendi kaydettiği 105 ses dosyası statik katman olarak entegre edildi. **2026-09-15 2. tur (aynı gün, "standart hale getirme"):** Envanter 214 kaynak dosyaya genişletildi — harf şablonları kapsamı büyüdü, AAC kelimeleri BİLİNÇLİ OLARAK boşaltıldı (ayrı bir turda yeniden kaydedilecek), ve en önemlisi Harf Avı'nın "dinamik" sayılan 71 nesne/ipucu kelimesi (`LETTER_OBJECTS`) artık STATİK — bu, D bölümündeki eski "Piper'da kalmalı" kararını geçersiz kılıyor (bkz. güncellenmiş D bölümü). **2026-09-15 3. tur:** Piper/tarayıcı `speechSynthesis` fallback zinciri TAMAMEN KALDIRILDI (kullanıcı isteği: "sadece mp3 kayıtlardan seçsin") — artık kayıt yoksa robotik ses yerine SESSİZ kalınıyor (özgün-anlamlı metinler: AAC, Aile Albümü cümleleri) veya mevcut kayıtlar arasından rastgele seçiliyor (rastgele-havuzlu metinler: kutlama/teşvik/harf sorma). Ayrıca bu turda Türkçe özel harf çiftlerinde (C/Ç, S/Ş, G/Ğ, I/İ, O/Ö, U/Ü) dosya adı slug çakışması nedeniyle 9 dosyanın birbirinin üzerine yazıldığı KRİTİK bir hata bulunup düzeltildi (kullanıcı bulgusu: "Bakalım Ü harfini bulabilecek misin" diyor U da) — tüm harf-şablon dosyaları hash bazında kaynağıyla yeniden doğrulandı. **2026-09-15 4. tur:** Sistem TEK kadın ses karakterine sadeleştirildi (bkz. "Ses karakteri ataması"); oyun modülü dışı (açılış/kapanış/hata) seslendirme ihtiyaçları envanterlendi (bkz. G bölümü); İletişim Tahtası (AAC) kelime havuzu Core Vocabulary + Brown'ın gelişim evreleri çerçevesinde 18 kelimeden 223 kelime/ifadeye (6 kategori × 1/2/3/4-kelime seviyeleri) baştan tasarlandı — henüz yalnızca doküman/hazırlık, kod ve UI'ye yansıtılmadı (bkz. H bölümü).
+> Oluşturulma: 2026-09-14. **2026-09-15 1. tur:** ElevenLabs yerine kullanıcının kendi kaydettiği 105 ses dosyası statik katman olarak entegre edildi. **2026-09-15 2. tur (aynı gün, "standart hale getirme"):** Envanter 214 kaynak dosyaya genişletildi — harf şablonları kapsamı büyüdü, AAC kelimeleri BİLİNÇLİ OLARAK boşaltıldı (ayrı bir turda yeniden kaydedilecek), ve en önemlisi Harf Avı'nın "dinamik" sayılan 71 nesne/ipucu kelimesi (`LETTER_OBJECTS`) artık STATİK — bu, D bölümündeki eski "Piper'da kalmalı" kararını geçersiz kılıyor (bkz. güncellenmiş D bölümü). **2026-09-15 3. tur:** Piper/tarayıcı `speechSynthesis` fallback zinciri TAMAMEN KALDIRILDI (kullanıcı isteği: "sadece mp3 kayıtlardan seçsin") — artık kayıt yoksa robotik ses yerine SESSİZ kalınıyor (özgün-anlamlı metinler: AAC, Aile Albümü cümleleri) veya mevcut kayıtlar arasından rastgele seçiliyor (rastgele-havuzlu metinler: kutlama/teşvik/harf sorma). Ayrıca bu turda Türkçe özel harf çiftlerinde (C/Ç, S/Ş, G/Ğ, I/İ, O/Ö, U/Ü) dosya adı slug çakışması nedeniyle 9 dosyanın birbirinin üzerine yazıldığı KRİTİK bir hata bulunup düzeltildi (kullanıcı bulgusu: "Bakalım Ü harfini bulabilecek misin" diyor U da) — tüm harf-şablon dosyaları hash bazında kaynağıyla yeniden doğrulandı. **2026-09-15 4. tur:** Sistem TEK kadın ses karakterine sadeleştirildi (bkz. "Ses karakteri ataması"); oyun modülü dışı (açılış/kapanış/hata) seslendirme ihtiyaçları envanterlendi (bkz. G bölümü); İletişim Tahtası (AAC) kelime havuzu Core Vocabulary + Brown'ın gelişim evreleri çerçevesinde 18 kelimeden 223 kelime/ifadeye (6 kategori × 1/2/3/4-kelime seviyeleri) baştan tasarlandı — henüz yalnızca doküman/hazırlık, kod ve UI'ye yansıtılmadı (bkz. H bölümü). **2026-09-15 5. tur:** 4 denetimli oyun (Harf Avı, Gölge Eşleştirme, Hafıza Kartları, Aile Albümü) kod satır satır taranıp temel/henüz düşünülmemiş seslendirme ihtiyaçları çıkarıldı (bkz. 🔴 KRİTİK bölümündeki "5. Tur — Derin Tarama" alt bölümü) — 12 öncelikli yeni metin + isteğe bağlı 29 harf-şablonlu ek metin hazır kayıt listesi olarak eklendi. Ayrıca "Trafik Işığı"/"Işık" anahtar uyuşmazlığı `ttsManifest.ts`'te düzeltildi (kod düzeltmesi, yeni kayıt gerekmedi) — artık 100/100 karşılaştırma nesnesi tam adıyla da erişilebilir.
 
 ## 🔴 KRİTİK — 4 Modülde Ses Kaydı Olmayan Metinler (2026-09-15, 3. tur)
 
 Aşağıdakiler Faz 2.11 denetiminden geçmiş 4 modülde (**Harf Avı, Gölge Eşleştirme, Hafıza Kartları, Aile Albümü**) gerçekten kullanılan ama `public/sounds/tts/`'te KAYDI OLMAYAN metinlerdir. 3. tur mimari değişikliği (Piper/robotik fallback kaldırıldı) nedeniyle bunların hiçbiri artık ses ÇIKARMIYOR — sessiz kalıyorlar. Öncelik sırasına göre:
 
-🔴 **Gölge Eşleştirme ve Hafıza Kartları'nın KENDİ özel metni yok** — ikisi de yalnızca paylaşılan kutlama/teşvik havuzunu (`celebrateSuccess`/`encourageRetry`) kullanıyor, o havuz TAM (B1 4/6, B2 3/3) — bu iki oyunda kritik eksik YOK, aşağıdaki liste yalnızca Harf Avı ve Aile Albümü'nü kapsıyor.
+🔴 **~~Gölge Eşleştirme ve Hafıza Kartları'nın KENDİ özel metni yok, kritik eksik YOK~~ — DÜZELTME (2026-09-15, 5. tur):** Bu satır 3. turda yanlış yazılmıştı. Derin tarama (5. tur) bu iki oyunda da kodda HİÇ `speak()` çağrısı olmayan ama pedagojik açıdan önemli temel eksikler bulmuştur — bkz. aşağıdaki "5. Tur — Derin Tarama" alt bölümü. Bu satırın altındaki 3. tur listesi (harf şablonu + Aile Albümü) hâlâ geçerli, ayrıca okunmalı.
 
 🔴 **Harf Avı — 29 eksik harf-şablon kombinasyonu** (87 olası kombinasyondan, 3 şablon × 29 harf):
 ```
@@ -31,6 +31,66 @@ Bakıcı, Komşu ("Bu senin bakıcı" / "Bu senin komşu" YOK)
 Etkisi: Hedef kişi "Bakıcı" veya "Komşu" olan bir round'da "Sesli ipucu" butonuna basılırsa artık SESSİZ kalır.
 
 **Toplam: 39 eksik metin** (29 harf-şablon kombinasyonu + 10 Aile Albümü). Tam liste `src/lib/ttsManifest.ts`'teki mevcut anahtarlarla karşılaştırılarak programatik olarak çıkarıldı, doğrulandı.
+
+### 🔴 5. Tur — Derin Tarama: 4 Oyunda Temel Eksik Seslendirme İhtiyaçları (2026-09-15)
+
+> Kullanıcı isteğiyle eklendi: "bu oyunları güçlendirmek için ... temel ihtiyaç ses kayıtları varsa kritik altında bunları da ekleyebilirsin ... bu listeyi başka asistana vereceğim, biz başlamadan hazır etsinler ihtiyaç olan kelimeleri - cümleleri." Bu bölüm, 4 oyunun kodu satır satır taranarak (henüz kodda hiç `speak()` çağrısı olmayan ama pedagojik/UX değeri olan noktalar dahil) çıkarılan **hazır kayıt listesidir** — kopyala-yapıştır kullanılabilir. Her madde **YENİ KAYIT GEREKİYOR** veya **KAYIT ZATEN VAR, sadece kod eksik** olarak işaretlendi (ikincisi başka bir asistanın kaydetmesine gerek yok, bu bilgi amaçlı).
+
+**Önemli tespit — nesne adları zaten %100 kayıtlı:** Tarama sırasında bir doküman hatası bulunup düzeltildi: `ttsManifest.ts`'teki 100 karşılaştırma nesnesinin ("Trafik Işığı" hariç) TAMAMI zaten Harf Avı'nın ipucu kelimesi olarak kayıtlıydı — yalnızca "Trafik Işığı" (DB'deki tam ad) ile "Işık" (Harf Avı'nın kullandığı kısa ad) arasında bir anahtar uyuşmazlığı vardı, bu turda `Trafik Işığı` alias'ı eklenerek KOD tarafında düzeltildi (yeni kayıt gerekmedi). Yani Gölge Eşleştirme/Hafıza Kartları ileride "eşleşen nesnenin adını söyle" özelliğini kodlarsa, **100/100 nesne için ses zaten hazır**, hiçbir yeni kayıt gerekmiyor.
+
+#### YENİ KAYIT GEREKENLER (öncelik sırasına göre)
+
+🔴 **Yüksek öncelik — Gölge Eşleştirme'nin oyun içi talimatı hiç seslendirilmiyor:**
+```
+Nesnenin gölgesine bak, doğru resmi bul ve üzerine sürükle.
+```
+Etkisi: Oyunun TEK yazılı açıklaması bir tıklamayla açılan bir balonda (`GameIntroCard` tooltip) — okuma bilmeyen/henüz konuşmayan bir çocuk için bu içerik fiilen erişilemez durumda. Diğer 3 oyunun hepsinde en azından round başı bir sözlü yönlendirme var (Harf Avı: harf sorusu, Aile Albümü: "Bu kim?", Hafıza Kartları: kısmen), Gölge Eşleştirme'de hiç yok.
+
+🔴 **Orta öncelik — Gölge Eşleştirme'de ipucu mekanizması hiç yok** (diğer 3 oyunda var: Harf Avı görsel highlight, Aile Albümü sesli ipucu butonu, Hafıza Kartları örtük):
+```
+Gölgeye bak, hangisi ona benziyor?
+```
+
+🔴 **Orta öncelik — Hafıza Kartları'nda round tamamlanma anına özel bir kutlama yok** (şu an tek eşleşmeyle aynı jenerik havuzdan çalıyor, ayırt edilemiyor):
+```
+Hepsini buldun! Harika iş çıkardın!
+```
+
+🔴 **Orta öncelik — Hafıza Kartları'nda mod seçim ekranı (Harflerle/Nesnelerle) seslendirilmiyor:**
+```
+Harflerle mi, nesnelerle mi eşleştirmek istersin?
+```
+
+🔴 **Orta öncelik — Aile Albümü'nde 30sn zaman aşımına özel bir geçiş ifadesi yok** (yalnızca jenerik "tekrar deneyelim" çalıyor, ama bu round DEĞİŞİYOR, tekrar denenmiyor — metin yanıltıcı):
+```
+Başka birine bakalım!
+```
+
+🔴 **Orta öncelik — Hafıza Kartları'nın harf modunda eşleşen harfin adı söylenmiyor** (nesne modunun aksine — nesne modu için kayıt zaten hazır, ama harf modu için "X harfini buldun!" kalıbı hiç kayıtlı değil, 29 harf × 1 şablon = 29 yeni kayıt gerekir, DÜŞÜK öncelik çünkü Harf Avı zaten harf isimlerini kapsıyor, bu yalnızca Hafıza Kartları'na özel bir pekiştirme metni):
+```
+{harf} harfini buldun!  (29 harf için ayrı ayrı: "A harfini buldun!", "B harfini buldun!" ... "Z harfini buldun!")
+```
+
+🔴 **Düşük-orta öncelik — 4 oyunun HEPSİNDE günlük tur limiti dolduğunda gösterilen mesaj hiç seslendirilmiyor** (aynı kalıp, oyun adı değişiyor — 4 ayrı kayıt):
+```
+Bugünkü harf avı turların bitti, yarın yine oynayabilirsin.
+Bugünkü gölge eşleştirme turların bitti, yarın tekrar oynayabilirsin.
+Bugünkü hafıza kartları turların bitti, yarın tekrar oynayabilirsin.
+Bugünkü aile albümü turların bitti, yarın tekrar oynayabilirsin.
+```
+
+🔴 **Düşük öncelik — Harf Avı'nın `GameIntroCard` açıklaması** (isteğe bağlı "dinle" düğmesiyle, otomatik değil — diğer oyunlardan farklı olarak Harf Avı zaten round başında harf sorusunu sesli veriyor, bu yüzden düşük öncelik):
+```
+Söylenen harfi doğru yere sürükle.
+```
+
+**Yeni kayıt gereken toplam: 8 tekil metin + 4 günlük-limit kalıbı + 29 harf-şablonlu "X harfini buldun!" = 41 metin** (harf şablonları hariç tutulursa 12 metin — harf şablonları düşük öncelikli, isteğe bağlı ilk turda atlanabilir).
+
+#### KAYIT GEREKMİYOR (kod eksikliği, bilgi amaçlı — başka asistana YÜK OLUŞTURMAZ)
+
+- **Gölge Eşleştirme'de doğru cevapta hiç kutlama sesi yok** — mevcut kutlama havuzu (B1: Harika/Çok güzel/Mükemmel/Süpersin) doğrudan yeniden kullanılabilir, `celebrateSuccess()` çağrısı kodda eksik. Yeni kayıt GEREKMİYOR.
+- **Aile Albümü'nde doğru cevapta yakınlık adı sesle tekrar edilmiyor** — "Bu senin {yakınlık}" ifadeleri zaten A4'te kayıtlı (sesli ipucu butonu için), doğru cevap anında da aynı ses tekrar çalınabilir. Yeni kayıt GEREKMİYOR, yalnızca kod tarafında `triggerReward` sonrası bu sesin de çalınması gerekir.
+- **Hafıza Kartları/Gölge Eşleştirme'de eşleşen nesnenin adı söylenmiyor** — yukarıda açıklandığı gibi 100/100 nesne için kayıt zaten hazır (bu turda "Trafik Işığı" alias'ı ile tamamlandı). Yeni kayıt GEREKMİYOR.
 
 ---
 
@@ -217,6 +277,8 @@ Ayrıca ekranda gösterilen ama hiç seslendirilmeyen metinler var (bilinçli bi
 **Durum: ✅ 71/71 kayıtlı ve entegre, Playwright ile doğrulandı** (hedef harf "Z" → `harf-nerede-z.mp3`, ipucu kelimesi "Zürafa" → `nesne-zurafa.mp3`, ikisi de art arda yerel dosyadan çaldı).
 
 **Not — hâlâ gerçekten dinamik kalan tek nokta:** Ebeveyn panelinden `LETTER_OBJECTS` listesine YENİ bir kelime eklenirse (kod değişikliği veya gelecekteki bir ebeveyn-içerik-yönetimi özelliğiyle), o yeni kelime `ttsManifest.ts`'te olmayacağı için `speak()` sessiz kalır (3. tur, Piper yok) — sistem bunu kendiliğinden idare eder, oyun bozulmaz, ama o kelime seslendirilmeyene kadar kayıt eklenmesi gerekir. Yani "dinamik" tanımı artık yalnızca *henüz kaydedilmemiş yeni kelimeler* için geçerli, mevcut sabit havuz için değil.
+
+**Not (2026-09-15, 5. tur):** `ttsManifest.ts` aslında bu 71'in ötesinde, 100 karşılaştırma nesnesinin TAMAMI için kayıt içeriyor (yalnızca Harf Avı'nın 71'i kullandığı doğru — kalan 29'u şu an hiçbir oyun kullanmıyor ama ses zaten hazır). Bu, Gölge Eşleştirme/Hafıza Kartları ileride "eşleşen nesnenin adını söyle" özelliği eklerse (bkz. "5. Tur — Derin Tarama") hiçbir yeni kayıt gerekmeyeceği anlamına geliyor — bkz. F bölümü ve KRİTİK bölümündeki 5. tur notu.
 
 ---
 
