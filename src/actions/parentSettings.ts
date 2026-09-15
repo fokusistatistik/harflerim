@@ -10,6 +10,8 @@ export interface ParentPreferences {
     dailyLetterHuntLimit: number;
     /** 2026-09-14 — Hafıza Kartları'na özel, süre bütçesine EK günlük round limiti. */
     dailyMemoryMatchLimit: number;
+    /** 2026-09-15 — Gölge Eşleştirme'ye özel, süre bütçesine EK günlük round limiti. */
+    dailyVisualMatchLimit: number;
     reduceMotion: boolean;
     highContrast: boolean;
     speechEnabled: boolean;
@@ -31,6 +33,7 @@ export async function getParentPreferences(): Promise<ParentPreferences | null> 
         dailyScreenLimitMinutes: Math.round(s.dailyScreenLimit / 60),
         dailyLetterHuntLimit: s.dailyLetterHuntLimit,
         dailyMemoryMatchLimit: s.dailyMemoryMatchLimit,
+        dailyVisualMatchLimit: s.dailyVisualMatchLimit,
         reduceMotion: s.reduceMotion,
         highContrast: s.highContrast,
         speechEnabled: s.speechEnabled,
@@ -89,8 +92,25 @@ export async function updateMemoryMatchLimit(rounds: number): Promise<{ ok: bool
     return { ok: true };
 }
 
+export async function updateVisualMatchLimit(rounds: number): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    if (!Number.isFinite(rounds) || rounds < 10 || rounds > 50) {
+        return { ok: false, error: 'Gölge Eşleştirme tur limiti 10-50 arasında olmalı.' };
+    }
+
+    await db.userSettings.update({
+        where: { userId: user.id },
+        data: { dailyVisualMatchLimit: Math.round(rounds) },
+    });
+    await logAudit('SETTINGS_CHANGED', user.id, 'Gölge Eşleştirme günlük tur limiti güncellendi');
+
+    return { ok: true };
+}
+
 export async function updateSensoryToggles(
-    partial: Partial<Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit'>>
+    partial: Partial<Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit'>>
 ): Promise<{ ok: boolean; error?: string }> {
     const user = await getCurrentUser();
     if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };

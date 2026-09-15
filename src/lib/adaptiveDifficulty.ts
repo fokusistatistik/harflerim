@@ -97,3 +97,42 @@ export async function getAdaptiveMemoryConfig(userId: string): Promise<MemoryAda
 
     return { pairCount: MIN_PAIRS };
 }
+
+export interface VisualMatchAdaptiveConfig {
+    /** Sürüklenebilir gölge/hedef çiftinin yanına eklenen, seçilmemesi gereken yanlış harf sayısı. */
+    distractorCount: number;
+}
+
+const MIN_DISTRACTORS = 0;
+const MAX_DISTRACTORS = 3;
+
+/** Hiç geçmiş yokken (ilk round) — en kolay ayar, hiç çeldirici yok (tek hedef/tek kart). */
+export const BASE_VISUAL_MATCH_ADAPTIVE_CONFIG: VisualMatchAdaptiveConfig = { distractorCount: MIN_DISTRACTORS };
+
+/**
+ * 2026-09-15 — Faz 2.11 denetimindeki "hâlâ sabit sistemde" bulgusunun
+ * düzeltmesi. `getAdaptiveConfig`/`getAdaptiveMemoryConfig` ile aynı desen
+ * ve aynı `detectErrorStreak` altyapısı, farklı beceri anahtarı
+ * (`golge-eslestirme`) ve farklı çıktı şekli (çeldirici sayısı).
+ */
+export async function getAdaptiveVisualMatchConfig(userId: string): Promise<VisualMatchAdaptiveConfig> {
+    const stats = await detectErrorStreak(userId, 'golge-eslestirme');
+
+    if (stats.sonDenemeSayisi === 0) return BASE_VISUAL_MATCH_ADAPTIVE_CONFIG;
+
+    if (stats.ardisikYanlisSayisi >= 3) {
+        return { distractorCount: MIN_DISTRACTORS };
+    }
+
+    const basari = stats.sonDenemeBasariOrani ?? 0;
+
+    if (basari >= 0.8) {
+        return { distractorCount: MAX_DISTRACTORS };
+    }
+
+    if (basari >= 0.5) {
+        return { distractorCount: 1 };
+    }
+
+    return { distractorCount: MIN_DISTRACTORS };
+}

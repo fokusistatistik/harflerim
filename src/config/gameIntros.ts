@@ -31,7 +31,7 @@ export const GAME_INTROS: Record<string, GameIntro> = {
     'visual-match': {
         id: 'visual-match',
         title: 'Gölge Eşleştirme',
-        description: 'Görseli doğru gölgesinin üzerine sürükle. Şekilleri tanımayı ve karşılaştırmayı öğretir.',
+        description: 'Doğru harfi bul ve kendi gölgesinin üzerine sürükle. Harf tanımayı ve ayırt etmeyi öğretir.',
     },
     'family-album': {
         id: 'family-album',

@@ -183,6 +183,11 @@ model UserSettings {
   /// aynı desen, ayrı bir sınır (2026-09-14, kullanıcı isteği, 10-50 arası,
   /// varsayılan 20). Diğer oyunları etkilemez.
   dailyMemoryMatchLimit Int @default(20)
+  /// Gölge Eşleştirme'nin günlük round (tur) limiti — dailyMemoryMatchLimit ile
+  /// aynı desen/aralık (2026-09-15, Faz 2.11 denetimi, 10-50 arası, varsayılan
+  /// 20). Sayaç ayrı bir tabloya ihtiyaç duymaz — bugünkü SkillAttempt
+  /// (gameId: "visual-match") sayısından hesaplanır (bkz. actions/gameProgress.ts).
+  dailyVisualMatchLimit Int @default(20)
   reduceMotion     Boolean @default(false)
   highContrast     Boolean @default(false)
   speechEnabled    Boolean @default(true)
