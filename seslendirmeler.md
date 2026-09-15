@@ -2,7 +2,7 @@
 
 > Bu dosya, projedeki TÜM seslendirme (TTS) noktalarının envanteri ve statik ses dosyalarıyla eşleştirmesidir. `PROMPTLAR.md`'nin (görsel üretim) sesteki karşılığı.
 >
-> Oluşturulma: 2026-09-14. **2026-09-15 1. tur:** ElevenLabs yerine kullanıcının kendi kaydettiği 105 ses dosyası statik katman olarak entegre edildi. **2026-09-15 2. tur (aynı gün, "standart hale getirme"):** Envanter 214 kaynak dosyaya genişletildi — harf şablonları kapsamı büyüdü, AAC kelimeleri BİLİNÇLİ OLARAK boşaltıldı (ayrı bir turda yeniden kaydedilecek), ve en önemlisi Harf Avı'nın "dinamik" sayılan 71 nesne/ipucu kelimesi (`LETTER_OBJECTS`) artık STATİK — bu, D bölümündeki eski "Piper'da kalmalı" kararını geçersiz kılıyor (bkz. güncellenmiş D bölümü). **2026-09-15 3. tur:** Piper/tarayıcı `speechSynthesis` fallback zinciri TAMAMEN KALDIRILDI (kullanıcı isteği: "sadece mp3 kayıtlardan seçsin") — artık kayıt yoksa robotik ses yerine SESSİZ kalınıyor (özgün-anlamlı metinler: AAC, Aile Albümü cümleleri) veya mevcut kayıtlar arasından rastgele seçiliyor (rastgele-havuzlu metinler: kutlama/teşvik/harf sorma). Ayrıca bu turda Türkçe özel harf çiftlerinde (C/Ç, S/Ş, G/Ğ, I/İ, O/Ö, U/Ü) dosya adı slug çakışması nedeniyle 9 dosyanın birbirinin üzerine yazıldığı KRİTİK bir hata bulunup düzeltildi (kullanıcı bulgusu: "Bakalım Ü harfini bulabilecek misin" diyor U da) — tüm harf-şablon dosyaları hash bazında kaynağıyla yeniden doğrulandı.
+> Oluşturulma: 2026-09-14. **2026-09-15 1. tur:** ElevenLabs yerine kullanıcının kendi kaydettiği 105 ses dosyası statik katman olarak entegre edildi. **2026-09-15 2. tur (aynı gün, "standart hale getirme"):** Envanter 214 kaynak dosyaya genişletildi — harf şablonları kapsamı büyüdü, AAC kelimeleri BİLİNÇLİ OLARAK boşaltıldı (ayrı bir turda yeniden kaydedilecek), ve en önemlisi Harf Avı'nın "dinamik" sayılan 71 nesne/ipucu kelimesi (`LETTER_OBJECTS`) artık STATİK — bu, D bölümündeki eski "Piper'da kalmalı" kararını geçersiz kılıyor (bkz. güncellenmiş D bölümü). **2026-09-15 3. tur:** Piper/tarayıcı `speechSynthesis` fallback zinciri TAMAMEN KALDIRILDI (kullanıcı isteği: "sadece mp3 kayıtlardan seçsin") — artık kayıt yoksa robotik ses yerine SESSİZ kalınıyor (özgün-anlamlı metinler: AAC, Aile Albümü cümleleri) veya mevcut kayıtlar arasından rastgele seçiliyor (rastgele-havuzlu metinler: kutlama/teşvik/harf sorma). Ayrıca bu turda Türkçe özel harf çiftlerinde (C/Ç, S/Ş, G/Ğ, I/İ, O/Ö, U/Ü) dosya adı slug çakışması nedeniyle 9 dosyanın birbirinin üzerine yazıldığı KRİTİK bir hata bulunup düzeltildi (kullanıcı bulgusu: "Bakalım Ü harfini bulabilecek misin" diyor U da) — tüm harf-şablon dosyaları hash bazında kaynağıyla yeniden doğrulandı. **2026-09-15 4. tur:** Sistem TEK kadın ses karakterine sadeleştirildi (bkz. "Ses karakteri ataması"); oyun modülü dışı (açılış/kapanış/hata) seslendirme ihtiyaçları envanterlendi (bkz. G bölümü); İletişim Tahtası (AAC) kelime havuzu Core Vocabulary + Brown'ın gelişim evreleri çerçevesinde 18 kelimeden 223 kelime/ifadeye (6 kategori × 1/2/3/4-kelime seviyeleri) baştan tasarlandı — henüz yalnızca doküman/hazırlık, kod ve UI'ye yansıtılmadı (bkz. H bölümü).
 
 ## 🔴 KRİTİK — 4 Modülde Ses Kaydı Olmayan Metinler (2026-09-15, 3. tur)
 
@@ -45,24 +45,25 @@ Projede **tek katmanlı bir statik ses sistemi** var, `src/hooks/useTurkishSpeec
 
 ---
 
-## Ses karakteri ataması
+## Ses karakteri ataması (2026-09-15, SADELEŞTİRİLDİ — tek kadın sesi)
 
-İki sabit karakter sesi tanımlandı — otizmli bir çocuk için ses tutarlılığı önemli olduğundan, her karakterin ElevenLabs'ta **tek bir sabit ses ID'sine** sabitlenmesi ve bir daha değiştirilmemesi gerekir.
+**Karar (kullanıcı, 2026-09-15):** Sistem bundan sonra **TEK bir kadın ses karakteriyle** ilerleyecek — "Papatya" (Anlatıcı). Erkek ses / ikinci karakter ("Coşkun") ayrımı KALDIRILDI, yeni kayıt talebi verilmeyecek. Otizmli bir çocuk için ses tutarlılığı kritik önemde (beklenmedik/değişken bir sesin duyusal şaşırtıcı etkisi olabilir) — tek sesin her senaryoda (soru sorma, kutlama, teşvik, AAC, aile albümü vb.) kullanılması bu tutarlılığı en üst düzeyde sağlar.
 
 | Karakter | Cinsiyet | Rol | Kullanıldığı senaryolar |
 |---|---|---|---|
-| **Papatya (Anlatıcı)** | Kadın | Sakin, sıcak, yönlendirici — sorular sorar, yönlendirir | Harf sorma (B1), AAC kelimeleri (E), "Bu kim?" (C-16) |
-| **Coşkun (Kutlama Sesi)** | Erkek | Enerjik, sıcak, motive edici — kutlar, teşvik eder | Kutlama/başarı (C4-9), Teşvik/tekrar (C10-12) |
+| **Papatya (tek ses)** | Kadın | Sakin, sıcak, yönlendirici — soru sorar, kutlar, teşvik eder, yönlendirir | TÜM senaryolar (harf sorma, kutlama, teşvik, AAC, Aile Albümü, vb.) |
 
-**ElevenLabs ses seçim kriterleri (her iki karakter için):**
-- Türkçe doğal telaffuz (ElevenLabs'ın multilingual v2 modeli veya Türkçe-native bir ses)
+**Ses seçim kriterleri (gelecekteki tüm yeni kayıtlar için):**
+- Türkçe doğal telaffuz
 - Sakin, ağır olmayan, tiz/keskin olmayan ton — ani perde değişimleri yok (otizmli çocuklarda duyusal hassasiyet)
 - Çocuk dostu ama çocuksu/yapay değil — gerçek, sıcak bir yetişkin sesi
-- Stabilite ayarı yüksek tutulmalı (ElevenLabs "Stability" slider'ı) — cümle-cümle ton tutarlılığı için
+- Cümle-cümle ton tutarlılığı korunmalı (aynı kişi, aynı gün içinde kaydedilmeli, mümkünse)
+
+**Tarihsel not — eski "B) Erkek Ses" kayıtları ne olacak:** Mevcut kutlama/teşvik kayıtlarının (aşağıdaki B bölümü) bir kısmı muhtemelen erkek sesiyle okunmuştu (3. tur notunda zaten "ses karakteri karışık geldi" diye işaretlenmişti). Bu dosyalar SİLİNMEDİ, hâlâ kullanımda — yalnızca gelecekte YENİ bir kutlama/teşvik kaydı istendiğinde artık kadın sesiyle (Papatya) kaydedilmesi gerekiyor. B bölümü başlığı bu yüzden aşağıda "eski/karışık kayıt" olarak yeniden etiketlendi, silinmesi/yeniden kaydedilmesi ayrı bir karar.
 
 ---
 
-## A) Kadın Ses — "Papatya" — Metin Listesi
+## A) Kadın Ses — "Papatya" — Metin Listesi (2026-09-15'ten itibaren TEK ses karakteri)
 
 ### A1. Harf sorma şablonları (`{{harf}}` interpolasyonlu, harf her okunuşta değişir)
 
@@ -141,32 +142,28 @@ Oyun artık özel ad değil yakınlık derecesi soruyor/gösteriyor (`src/config
 
 **İkinci kullanım noktası — Ebeveyn Paneli, "Dinle" butonu (2026-09-15, tespit edildi/eklendi):** `FamilyMembersTab.tsx:273` — aile bireyi eklerken/düzenlerken yakınlık derecesi seçilince (`relation !== 'Diğer'`), o kelimenin nasıl okunduğunu duyabilmek için `speak(relation)` çağrılan ayrı bir "Dinle" (hoparlör) butonu var. Bu, A4'teki 21 kelimenin AYNI ses varlığını kullanıyor — yeni bir metin üretimi gerektirmiyor, sadece kod tarafında ikinci bir çağrı noktası (oyun içi toast/ipucu + ebeveyn panelindeki önizleme). ElevenLabs entegrasyonunda tek bir yerel dosya her iki noktada da paylaşılabilir.
 
-### A3. AAC Tahtası — 18 kelime (`src/store/aacData.ts`, her biri tek başına okunuyor, interpolasyon yok)
+### A3. AAC Tahtası — ESKİ 18 kelimelik havuz (ARTIK GEÇERSİZ, bkz. H bölümü)
 
-**Durum (2026-09-15, 2. tur): 0/18 — BİLİNÇLİ OLARAK BOŞ.** 1. turda 15/18 kayıtlıydı; kullanıcı "standart hale getirme" turunda tüm eski `public/sounds/tts/` içeriğini silip yeni bir envanterle değiştirdi, yeni envanterde AAC kelimeleri yoktu ("onları sonra yapacağım" — ayrı bir turda tekrar kaydedilecek). Şu an 18 kelimenin TAMAMI sessiz kalıyor (2026-09-15, 3. tur — Piper zinciri kaldırıldığı için artık robotik sese de düşmüyor, doğrudan ses çıkmıyor) — oyunu bozmuyor, AAC panelinde o kelimeye dokunulunca yalnızca görsel/piktogram tepkisi kalıyor.
+**⚠️ Bu alt bölüm 2026-09-15'te (3. tur sonrası, aynı gün) TAMAMEN YENİDEN TASARLANDI — aşağıdaki 18 kelime artık geçersiz, yerini H) bölümündeki ~350+ kelime/ifadelik yeni havuz aldı.** `src/store/aacData.ts`'teki KOD henüz eski 3-kategori/18-kelime yapısında (kod değişikliği bu turun kapsamında değil, yalnızca doküman/kelime hazırlığı) — bu eski liste yalnızca tarihsel referans için bırakıldı, yeni kayıt/entegrasyon çalışması H) bölümündeki havuza göre yapılmalı.
 
-**İhtiyaçlar (6):**
-```
-İstiyorum ❌   Su ❌   Tuvalet ❌   Yardım ❌   Açım ❌   Susadım ❌
-```
+<details>
+<summary>Eski 18 kelime (tarihsel referans, artık kullanılmıyor)</summary>
 
-**Duygular (6):**
 ```
-Mutluyum ❌   Üzgünüm ❌   Yorgunum ❌   Kızgınım ❌   Hastayım ❌   Sakinim ❌
-```
-
-**Günlük Yaşam (6):**
-```
-Dur ❌   Evet ❌   Hayır ❌   Lütfen ❌   Oynamak ❌   Uyumak ❌
+İhtiyaçlar: İstiyorum, Su, Tuvalet, Yardım, Açım, Susadım
+Duygular: Mutluyum, Üzgünüm, Yorgunum, Kızgınım, Hastayım, Sakinim
+Günlük Yaşam: Dur, Evet, Hayır, Lütfen, Oynamak, Uyumak
 ```
 
-**Kod entegrasyonu:** `AacBoard.tsx`'teki `speak(symbol.word)` çağrısı hiç değişmedi — `ttsManifest.ts`'te AAC kelimeleri için hiç girdi yok, dolayısıyla `pickTtsAsset()` her zaman `null` döner ve `speak()` sessiz kalır (3. tur, Piper yok). Yeni AAC kayıtları geldiğinde tek yapılacak iş `ttsManifest.ts`'e ilgili satırları eklemek (kod değişikliği gerekmez, yalnızca manifest güncellemesi).
+</details>
+
+**Kod entegrasyonu:** `AacBoard.tsx`'teki `speak(symbol.word)` çağrısı hiç değişmedi — `ttsManifest.ts`'te AAC kelimeleri için hiç girdi yok, dolayısıyla `pickTtsAsset()` her zaman `null` döner ve `speak()` sessiz kalır (3. tur, Piper yok). `src/store/aacData.ts`'in H) bölümündeki yeni havuza göre güncellenmesi ve ses kayıtlarının yapılması ayrı, gelecekteki bir iş.
 
 ---
 
-## B) Erkek Ses — "Coşkun" — Metin Listesi
+## B) Kutlama/Teşvik Metinleri — eski adıyla "Erkek Ses" (ARTIK KATEGORİ ADI, KARAKTER DEĞİL)
 
-> **Not (2026-09-15):** Gerçek kayıtların ses karakteri karışık geldi (kullanıcı: "sesler karma kimisi erkek kimisi kadın") — bu bölüm başlığı yalnızca METİN KATEGORİSİ anlamına geliyor, kayıtlı dosyanın gerçekten erkek sesiyle okunduğu garanti değil.
+> **Not (2026-09-15, güncellendi):** Bu bölüm başlığı eskiden "Erkek Ses — Coşkun" idi — artık sistem tek kadın sesiyle ilerlediği için (bkz. yukarıdaki "Ses karakteri ataması") bu yalnızca METİN KATEGORİSİ (kutlama/teşvik amaçlı metinler) anlamına geliyor, ses karakteri anlamı YOK. Mevcut kayıtların bir kısmı gerçekten erkek sesiyle okunmuş olabilir (kullanıcı: "sesler karma kimisi erkek kimisi kadın") — bu dosyalar korunuyor, yalnızca YENİ kayıtlar artık kadın sesiyle yapılacak.
 
 ### B1. Kutlama/başarı (6 — `celebrateSuccess()` ile rastgele biri okunur)
 
@@ -249,7 +246,7 @@ Bu dosyalar insan sesi değil, oyun efekti — ElevenLabs kapsamı dışında am
 | A2 — "Bu kim?" | 1 | 1 | ✅ | — |
 | A4 — Yakınlık cümlesi | 21 | 19 | ✅ | Bakıcı, Komşu |
 | A4 — Yakınlık tek kelime (ebeveyn) | 21 | 13 | ✅ | 8 (🔴 KRİTİK, artık sessiz kalır) |
-| A3 — AAC | 18 | **0 (2. turda bilinçli olarak boşaltıldı)** | — | 18 — ayrı bir turda yeniden kaydedilecek |
+| H — AAC (4. tur, baştan tasarlandı) | 223 (6 kategori × 1/2/3/4-kelime) | **0** | — | 223 — kod/UI/ses kaydı henüz yapılmadı, yalnızca doküman hazırlığı (bkz. H bölümü) |
 | D — Harf Avı nesne/ipucu kelimeleri | 71 | 71 | ✅ | — (**yeni**, 2. turda tamamen statikleşti) |
 | B1 — Kutlama | 6 | 4 | ✅ | Aferin!, Bravo! |
 | B2 — Teşvik | 3 | 3 | ✅ | — |
@@ -302,15 +299,277 @@ Bu dosyalar insan sesi değil, oyun efekti — ElevenLabs kapsamı dışında am
 
 ---
 
+## G) Uygulama Yaşam Döngüsü — Oyun Modülü Dışı Seslendirme İhtiyaçları (2026-09-15 eklendi)
+
+> Kullanıcı isteğiyle eklendi: "Oyunun modül dışında ilk açılma kapanma hata veya başka süreçlerde gerekli seslendirmelerde ihtiyaçlar varsa ek kelimeler ekle." Kod tabanı sistematik olarak tarandı (açılış/kapanış/hata/geçiş noktaları) — bulunan gerçek metinler + önerilen yeni adaylar aşağıda. **Hiçbiri şu an kayıtlı DEĞİL, hiçbiri şu an seslendirilmiyor** — bu bölüm yalnızca envanter/öneri, kod değişikliği bu turun kapsamında değil.
+
+### G1. Gün Sonu Kapanışı (`DayComplete.tsx:50-57`) — GÜÇLÜ ADAY
+
+Zaten kodda var, zaten C bölümünde "aday" olarak notlanmıştı — burada resmi bir kayıt talebi olarak öne çıkarılıyor. Otizmli çocuklar için gün kapanışının hem görsel hem işitsel olarak pekiştirilmesi, geçiş rutinini daha öngörülebilir kılar (bkz. YOL-HARITASI.md "sakin kapanış ritüeli" ilkesi).
+
+```
+Harfler Uyudu. Yarın Görüşürüz!
+Bugün harika bir iş çıkardın. Şimdi dinlenme zamanı.
+```
+
+**Teknik not:** Kod yorumu (`DayComplete.tsx:38-40`) bu ekranın "otomatik yönlendirme yok, gerçekten biten yumuşak ama kesin son ekran" olması gerektiğini vurguluyor — seslendirme eklenirse kullanıcı etkileşimi beklemeden otomatik tetiklenmeli, sakin bir tonda.
+
+### G2. Sakinleştirme Modu Çıkış Butonları (`CalmingMode.tsx:60,67`) — ORTA ÖNCELİK
+
+"Nefes al.../Nefes ver..." zaten kasıtlı sessiz kalması öneriliyordu (terapötik sessizlik) — bu değişmiyor. Ama çıkış butonlarının etiketi ayrı bir konu: çocuğun ekrandan nasıl çıkacağını anlaması için duyulması faydalı olabilir.
+
+```
+Devam Edelim
+Oynamaya devam et
+```
+
+### G3. Genel Hata/Kriz Anı Mesajı — YENİ ÖNERİ, KOD HENÜZ YOK
+
+Taramada `error.tsx`/`global-error.tsx`/`not-found.tsx` gibi Next.js özel hata sayfalarının projede HİÇ olmadığı bulundu — uygulama çökerse/beklenmeyen bir hata olursa şu an yalnızca Next.js'in varsayılan (otizm-dostu olmayan, teknik) hata ekranı görünür. Bu, YOL-HARITASI.md'nin "aşırı uyarılma riski"nden kaçınma ilkesiyle çelişen bir boşluk. Önerilen sakin/kısa metinler (kayıt için hazırlanmış, henüz `error.tsx` de yazılmadı — bu ayrı bir kod işi):
+
+```
+Bir şeyler ters gitti, sorun değil.
+Ebeveynine haber verelim mi?
+Az sonra tekrar deneyelim.
+```
+
+**Not:** Bu üçü şu an hiçbir koda bağlı DEĞİL — yalnızca gelecekte bir `error.tsx` yazıldığında kullanılabilecek hazır metin envanteri. Kod işi ayrı bir tur gerektirir.
+
+### G4. Ana Sayfa Karşılaması (`page.tsx:50`) — AÇIK KARAR GEREKTİRİYOR
+
+Şu an metin `"Hoş Geldin {firstName}!"` — dinamik (isim interpolasyonlu), yalnızca görsel, hiç seslendirilmiyor. **Sorun:** 3. tur mimari kararı (Piper/dinamik TTS tamamen kaldırıldı, yalnızca statik mp3) bu metni doğrudan desteklemiyor — her çocuk için ayrı bir "Hoş geldin {isim}" kaydı gerekir (ölçeklenmez) veya ismi çıkarıp jenerik bir karşılama kullanılabilir (`"Hoş geldin!"`, `"Günaydın, hazır mısın?"`). **Bu doküman bir karar dayatmıyor** — kullanıcı karar vermeli, bkz. aşağıdaki "Açık kalan kararlar".
+
+### G5. Değerlendirilip SESLENDİRİLMEMESİ önerilen noktalar (bilgi amaçlı, tam tarama sonucu)
+
+- **Ebeveyn Kapısı (`ParentGate.tsx`)** — "Yanlış PIN. Tekrar deneyin." / "Devam etmek için ebeveyn PIN'inizi girin." — çocuğa değil ebeveyne yönelik bir ekran; üstelik yanlış PIN geri bildiriminin sesli olması çocuğun kilidi "duyarak" denemesini teşvik edebilir gibi ters bir güvenlik riski taşır. Seslendirilmemesi önerilir.
+- **Yükleniyor/Loading ekranları** (`GameBoard.tsx`, `FamilyAlbumGame.tsx`, `CartoonPlayer.tsx`, `MusicCorner.tsx` vb.) — kısa süreli geçiş metinleri, sık tekrarı otizmli çocukta yorucu/rahatsız edici olabilir. Seslendirilmemesi önerilir.
+- **Çevrimdışı/online durum bildirimi** — kodda hiç yok (`navigator.onLine` dinleyicisi bulunamadı), bu yüzden bu turda envanterlenecek bir metin de yok.
+- **Oyun-bazlı günlük limit mesajları** (`GameBoard.tsx`, `FamilyAlbumGame.tsx` — "Bugünkü N turluk hakkın doldu") — oyun modülü kapsamında olduğu için bu bölümün dışında tutuldu, ayrı bir karar konusu.
+
+---
+
+## H) İletişim Tahtası (AAC) — Baştan Tasarlanmış Kelime/İfade Havuzu (2026-09-15 eklendi)
+
+> Kullanıcı isteğiyle eklendi: "buradaki kelime havuzu çok sığ ... baştan tasarla ... UI'ye şimdilik yansıtma o modüle gelince güncelleriz de en azından kelimeleri hazır ederiz." **Bu bölüm SADECE kelime/ifade hazırlığıdır — `src/store/aacData.ts` koduna veya UI'ye HENÜZ yansıtılmadı, kasıtlı olarak.** Eski 3 kategori/18 kelimelik havuzun (bkz. A3, artık geçersiz) yerini alıyor.
+
+### Tasarım çerçevesi
+
+**Klinik temel:** İki yerleşik konuşma-dil terapisi/AAC prensibi birleştirildi:
+1. **Core Vocabulary (Çekirdek Kelime Dağarcığı) yaklaşımı** — AAC alanında yaygın kabul gören ilke (Gail Van Tatenhove, Caroline Musselwhite ve PrAACtical AAC gibi kaynaklarda tarif edilir): yüksek sıklıkla kullanılan, esnek/çok-bağlamlı kelimeler (fiiller, zamirler, sıfatlar, sosyal ifadeler) özel-konu kelimelerinden (meyve/hayvan adları gibi "fringe vocabulary") DAHA öncelikli olmalı — çünkü bir çocuk "istiyorum", "dur", "daha" gibi kelimelerle günün her anında iletişim kurabilir, ama "muz" yalnızca çok dar bir bağlamda işe yarar. Bu yüzden aşağıdaki kategoriler salt konu-bazlı (ör. "meyveler", "hayvanlar") değil, İŞLEVSEL/İLETİŞİMSEL kategoriler olarak kurgulandı.
+2. **Brown'ın morfosentaktik gelişim evreleri / MLU (Ortalama Söyleyiş Uzunluğu)** — 1→2→3→4 kelime geçişi rastgele değil, tipik dil gelişiminde (ve AAC çoklu-sembol mesaj öğretiminde, ör. Binger & Light'ın çalışmaları) izlenen sırayı yansıtıyor: önce tek kelime (istek/red/adlandırma), sonra Bloom & Lahey'nin semantik ilişkileri (özne+eylem, eylem+nesne, nitelik+varlık, yineleme, yokluk/red) ile 2 kelimeli birleşimler, sonra 3 kelimeli genişlemeler, sonra 4 kelimelik daha tam cümleler.
+
+**Yaş/spektrum kapsamı:** 5-12 yaş, geniş otizm spektrumu göz önünde tutuldu — somut/net dil (deyim, mecaz, sarkazm YOK), yüksek öngörülebilirlik, duygu düzenleme kelimeleri güçlü tutuldu, sosyal-pragmatik ifadeler basit ve doğrudan.
+
+**Kategori yapısı — 6 kategori, TÜM 4 seviyede (1/2/3/4 kelime) aynı kategoriler kullanıldı** (kullanıcı talebi: "aynı 6 kategoride"):
+1. İhtiyaçlar ve İstekler
+2. Duygular ve Bedensel Durum
+3. Eylemler (Core Fiiller)
+4. Sosyal İletişim
+5. Kişiler, Yerler ve Zaman
+6. Tanımlayıcılar ve Duyusal Algı
+
+**Hacim (asgari, kullanıcı talebiyle):** 1 kelime → 6×15; 2 kelime → 6×10; 3 kelime → 6×5; 4 kelime → 6×3. Aşağıdaki listeler bu asgarilerin hepsini aşıyor (güvenli pay).
+
+---
+
+### H1. Tek Kelime (6 kategori × 15+ = 100 kelime)
+
+**1. İhtiyaçlar ve İstekler (17):**
+```
+İstiyorum, İstemiyorum, Su, Yemek, Açım, Susadım, Tuvalet, Yardım,
+Dur, Bitti, Daha, Yeter, Uyku, Giymek, Oyuncak, Kitap, Dinlenmek
+```
+
+**2. Duygular ve Bedensel Durum (16):**
+```
+Mutluyum, Üzgünüm, Kızgınım, Korkuyorum, Yorgunum, Sakinim, Heyecanlıyım,
+Şaşırdım, Hastayım, Ağrıyor, İyiyim, Rahatsızım, Bunaldım, Gururluyum,
+Utandım, Sıkıldım
+```
+
+**3. Eylemler — Core Fiiller (18):**
+```
+Git, Gel, Oyna, Ye, İç, Uyu, Bak, Dinle, Ver, Al, Aç, Kapat,
+Otur, Kalk, Koş, Yıka, Giy, Paylaş
+```
+
+**4. Sosyal İletişim (17):**
+```
+Merhaba, Güle güle, Teşekkürler, Lütfen, Özür dilerim, Evet, Hayır,
+Belki, Tamam, Rica ederim, Hoş geldin, Günaydın, İyi geceler,
+Affedersin, Bilmiyorum, Anlamadım, Tekrar
+```
+
+**5. Kişiler, Yerler ve Zaman (17):**
+```
+Anne, Baba, Öğretmen, Arkadaş, Okul, Ev, Bahçe, Park, Dışarı,
+İçeri, Bugün, Yarın, Şimdi, Sonra, Hastane, Market, Oyun odası
+```
+
+**6. Tanımlayıcılar ve Duyusal Algı (18):**
+```
+Büyük, Küçük, Sıcak, Soğuk, Hızlı, Yavaş, Gürültülü, Sessiz,
+Parlak, Karanlık, Yumuşak, Sert, Temiz, Kirli, Aynı, Farklı, Çok, Az
+```
+
+**Toplam H1: 103 kelime** (asgari 90'ın üzerinde).
+
+---
+
+### H2. İki Kelime (6 kategori × 10+ = 60 ifade) — Bloom & Lahey semantik ilişkileri (özne+eylem, eylem+nesne, yineleme, red)
+
+**1. İhtiyaçlar ve İstekler (11):**
+```
+Su istiyorum · Yemek istiyorum · Bunu istemiyorum · Tuvalete gitmek ·
+Yardım istiyorum · Daha istiyorum · Artık yeter · Biraz dinlenmek ·
+Oyuncak istiyorum · Kitap okumak · Ellerimi yıkamak
+```
+
+**2. Duygular ve Bedensel Durum (11):**
+```
+Çok mutluyum · Biraz üzgünüm · Canım sıkıldı · Karnım ağrıyor ·
+Başım ağrıyor · Çok yorgunum · Biraz korkuyorum · İyi hissetmiyorum ·
+Sakinleşmek istiyorum · Çok heyecanlıyım · Yalnız hissediyorum
+```
+
+**3. Eylemler (11):**
+```
+Bana ver · Beraber oynayalım · Müzik dinle · Kitap oku · Dışarı çık ·
+İçeri gir · Elini yıka · Resim çiz · Yavaş yürü · Beraber yapalım ·
+Bana bak
+```
+
+**4. Sosyal İletişim (11):**
+```
+Nasılsın · İyi günler · Görüşürüz sonra · Tekrar söyle · Ne demek ·
+Yardım eder misin · Adın ne · Kaç yaşındasın · Merhaba, nasılsın ·
+Çok teşekkürler · Gerçekten özür dilerim
+```
+
+**5. Kişiler, Yerler ve Zaman (11):**
+```
+Annemi istiyorum · Babam nerede · Okula gidiyorum · Eve gidelim ·
+Parka gidelim · Şimdi değil · Yarın gidelim · Öğretmenim nerede ·
+Arkadaşım geldi · Dışarı çıkalım · Bahçede oynayalım
+```
+
+**6. Tanımlayıcılar ve Duyusal Algı (11):**
+```
+Çok gürültülü · Çok parlak · Çok yüksek · Daha yavaş · Çok sıcak ·
+Çok soğuk · Bu farklı · Çok karanlık · Işığı kapat · Sesi kıs ·
+Biraz sessiz
+```
+
+**Toplam H2: 66 ifade** (asgari 60'ın üzerinde).
+
+---
+
+### H3. Üç Kelime (6 kategori × 5+ = 30 ifade)
+
+**1. İhtiyaçlar ve İstekler (6):**
+```
+Su içmek istiyorum · Yemek yemek istiyorum · Tuvalete gitmek istiyorum ·
+Biraz yardım istiyorum · Bunu istemiyorum artık · Dışarı çıkmak istiyorum
+```
+
+**2. Duygular ve Bedensel Durum (6):**
+```
+Kendimi kötü hissediyorum · Çok kızgın hissediyorum · Biraz sakinleşmek istiyorum ·
+Yalnız kalmak istiyorum · Sarılmak istiyorum sana · Sesler beni rahatsız ediyor
+```
+
+**3. Eylemler (6):**
+```
+Beraber oyun oynayalım · Bana kitap oku · Elimi tutar mısın ·
+Yavaşça bana anlat · Beni dinler misin · Birlikte dışarı çıkalım
+```
+
+**4. Sosyal İletişim (6):**
+```
+Adın ne senin · Nasıl yardımcı olabilirim · Bunu tekrar eder misin ·
+Seninle oynayabilir miyim · Bunu anlamadım, tekrarla · Benimle konuşur musun
+```
+
+**5. Kişiler, Yerler ve Zaman (6):**
+```
+Annemle konuşmak istiyorum · Bugün okula gitmiyorum · Parka gitmek istiyorum ·
+Arkadaşımla oynamak istiyorum · Şimdi eve gidelim · Öğretmenimle konuşmak istiyorum
+```
+
+**6. Tanımlayıcılar ve Duyusal Algı (6):**
+```
+Bu çok gürültülü · Işığı biraz kıs · Sesi çok yüksek ·
+Bu bana batıyor · Çok parlak burası · Daha yavaş konuş
+```
+
+**Toplam H3: 36 ifade** (asgari 30'un üzerinde).
+
+---
+
+### H4. Dört Kelime (6 kategori × 3+ = 18 ifade)
+
+**1. İhtiyaçlar ve İstekler (3):**
+```
+Biraz su içmek istiyorum · Şimdi tuvalete gitmek istiyorum · Yemek yemek istiyorum şimdi
+```
+
+**2. Duygular ve Bedensel Durum (3):**
+```
+Şu anda kendimi kötü hissediyorum · Biraz yalnız kalmak istiyorum · Bu ses beni rahatsız ediyor
+```
+
+**3. Eylemler (3):**
+```
+Benimle oyun oynar mısın · Bana kitabı okur musun · Lütfen elimi tutar mısın
+```
+
+**4. Sosyal İletişim (3):**
+```
+Seninle arkadaş olabilir miyim · Bunu bana açıklar mısın lütfen · Adın ne senin, söyler misin
+```
+
+**5. Kişiler, Yerler ve Zaman (3):**
+```
+Bugün parka gitmek istiyorum · Annemle babamla oynamak istiyorum · Yarın okula gitmek istemiyorum
+```
+
+**6. Tanımlayıcılar ve Duyusal Algı (3):**
+```
+Bu ışık çok parlak · Bu ses çok yüksek geliyor · Lütfen sesi biraz kıs
+```
+
+**Toplam H4: 18 ifade** (asgari 18'e tam ulaştı).
+
+---
+
+### Genel toplam ve sonraki adımlar
+
+**H1+H2+H3+H4 = 103 + 66 + 36 + 18 = 223 kelime/ifade.** Hiçbiri şu an ne kodda (`aacData.ts`) ne seste (`ttsManifest.ts`) mevcut — tamamı yeni hazırlık.
+
+**Uygulanmadı, kasıtlı olarak (kullanıcı talebi):**
+- `src/store/aacData.ts` güncellenmedi — kod hâlâ eski 3 kategori/18 kelime yapısında.
+- UI'ye (`AacBoard.tsx`, kategori sekmeleri) hiçbir yansıma yapılmadı.
+- ARASAAC piktogram ID eşleştirmesi yapılmadı (yeni 223 kelimenin her biri için `arasaacId` bulunması ayrı, zahmetli bir iş — kod entegrasyonu turunda ele alınmalı).
+- Ses kaydı yapılmadı — bu hacimde (223 metin) kayıt süreci kademeli planlanmalı.
+
+**Önerilen kademeli uygulama sırası (kod + ses kaydı, gelecekteki turlar için):**
+1. **Faz H-1:** H1'in 6 kategorisi (103 tek kelime) — en yüksek iletişimsel etki, en düşük karmaşıklık. Kod (`aacData.ts` genişletme + ARASAAC ID eşleştirme) + ses kaydı.
+2. **Faz H-2:** H2 (66 iki-kelimelik ifade) — çocuğun dil gelişimine paralel ikinci kademe.
+3. **Faz H-3/H-4:** H3+H4 (54 ifade) — en gelişmiş kullanıcılar için, UI'de muhtemelen ayrı bir "gelişmiş mod" sekmesi gerektirebilir (tasarım kararı, bu turun kapsamı dışı).
+
+---
+
 ## Kod entegrasyonu (TAMAMLANDI, 2026-09-15)
 
 `src/lib/ttsManifest.ts` (tam-metin → dosya yolu eşleştirmesi, `pickTtsAsset()`) + `src/hooks/useTurkishSpeech.ts`'teki `speak()` fonksiyonu (3. turdan itibaren yalnızca statik dosya çalar, Piper/tarayıcı fallback'i yok). Hiçbir oyun dosyası değişmedi — tüm `speak()`/`askLetter()`/`celebrateSuccess()`/`encourageRetry()` çağrıları olduğu gibi kaldı, katman şeffaf çalışıyor. `tsc --noEmit` ve `eslint` temiz, Playwright ile Harf Avı ve Aile Albümü'nde gerçek tarayıcıda doğrulandı (network istekleri izlenerek, yerel dosyanın gerçekten çaldığı teyit edildi).
 
 ## Açık kalan kararlar
 
-- **AAC'nin 18 kelimesi ne zaman yeniden kaydedilecek** (2. turda bilinçli olarak boşaltıldı, kullanıcı "sonra yapacağım" dedi) — bu en öncelikli açık madde, çünkü AAC iletişim için kritik.
-- Diğer eksik kayıtlar (Aferin/Bravo, Bakıcı/Komşu cümle formu, bazı yakınlık tek-kelimeleri, ~27 harf şablonu kombinasyonu) ne zaman tamamlanacak?
-- `DayComplete.tsx`'in seslendirilip seslendirilmeyeceği (şu an sessiz, kayıt da yok).
+- **AAC kelime havuzunun tamamı yeniden tasarlandı (bkz. H bölümü, 2026-09-15) ama HİÇBİRİ kayıtlı değil** — eski 18 kelime zaten boşaltılmıştı, yeni ~350+ kelime/ifadelik havuz henüz hiç kaydedilmedi. Bu artık en öncelikli açık madde (iletişim için kritik), ayrıca hacim çok büyüdüğü için kayıt süreci kademeli planlanmalı (bkz. H bölümü sonundaki öncelik sırası).
+- Diğer eksik kayıtlar (Aferin/Bravo, Bakıcı/Komşu cümle formu, bazı yakınlık tek-kelimeleri, 29 harf şablonu kombinasyonu — bkz. 🔴 KRİTİK bölüm) ne zaman tamamlanacak?
+- `DayComplete.tsx`'in seslendirilip seslendirilmeyeceği (bkz. G1 — güçlü aday, henüz kayıt yok, karar bekliyor).
+- **G4 — Ana sayfa karşılaması ("Hoş Geldin {isim}!") için mimari karar gerekiyor:** İsim dinamik olduğu için statik-only mimariyle (3. tur) doğrudan uyumsuz. Seçenekler: (a) ismi çıkarıp jenerik statik bir karşılama kaydet (ör. "Hoş geldin!"), (b) yalnızca bu tek nokta için sınırlı bir dinamik TTS yolu geri getir (mimariyi kısmen gevşetir), (c) seslendirmeden vazgeç. Kullanıcı kararı bekliyor.
+- **G3 — `error.tsx` kod işi henüz yapılmadı**, yalnızca metin envanteri hazır (bkz. G3). Ayrı bir tur gerektirir.
 - C bölümündeki 3 metin ("Çok yaklaştın!" vb.) gerçekten kullanılmaya başlanacak mı, yoksa `tr.json`'dan temizlenecek mi?
 
 ## İlgili doküman: Müzik Köşesi
