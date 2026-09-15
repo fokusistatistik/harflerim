@@ -16,9 +16,12 @@ export function Droppable({ id, children, isMatched }: DroppableProps) {
     return (
         <div
             ref={setNodeRef}
+            role="status"
+            aria-live="polite"
+            aria-label={isMatched ? 'Doğru eşleşme!' : undefined}
             className={clsx(
-                "transition-all duration-300 rounded-3xl flex items-center justify-center border-4",
-                isMatched ? "border-emerald bg-emerald/20" : isOver ? "border-softIndigo bg-softIndigo/10 scale-105" : "border-gray-300 bg-gray-100/50"
+                "transition-all duration-p-base rounded-3xl flex items-center justify-center border-4",
+                isMatched ? "border-papatya-leaf bg-papatya-leaf/20" : isOver ? "border-papatya-sky bg-papatya-sky/10 scale-105" : "border-papatya-rule bg-papatya-cream/50"
             )}
         >
             {children}

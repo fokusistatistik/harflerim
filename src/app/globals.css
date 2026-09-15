@@ -215,6 +215,19 @@ a:focus-visible {
   }
 }
 
+/* 2026-09-15 — görsel eşleştirme denetimi: sabit `h-screen` (100vh)
+   kullanan oyun ekranları için `.min-h-app`'in sabit-yükseklik karşılığı —
+   `overflow-hidden` ile dikey ortalama yapan ekranlarda min-height yerine
+   gerçek height gerekiyor, aynı body-padding çıkarımı mantığıyla. */
+.h-app {
+  height: calc(100vh - 4rem); /* 100vh - pt-16 */
+}
+@media (min-width: 1024px) {
+  .h-app {
+    height: calc(100vh - 5rem); /* 100vh - lg:pt-20 */
+  }
+}
+
 /* Ana sayfa kart başlıkları — text-p-base/text-p-lg'nin 2px küçültülmüş
    karşılığı (kullanıcı isteği). Global tipografi tokenlerini değiştirmez,
    yalnızca bu başlığa özeldir. */

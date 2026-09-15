@@ -63,8 +63,6 @@ export function GameBoard() {
         const randomLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
         setTargetLetter(randomLetter);
         setIsMatched(false);
-        // resetTimer();
-        // logEvent('start', { target: randomLetter });
     };
 
     useEffect(() => {
@@ -80,23 +78,18 @@ export function GameBoard() {
     const handleDragEnd = (event: DragEndEvent) => {
         setActiveId(null);
         if (dayBudget?.isDayComplete) return; // Faz 1.8/1.10: günlük süre bütçesi doldu
-        const { over, active } = event;
+        const { over } = event;
 
         if (over && over.id === 'target-zone') {
-            // Success Logic
             setIsMatched(true);
             playSuccess();
-            // logEvent('success', { target: targetLetter, chosen: active.id as string });
             recordSkillAttempt('golge-eslestirme', 'visual-match', true).catch(() => {});
             checkCalmingMode(true);
 
-            // Next Level Delay
             setTimeout(() => {
                 startNewLevel();
             }, 3000);
         } else {
-            // Fail Logic
-            // logEvent('attempt', { target: targetLetter, chosen: active.id as string });
             recordSkillAttempt('golge-eslestirme', 'visual-match', false).catch(() => {});
             checkCalmingMode(false);
         }
@@ -113,7 +106,7 @@ export function GameBoard() {
     };
 
     return (
-        <div className="flex flex-col h-screen w-full bg-papatya-cream overflow-hidden relative">
+        <div className="flex flex-col h-app w-full bg-papatya-cream overflow-hidden relative">
             {/* Success Confetti */}
             {isMatched && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={200} colors={['#E8B33C', '#5F7A52', '#6B87A8', '#C4756A']} />}
 
@@ -123,6 +116,7 @@ export function GameBoard() {
             </div>
 
             <DndContext
+                id="visual-match-dnd"
                 sensors={sensors}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
@@ -148,6 +142,7 @@ export function GameBoard() {
                                     initial={{ scale: 0, rotate: -45 }}
                                     animate={{ scale: 1, rotate: 0 }}
                                     exit={{ scale: 0 }}
+                                    aria-hidden="true"
                                     className="absolute -top-12 -right-12 text-8xl z-20 drop-shadow-lg"
                                 >
                                     👍
