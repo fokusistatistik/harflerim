@@ -2,7 +2,7 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (ilk denetim — düşük riskli UI/erişilebilirlik/layout düzeltmeleri uygulandı).
+> Son güncelleme: 2026-09-15 (ikinci tur — ilk turda öneriye bırakılan büyük/mimari bulguların dördü kullanıcı onayıyla uygulandı: adaptif zorluk + günlük limit, sakinleştirme modu, rastgele hedef seçimi + ardışık koruma, yanlış-seçenek görsel vurgusu).
 
 ## Özet
 
@@ -10,35 +10,31 @@
 
 **Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
 
-**Diğer dört oyuna göre en belirgin fark:** Bu modül hiçbir zaman adaptif zorluk motoruna (`adaptiveDifficulty.ts`) bağlanmadı — seçenek sayısı sabit 3 (`OPTIONS_PER_ROUND`), hedef seçimi rastgele değil sıralı bir döngü (`pool[index % pool.length]`). Bu, diğer oyunların "ilk turda sabit sistem, sonraki turda adaptif zorluk eklendi" gelişim eğrisinden farklı olarak hiç ele alınmamış bir alan.
+**Diğer dört oyuna göre en belirgin fark (2. turda kapatıldı):** Bu modül ilk denetim turunda adaptif zorluk motoruna (`adaptiveDifficulty.ts`) hiç bağlı değildi — seçenek sayısı sabit 3 (`OPTIONS_PER_ROUND`), hedef seçimi rastgele değil sıralı bir döngü (`pool[index % pool.length]`). 2. turda `getAdaptiveFamilyAlbumConfig` eklenip diğer üç oyunla aynı `detectErrorStreak` desenine bağlandı, hedef seçimi rastgele + ardışık-aynı-hedef korumasına geçirildi — artık diğer oyunlarla aynı gelişim eğrisinde.
 
 ---
 
 ## Blok (a) — Klinik/pedagojik/gelişimsel uygunluk
 
-**Durum: Temel işlevsellik sağlam, zorluk kademesi hiç yok.**
+**Durum: Temel işlevsellik sağlam, zorluk kademesi ve sakinleştirme modu 2. turda eklendi.**
 
-- ❌ **Zorluk kademesi/adaptif zorluk yok.** `OPTIONS_PER_ROUND = 3` sabit — Harf Avı/Hafıza Kartları/Gölge Eşleştirme'nin üçünde de artık `detectErrorStreak` tabanlı bir adaptif motor var (çeldirici/seçenek sayısı başarıya göre ayarlanıyor); bu oyunda hiç yok. Bir çocuk zorlandığı aile bireylerinde üst üste yanlış yapabilir, sistem bunu hiç fark etmiyor.
-- ⚠️ **Hedef seçimi rastgele değil, sıralı bir döngü.** `startRound(index, pool)` her zaman `pool[index % pool.length]` seçiyor — round 0 her zaman ilk kayıtlı aile bireyi, round 1 ikincisi, vs. Diğer oyunlardaki "rastgele + ardışık aynı hedef koruması" desenine göre farklı bir yaklaşım: burada zaten hiç ardışık tekrar riski yok (sıralı döngü doğası gereği), ama tahmin edilebilirlik de var — çocuk sırayı ezberleyebilir. Bilinçli bir tasarım kararı olabilir (sabit sırada gösterim = daha öngörülebilir, "Öngörülebilirlik > sürpriz" ilkesiyle bile uyumlu okunabilir), ama doğrulanmadı.
-- ✅ Sakinleştirme modu bu oyunda **hiç bağlı değil** — `useCalmingModeMonitor` çağrısı yok. Diğer dört oyunun hepsinde var. Bu N/A değil, gerçek bir eksiklik olabilir: sosyal tanıma da üst üste yanlış yapıldığında çocuk için stresli olabilir.
+- ✅ (2026-09-15, 2. tur) **Adaptif zorluk eklendi.** `getAdaptiveFamilyAlbumConfig` (`src/lib/adaptiveDifficulty.ts`) — Harf Avı/Hafıza Kartları/Gölge Eşleştirme ile aynı `detectErrorStreak` tabanlı desen, farklı beceri anahtarı (`sosyal-tanima`). Seçenek sayısı artık sabit 3 değil, başarı oranına göre 2-4 arası (`ardisikYanlisSayisi >= 3` → 2'ye düşer, `basari >= 0.8` → 4'e çıkar). `Math.min(optionCount, members.length)` ile mevcut aile bireyi sayısını aşmıyor.
+- ✅ (2026-09-15, 2. tur) **Hedef seçimi rastgele + ardışık koruma.** Eski `pool[index % pool.length]` sıralı döngüsü kaldırıldı — Gölge Eşleştirme/Harf Avı'ndaki `previousTargetIdRef` desenine geçirildi: her round havuz karıştırılıp ilk eleman seçiliyor, önceki round'un hedefiyle aynıysa bir sıra kaydırılıyor.
+- ✅ (2026-09-15, 2. tur) **Sakinleştirme modu bağlandı.** `useCalmingModeMonitor('sosyal-tanima')` eklendi, `handleSelect` içinde `checkCalmingMode(isMatch)` diğer dört oyunla aynı noktada çağrılıyor — artık beş oyunun hepsinde tutarlı.
 - ✅ Rozet mekanizması aynı merkezi `recordSkillAttempt`/`Skill` katmanını kullanıyor, spam değil.
 - ✅ Pekiştirme doğru cevapta `useRewardMoment` (ses + konfeti + toast) — diğer oyunlarla aynı, tutarlı.
 - ✅ İpucu sistemi var: 6 saniye sonra doğru seçeneğin rengi hafifçe değişiyor (`bg-papatya-petal/40`), ismi vermiyor — makul bir ipucu şiddeti.
-
-**Öneri (kod dışı/mimari, bu turda kapsam dışı):** Adaptif zorluk motoruna bağlanma (`getAdaptiveFamilyAlbumConfig` gibi, diğer üç oyunla aynı desen) ve sakinleştirme modu entegrasyonu — büyük bir iş değil ama kullanıcı onayı gerektirir.
 
 ---
 
 ## Blok (b) — Ebeveyn deneyimi
 
-**Durum: Aile bireyi yönetimi güçlü, oyuna özel görünürlük/limit eksik.**
+**Durum: Aile bireyi yönetimi güçlü, oyuna özel günlük limit 2. turda eklendi.**
 
 - ✅ **Aile bireyi yönetimi (`FamilyMembersTab.tsx`) eksiksiz.** Ekleme/düzenleme/silme, fotoğraf (zorunlu) + ses (isteğe bağlı, `MediaRecorder` ile tarayıcıdan kayıt) — düzenleme akışı da var (2026-09-13 denetiminde "düzenleme hiç yazılmamıştı" bulgusu daha önce kapatılmış).
 - ✅ **`sosyal-tanima` becerisi `ProgressTab.tsx`'te görünüyor.** `getAllSkillProgress()` tüm `Skill` kayıtlarını filtresiz listeliyor — gerçek tarayıcıda birkaç round oynanıp ebeveyn panelinin İlerleme sekmesi açıldığında hem "👪 Sosyal Tanıma" rozetinde hem beceri ilerlemesi listesinde (yüzdelik oranla) doğrulandı.
-- ❌ Günlük round (tur) limiti yok — Harf Avı/Hafıza Kartları/Gölge Eşleştirme'nin üçünde de artık `dailyXxxLimit` deseni var (ebeveyn panelinden 10-50 arası ayarlanabilir), bu oyunda hiç yok, yalnızca genel günlük ekran süresi bütçesi geçerli.
+- ✅ (2026-09-15, 2. tur) **Günlük round limiti eklendi.** `dailyFamilyAlbumLimit` (`UserSettings`, varsayılan 20, 10-50 arası) — `dailyLetterHuntLimit`/`dailyMemoryMatchLimit`/`dailyVisualMatchLimit` ile birebir aynı desen: `ScreenTimeTab.tsx`'te 5. alan olarak eklendi (grid `lg:grid-cols-4`→`xl:grid-cols-5`), `updateFamilyAlbumLimit` action'ı ve `getFamilyAlbumDailyState` sorgu fonksiyonu (`familyMembers.ts`) eklendi. Oyun ekranında GameHud'ın ortasında "Bugün X/Y" rozeti gösteriliyor, limit dolunca oyun durup "Yarın devam edebilirsin!" ekranı çıkıyor (Gölge Eşleştirme ile aynı UX).
 - N/A İçerik kontrol listesi/onay akışı (Müzik/Video sekmelerindeki gibi) — aile fotoğrafları zaten yalnızca ebeveyn tarafından yüklenebiliyor, ayrı bir onay adımı gerektirmiyor.
-
-**Öneri:** `dailyFamilyAlbumLimit` deseninin eklenmesi tutarlılık açısından mantıklı olur — kod dışı, kullanıcı onayı gerektiren bir sonraki adım.
 
 ---
 
@@ -51,7 +47,7 @@
 - ✅ (2026-09-15) **PC'de (1920px+) içerik genişletildi.** Fotoğraf boyutuna `lg:`/`xl:` kademesi eklendi (`w-48`→`xl:w-80`) — diğer üç modülde de yapılan aynı düzeltme, burada eksikti.
 - ✅ (2026-09-15) **Erişilebilirlik duyurusu eklendi (yalnızca gerekli olan kısmına).** İlk denemede hem doğru hem yanlış durumu için bir `aria-live` span'ı eklendi, ama gerçek tarayıcı testinde doğru cevabın zaten `useRewardMoment`'ın kendi toast'ı (`role="status"`, `ToastHost.tsx`) tarafından duyurulduğu görüldü — çift duyuru olmasın diye yalnızca yanlış cevap durumu (`Tekrar deneyelim`) için `aria-live` bırakıldı. Gerçek tarayıcıda hem doğru (toast üzerinden) hem yanlış (yeni span üzerinden) durumun ekran okuyucuya ayrı ayrı ulaştığı doğrulandı.
 - ✅ Dokunma hedefleri: seçenek butonları `min-h-tap` + yeterli yatay dolgu (`px-6 py-3`), WCAG standardını karşılıyor.
-- ⚠️ **Yanlış cevap seçildiğinde hangi butona basıldığı görsel olarak ayırt edilemiyor.** `feedback === 'wrong'` durumunda TÜM yanlış seçenekler (tıklanan dahil, tıklanmayan da dahil) aynı soluk `bg-papatya-surface` rengini alıyor — çocuk hangi seçeneği seçtiğini göremiyor, yalnızca ses (`encourageRetry`) geliyor. "Başarısızlık yok" ilkesiyle kasıtlı bir tasarım olabilir (yanlışı vurgulamamak) ama davranış belirsiz, kod değişikliği gerektiren bir tasarım kararı — bu turda dokunulmadı.
+- ✅ (2026-09-15, 2. tur) **Yanlış cevapta tıklanan seçenek artık ayrı vurgulanıyor.** `wrongPickId` state'i eklendi — tıklanan yanlış seçenek `bg-papatya-rose/20` + `border-papatya-rose/50` ile (diğer yanlış/nötr seçeneklerden ayrı bir stil) işaretleniyor, 900ms sonra sıfırlanıyor. `papatya-rose` projede zaten "dikkat/uyarı" rengi olarak kullanılıyor (`MagicWordsGame.tsx`), sert bir "hata" kırmızısı değil — "Başarısızlık yok" ilkesiyle çelişmiyor, yalnızca hangi seçeneğin tıklandığını görsel olarak netleştiriyor.
 - ⚠️ Banner tanıtım kartı (`GameIntroCard variant="banner"`) her oyun açılışında yeniden görünüyor olabilir mi doğrulanmadı — `localStorage`'da kapatma tercihi tutulduğu biliniyor (kod incelemesiyle), ama bu oyunda ayrıca test edilmedi.
 
 **Kalan:** Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi — insan/cihaz adımı, diğer dört modülde de aynı durum.
@@ -75,7 +71,7 @@
 
 ### Diğer bulgular
 
-- ⚠️ **`/uploads/family/` klasörü middleware statik asset istisna listesinde YOK.** `middleware.ts`'in matcher'ı `sounds`, `ikonlar`, `harfler`, `karsilastirma` gibi genel/anonim içerik klasörlerini istisna tutuyor ama `uploads/family` (ve `uploads/voice`) listede değil — oturum yoksa bu dosyalara yapılan istek `/giris`'e redirect ediliyor. Bu aslında **doğru güvenlik davranışı olabilir**: aile fotoğrafları kişisel/hassas veri, `karsilastirma` gibi genel içerikten farklı olarak oturumsuz erişilebilir OLMAMALI. Pratik risk düşük (oyun ekranı zaten `getCurrentUser()` ile korunuyor, istek her zaman oturum açıkken yapılıyor olmalı) ama teorik bir senaryo var: session cookie süresi dolarsa veya tarayıcı önbellekten eski bir `<img src>` isteği tekrar denerse redirect'e düşebilir. Kasıtlı mı yoksa gözden kaçmış mı belirsiz — kullanıcı kararı gerektirir, bu turda dokunulmadı.
+- ✅ (2026-09-15, kullanıcı kararı) **`/uploads/family/` ve `/uploads/voice/` klasörlerinin middleware istisna listesinde OLMAMASI kasıtlı bir güvenlik kararı olarak onaylandı.** `middleware.ts`'in matcher'ı `sounds`, `ikonlar`, `harfler`, `karsilastirma` gibi genel/anonim içerik klasörlerini istisna tutuyor ama aile fotoğrafı/ses klasörlerini tutmuyor — bu bilinçli: aile fotoğrafları kişisel/hassas veri, genel içerikten farklı olarak oturumsuz erişilebilir OLMAMALI. Detay için blok (f).
 - ✅ Fotoğraf yükleme uzantı kısıtlaması var (`ALLOWED_EXTENSIONS`) — `mediaStorage.ts`'de tanımlı, `saveUploadedFile` izin verilmeyen uzantıları `.bin`'e çeviriyor (güvenli varsayılan).
 - ✅ Fotoğraf zorunlu, ses isteğe bağlı — `createFamilyMember` doğru validasyon yapıyor.
 
@@ -83,14 +79,14 @@
 
 ## Blok (e) — Erişilebilirlik/duyusal uygunluk
 
-**Durum: `reduceMotion` köprüsü kapsıyor; sakinleştirme modu bağlı değil (blok a'da not edildi); `sensoryProfile` proje-geneli eksik burada da var.**
+**Durum: `reduceMotion` köprüsü kapsıyor; sakinleştirme modu 2. turda bağlandı; `sensoryProfile` proje-geneli eksik hâlâ burada da var.**
 
 - ✅ `reduceMotion` → Framer Motion köprüsü diğer oyunlarla aynı kod yolunu paylaşıyor — bu oyunda animasyon zaten minimal (geçiş renkleri, konfeti), ayrıca gerçek tarayıcıda doğrulanmadı.
-- ✅ Yanlış cevapta ceza/kırmızı-çarpı yok — yalnızca nazik bir ses (`encourageRetry`), 900ms sonra otomatik sıfırlanıyor. "Başarısızlık yok" ilkesiyle uyumlu.
-- ❌ `sensoryProfile` JSON'u burada da (proje-geneli, diğer tüm oyunlarla aynı) hiç okunmuyor.
-- ❌ **Sakinleştirme modu bu oyuna hiç bağlanmamış** (bkz. blok a) — diğer dört oyunun hepsinde `useCalmingModeMonitor` var, bu oyunda yok. Bu, erişilebilirlik/duyusal güvenlik açısından tutarsız bir boşluk.
+- ✅ Yanlış cevapta ceza/kırmızı-çarpı yok — yalnızca nazik bir ses (`encourageRetry`) + tıklanan seçeneğin yumuşak vurgusu (blok c), 900ms sonra otomatik sıfırlanıyor. "Başarısızlık yok" ilkesiyle uyumlu.
+- ✅ (2026-09-15, 2. tur) **Sakinleştirme modu bağlandı** — artık beş oyunun hepsinde `useCalmingModeMonitor` tutarlı şekilde var (bkz. blok a).
+- ❌ `sensoryProfile` JSON'u burada da (proje-geneli, diğer tüm oyunlarla aynı) hiç okunmuyor — bu tur kapsamı dışında, proje-geneli bir iş.
 
-**Kalan:** Gerçek ekran okuyucu testi, `sensoryProfile` bağlanması, sakinleştirme modu entegrasyonu — üçü de proje-geneli veya mimari kararlar, bu turda kapsam dışı.
+**Kalan:** Gerçek ekran okuyucu testi, `sensoryProfile` bağlanması — ikisi de proje-geneli veya mimari kararlar, bu turda kapsam dışı.
 
 ---
 
@@ -103,10 +99,8 @@
 - ✅ `updateFamilyMember`/`deleteFamilyMember` sahiplik kontrolü yapıyor (`member.userId !== user.id` ise reddediyor) — güvenli.
 - ✅ `createFamilyMember`/`updateFamilyMember`/`deleteFamilyMember` her biri `logAudit` ile audit log'a yazıyor — "Her önemli işlem iz bırakır" ilkesiyle uyumlu.
 - ✅ Dosya yükleme uzantı kısıtlaması var, dosya adları `randomUUID()` ile üretiliyor — path traversal veya dosya adı çakışması riski yok.
-- ⚠️ Fotoğraf/ses dosyaları **kişisel veri** ama middleware'in koruması bu klasörlere de uygulanıyor (blok d'de detaylandırıldı) — bu satırda ayrıca not: bu aslında güvenlik AÇIĞI değil, muhtemelen fazla kısıtlayıcı (ama güvenli tarafta) bir davranış. Gözden geçirilmesi gereken nokta, davranışın kasıtlı olup olmadığı.
+- ✅ (2026-09-15, kullanıcı kararı) **Middleware davranışı kasıtlı olarak onaylandı.** `/uploads/family` ve `/uploads/voice` klasörlerinin middleware istisna listesinde OLMAMASI — yani aile fotoğraflarının oturumsuz erişilemez olması — bilinçli bir güvenlik kararı olarak doğrulandı (aile fotoğrafları kişisel veri, `karsilastirma` gibi genel içerikten farklı olarak oturumsuz erişilebilir olmamalı). Kod değişikliği yapılmadı, mevcut davranış korunuyor. Kullanıcı ayrıca disk-at-rest şifreleme/ayrı güvenli depolama katmanı ihtimalini sordu — bu büyük bir mimari değişiklik olduğu için ayrı bir iş olarak roadmap'e not düşüldü (bkz. dosya sonu).
 - ✅ Client'a sızan hassas veri yok — `FamilyMemberData` yalnızca oyunun ihtiyaç duyduğu alanları taşıyor (`id`, `name`, `relation`, `photoPath`, `voicePath`).
-
-**Kalan:** Middleware'in `/uploads/family` ve `/uploads/voice` davranışının kasıtlı olup olmadığının netleştirilmesi — kullanıcı kararı gerektirir.
 
 ---
 
@@ -124,26 +118,35 @@
 
 ---
 
-## Genel geliştirme önerileri — bu turda uygulanan düzeltmeler (4/4 düşük riskli)
+## Genel geliştirme önerileri — 1. tur (düşük riskli, 4/4 tamamlandı)
 
 1. ✅ Kırık görsel riski: `<img>` → `ImageWithFallback` (blok c).
 2. ✅ Dikey ortalama/PC boşluk sorunu: `GameHud` sabit üstte, içerik `flex-1 justify-center` (blok c).
 3. ✅ PC'de içerik genişletildi: `lg:`/`xl:` boyut kademesi (blok c).
 4. ✅ Yanlış cevap için `aria-live` duyurusu eklendi (doğru cevap zaten toast ile duyuruluyordu, çift duyuru önlendi) (blok c).
 
-**Doğrulama:** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042) 375px/800px/1920px'te: giriş akışı + 3 geçici test aile bireyi eklenip (gerçek ebeveyn panel formu üzerinden) oyun ekranı test edildi — doğru/yanlış seçim akışı, aria-live duyurusu (yanlışta "Tekrar deneyelim", doğruda toast), round geçişi, boş-durum mesajı (aile bireyi silinince) doğrulandı; `ProgressTab`'de `sosyal-tanima` becerisinin göründüğü teyit edildi; konsol hatası sıfır, scroll taşması yok. Test verileri (aile bireyleri + yüklenen fotoğraflar + skill attempt/rozet kayıtları) sonunda tamamen temizlendi.
+## Genel geliştirme önerileri — 2. tur (büyük/mimari, kullanıcı onayıyla 5/5 tamamlandı)
 
-**Bu turda kod DEĞİŞTİRİLMEYEN, yalnızca öneri olarak kalan büyük/mimari bulgular (kullanıcı onayıyla kapsam dışı):**
-- Adaptif zorluk motoruna bağlanma yok (blok a) — diğer üç oyunda artık var, bu oyunda hiç yok.
-- Hedef seçiminin sıralı döngü olması (blok a) — rastgele değil, kasıtlı olup olmadığı doğrulanmadı.
-- Sakinleştirme modu bu oyuna hiç bağlanmamış (blok a/e) — diğer dört oyunun hepsinde var.
-- Günlük round limiti yok (blok b) — `dailyLetterHuntLimit`/`dailyMemoryMatchLimit`/`dailyVisualMatchLimit` desenine paralel bir alan eksik.
-- Yanlış cevapta hangi seçeneğin tıklandığının görsel olarak ayırt edilememesi (blok c) — davranış değişikliği gerektiren bir tasarım kararı.
-- `/uploads/family`+`/uploads/voice` klasörlerinin middleware'de istisna tutulmaması (blok d/f) — muhtemelen doğru/kasıtlı davranış ama netleştirilmedi.
-- `sensoryProfile` JSON'unun oyun davranışına bağlanması (blok e) — proje-geneli, diğer dört modülde de aynı not var.
+1. ✅ Adaptif zorluk motoruna bağlandı — `getAdaptiveFamilyAlbumConfig` (blok a).
+2. ✅ Günlük round limiti eklendi — `dailyFamilyAlbumLimit`, 10-50 arası, varsayılan 20 (blok b).
+3. ✅ Hedef seçimi rastgele + ardışık aynı hedef koruması desenine geçirildi (blok a).
+4. ✅ Yanlış cevapta tıklanan seçenek ayrıca vurgulanıyor (`papatya-rose` stili) (blok c).
+5. ✅ Middleware'in `/uploads/family`+`/uploads/voice` davranışı kasıtlı güvenlik kararı olarak onaylandı, kod değişmedi (blok d/f).
+
+**Doğrulama (1. tur):** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042) 375px/800px/1920px'te: giriş akışı + 3 geçici test aile bireyi eklenip (gerçek ebeveyn panel formu üzerinden) oyun ekranı test edildi — doğru/yanlış seçim akışı, aria-live duyurusu (yanlışta "Tekrar deneyelim", doğruda toast), round geçişi, boş-durum mesajı (aile bireyi silinince) doğrulandı; `ProgressTab`'de `sosyal-tanima` becerisinin göründüğü teyit edildi; konsol hatası sıfır, scroll taşması yok. Test verileri sonunda tamamen temizlendi.
+
+**Doğrulama (2. tur):** `tsc --noEmit` ve `eslint` temiz, migration (`20260915081055_add_daily_family_album_limit`) uygulandı. Gerçek tarayıcıda (Playwright, `dev:agent`/3042) 375px/800px/1920px'te: ebeveyn paneli üzerinden 3 geçici test aile bireyi eklendi (`public/karsilastirma/` altındaki mevcut görseller kullanıldı), oyun ekranı test edildi —
+- GameHud'ın ortasındaki "Bugün X/20" günlük round rozeti üç viewport'ta da doğru göründü.
+- Doğru cevapta yeşil buton + toast + otomatik round geçişi; yanlış cevapta tıklanan seçeneğin `papatya-rose` arka plan/border ile ayrı vurgulandığı **ekran görüntüsüyle** doğrulandı (salt metinsel kontrole güvenilmedi).
+- Hedef seçiminin rastgele olduğu ve seçenek sayısının (`optionCount`) adaptif olarak 2-3 arası değiştiği gözlemlendi.
+- Sakinleştirme modu test sırasında **organik olarak tetiklendi** — tam ekran nefes overlay'i (`CalmingMode.tsx`) doğru çalıştı.
+- Günlük limit organik olarak dolduğunda (round sayısı 20'yi geçince) "Bugünkü 20 turluk hakkın doldu / Yarın devam edebilirsin!" ekranı doğru render oldu, rozet o durumda gizlendi.
+- 1920px'te layout diğer oyunlarla tutarlı, taşma/boşluk yok; konsol/network'te hydration hatası, React uyarısı, 4xx/5xx sıfır.
+
+Test verileri (3 aile bireyi + yüklenen fotoğraflar) UI üzerinden silindi, `dailyFamilyAlbumLimit` zaten hiç değiştirilmemişti (20 kaldı) — DB'de kalıcı kirlilik yok, `FamilyMember` tablosu 0 satıra döndü.
 
 ## Açık kalan işler (roadmap referansı)
 
 - Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi ve klinik/pedagojik uzman denetimi — Faz 3'ün "Uzman denetimi" ve "Tam gerçek-cihaz QA" notlarının kapsamında, diğer dört modülle aynı insan/cihaz adımı.
-- Bu modülün adaptif zorluk/sakinleştirme modu/günlük limit kapsamına hiç alınmamış olması — roadmap'e ayrı bir madde olarak işlenmesi düşünülebilir.
-- Middleware'in aile fotoğrafı/ses klasörlerine yönelik davranışının kasıtlı olup olmadığının netleştirilmesi — güvenlik açısından "fazla kısıtlayıcı ama güvenli" ile "gözden kaçmış eksiklik" arasındaki fark önemli, kullanıcı kararı gerektirir.
+- `sensoryProfile` JSON'unun oyun davranışına bağlanması — proje-geneli, tüm modüllerde aynı not var, bu modüle özel değil.
+- Aile fotoğrafı/ses dosyaları için disk-at-rest şifreleme veya ayrı güvenli depolama katmanı (S3+KMS gibi) — kullanıcı tarafından gündeme getirildi, BÜYÜK bir mimari değişiklik olduğu için bu turun kapsamı dışında bırakıldı, ayrı bir iş olarak ele alınmalı. Mevcut middleware tabanlı oturum koruması (blok f) yeterli görülüp bu turda korundu.

@@ -188,6 +188,11 @@ model UserSettings {
   /// 20). Sayaç ayrı bir tabloya ihtiyaç duymaz — bugünkü SkillAttempt
   /// (gameId: "visual-match") sayısından hesaplanır (bkz. actions/gameProgress.ts).
   dailyVisualMatchLimit Int @default(20)
+  /// Aile Albümü'nün günlük round (tur) limiti — dailyVisualMatchLimit ile
+  /// aynı desen/aralık (2026-09-15, Faz 2.11 denetimi, 10-50 arası, varsayılan
+  /// 20). Sayaç ayrı bir tabloya ihtiyaç duymaz — bugünkü SkillAttempt
+  /// (gameId: "family-album") sayısından hesaplanır.
+  dailyFamilyAlbumLimit Int @default(20)
   reduceMotion     Boolean @default(false)
   highContrast     Boolean @default(false)
   speechEnabled    Boolean @default(true)

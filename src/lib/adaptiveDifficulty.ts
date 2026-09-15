@@ -138,3 +138,45 @@ export async function getAdaptiveVisualMatchConfig(userId: string): Promise<Visu
 
     return { distractorCount: MIN_DISTRACTORS };
 }
+
+export interface FamilyAlbumAdaptiveConfig {
+    /** Round başına gösterilen toplam aile bireyi fotoğrafı (1 doğru + çeldiriciler). */
+    optionCount: number;
+}
+
+const MIN_FAMILY_OPTIONS = 2;
+const MAX_FAMILY_OPTIONS = 4;
+
+/** Hiç geçmiş yokken (ilk round) — en kolay ayar, 2 seçenek (1 doğru + 1 çeldirici). */
+export const BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG: FamilyAlbumAdaptiveConfig = { optionCount: MIN_FAMILY_OPTIONS };
+
+/**
+ * 2026-09-15 — Aile Albümü'nün Faz 2.11 denetiminde bulunan eksikliği
+ * kapatır: oyun hiç adaptif zorluğa bağlı değildi (`OPTIONS_PER_ROUND`
+ * sabit 3'tü). Diğer üç oyunla (`getAdaptiveConfig`/`getAdaptiveMemoryConfig`/
+ * `getAdaptiveVisualMatchConfig`) aynı desen ve aynı `detectErrorStreak`
+ * altyapısı, farklı beceri anahtarı (`sosyal-tanima`). `optionCount`
+ * mevcut aile bireyi sayısını aşamaz — çağıran kod (`FamilyAlbumGame.tsx`)
+ * `Math.min(optionCount, members.length)` ile sınırlar.
+ */
+export async function getAdaptiveFamilyAlbumConfig(userId: string): Promise<FamilyAlbumAdaptiveConfig> {
+    const stats = await detectErrorStreak(userId, 'sosyal-tanima');
+
+    if (stats.sonDenemeSayisi === 0) return BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG;
+
+    if (stats.ardisikYanlisSayisi >= 3) {
+        return { optionCount: MIN_FAMILY_OPTIONS };
+    }
+
+    const basari = stats.sonDenemeBasariOrani ?? 0;
+
+    if (basari >= 0.8) {
+        return { optionCount: MAX_FAMILY_OPTIONS };
+    }
+
+    if (basari >= 0.5) {
+        return { optionCount: 3 };
+    }
+
+    return { optionCount: MIN_FAMILY_OPTIONS };
+}

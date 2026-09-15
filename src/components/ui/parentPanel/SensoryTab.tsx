@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getParentPreferences, updateSensoryToggles, type ParentPreferences } from '@/actions/parentSettings';
 
-const TOGGLES: { key: keyof Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit'>; label: string }[] = [
+const TOGGLES: { key: keyof Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit' | 'dailyFamilyAlbumLimit'>; label: string }[] = [
     { key: 'reduceMotion', label: 'Hareketi azalt' },
     { key: 'highContrast', label: 'Yüksek kontrast' },
     { key: 'speechEnabled', label: 'Sesli okuma' },
@@ -28,7 +28,7 @@ export function SensoryTab() {
         return <p className="text-p-sm text-papatya-ink-soft text-center py-6">Yükleniyor...</p>;
     }
 
-    const handleToggle = async (key: keyof Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit'>) => {
+    const handleToggle = async (key: keyof Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit' | 'dailyFamilyAlbumLimit'>) => {
         const next = { ...prefs, [key]: !prefs[key] };
         setPrefs(next);
         setSaved(false);

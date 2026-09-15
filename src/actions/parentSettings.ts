@@ -12,6 +12,8 @@ export interface ParentPreferences {
     dailyMemoryMatchLimit: number;
     /** 2026-09-15 — Gölge Eşleştirme'ye özel, süre bütçesine EK günlük round limiti. */
     dailyVisualMatchLimit: number;
+    /** 2026-09-15 — Aile Albümü'ne özel, süre bütçesine EK günlük round limiti. */
+    dailyFamilyAlbumLimit: number;
     reduceMotion: boolean;
     highContrast: boolean;
     speechEnabled: boolean;
@@ -34,6 +36,7 @@ export async function getParentPreferences(): Promise<ParentPreferences | null> 
         dailyLetterHuntLimit: s.dailyLetterHuntLimit,
         dailyMemoryMatchLimit: s.dailyMemoryMatchLimit,
         dailyVisualMatchLimit: s.dailyVisualMatchLimit,
+        dailyFamilyAlbumLimit: s.dailyFamilyAlbumLimit,
         reduceMotion: s.reduceMotion,
         highContrast: s.highContrast,
         speechEnabled: s.speechEnabled,
@@ -109,8 +112,34 @@ export async function updateVisualMatchLimit(rounds: number): Promise<{ ok: bool
     return { ok: true };
 }
 
+export async function updateFamilyAlbumLimit(rounds: number): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    if (!Number.isFinite(rounds) || rounds < 10 || rounds > 50) {
+        return { ok: false, error: 'Aile Albümü tur limiti 10-50 arasında olmalı.' };
+    }
+
+    await db.userSettings.update({
+        where: { userId: user.id },
+        data: { dailyFamilyAlbumLimit: Math.round(rounds) },
+    });
+    await logAudit('SETTINGS_CHANGED', user.id, 'Aile Albümü günlük tur limiti güncellendi');
+
+    return { ok: true };
+}
+
 export async function updateSensoryToggles(
-    partial: Partial<Omit<ParentPreferences, 'dailyScreenLimitMinutes' | 'dailyLetterHuntLimit' | 'dailyMemoryMatchLimit' | 'dailyVisualMatchLimit'>>
+    partial: Partial<
+        Omit<
+            ParentPreferences,
+            | 'dailyScreenLimitMinutes'
+            | 'dailyLetterHuntLimit'
+            | 'dailyMemoryMatchLimit'
+            | 'dailyVisualMatchLimit'
+            | 'dailyFamilyAlbumLimit'
+        >
+    >
 ): Promise<{ ok: boolean; error?: string }> {
     const user = await getCurrentUser();
     if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };

@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/auditLog';
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/mediaStorage';
 import { enrollFamilyMemberVoiceSample } from '@/actions/speaker';
+import { getAdaptiveFamilyAlbumConfig, BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG, type FamilyAlbumAdaptiveConfig } from '@/lib/adaptiveDifficulty';
 
 export interface FamilyMemberData {
     id: string;
@@ -12,6 +13,50 @@ export interface FamilyMemberData {
     relation: string;
     photoPath: string;
     voicePath: string | null;
+}
+
+export interface FamilyAlbumDailyState extends FamilyAlbumAdaptiveConfig {
+    roundsPlayedToday: number;
+    dailyFamilyAlbumLimit: number;
+    isFamilyAlbumLimitReached: boolean;
+}
+
+/** Bugün bu kullanıcı için kaç SkillAttempt (=round) kaydedilmiş — visualMatch.ts'teki countTodaysAttempts ile aynı desen. */
+async function countTodaysFamilyAlbumAttempts(userId: string, skillId: string): Promise<number> {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    return db.skillAttempt.count({
+        where: { userId, skillId, gameId: 'family-album', createdAt: { gte: startOfDay } },
+    });
+}
+
+/**
+ * 2026-09-15 — Faz 2.11 denetiminde bulunan "adaptif zorluğa hiç bağlı
+ * değil, günlük limiti yok" boşluğunun düzeltmesi. `getVisualMatchDailyState`
+ * (Gölge Eşleştirme) ile aynı desen — oturumu olmayan durumda güvenle en
+ * kolay ayara düşer.
+ */
+export async function getFamilyAlbumDailyState(): Promise<FamilyAlbumDailyState> {
+    const user = await getCurrentUser();
+    if (!user) {
+        return { ...BASE_FAMILY_ALBUM_ADAPTIVE_CONFIG, roundsPlayedToday: 0, dailyFamilyAlbumLimit: 20, isFamilyAlbumLimitReached: false };
+    }
+
+    const skill = await db.skill.findUnique({ where: { key: 'sosyal-tanima' } });
+    const dailyFamilyAlbumLimit = user.settings?.dailyFamilyAlbumLimit ?? 20;
+
+    const [config, roundsPlayedToday] = await Promise.all([
+        getAdaptiveFamilyAlbumConfig(user.id),
+        skill ? countTodaysFamilyAlbumAttempts(user.id, skill.id) : Promise.resolve(0),
+    ]);
+
+    return {
+        ...config,
+        roundsPlayedToday,
+        dailyFamilyAlbumLimit,
+        isFamilyAlbumLimitReached: roundsPlayedToday >= dailyFamilyAlbumLimit,
+    };
 }
 
 /**

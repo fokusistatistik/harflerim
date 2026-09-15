@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAudio } from '@/components/AudioProvider';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useHintTimer } from '@/hooks/useHintTimer';
 import { useVoiceConfirm } from '@/hooks/useVoiceConfirm';
+import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { recordSkillAttempt } from '@/actions/skills';
-import { listFamilyMembers, type FamilyMemberData } from '@/actions/familyMembers';
+import { listFamilyMembers, getFamilyAlbumDailyState, type FamilyMemberData } from '@/actions/familyMembers';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { User as UserIcon } from 'lucide-react';
 import { GameHud } from './GameHud';
-
-const OPTIONS_PER_ROUND = 3;
 
 function shuffle<T>(arr: T[]): T[] {
     return [...arr].sort(() => Math.random() - 0.5);
@@ -22,23 +21,37 @@ function shuffle<T>(arr: T[]): T[] {
 /**
  * Faz 2.5 — aile albümü oyunu. Faz 2.2'deki gerçek aile fotoğraflarıyla
  * "bu kim?" eşleştirmesi. Ortak kabuk deseni (Faz 1.8): GameHud,
- * useRewardMoment, useHintTimer, useGameDayBudget — dört oyunla aynı
+ * useRewardMoment, useHintTimer, useGameDayBudget — beş oyunla aynı
  * altyapı, kendi ilerleme modeli (seviye merdiveni yok, sürekli tur).
  * Skill katmanına (1.20) `sosyal-tanima` olarak bağlı.
+ *
+ * 2026-09-15 (Faz 2.11 denetimi) — diğer üç oyunla eşitlendi: adaptif
+ * zorluk (`getAdaptiveFamilyAlbumConfig`, seçenek sayısı sabit 3 değil
+ * 2-4 arası), günlük round limiti (`dailyFamilyAlbumLimit`), sakinleştirme
+ * modu (`useCalmingModeMonitor`), rastgele hedef seçimi + ardışık aynı
+ * hedef koruması (eski `pool[index % pool.length]` sıralı döngüsü yerine).
  */
 export default function FamilyAlbumGame() {
     const [members, setMembers] = useState<FamilyMemberData[]>([]);
     const [loaded, setLoaded] = useState(false);
-    const [roundIndex, setRoundIndex] = useState(0);
     const [options, setOptions] = useState<FamilyMemberData[]>([]);
     const [target, setTarget] = useState<FamilyMemberData | null>(null);
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
+    const [wrongPickId, setWrongPickId] = useState<string | null>(null);
     const [isLocked, setIsLocked] = useState(false);
+    const [dailyLimit, setDailyLimit] = useState<{
+        optionCount: number;
+        roundsPlayedToday: number;
+        dailyFamilyAlbumLimit: number;
+        isFamilyAlbumLimitReached: boolean;
+    } | null>(null);
 
     const dayBudget = useGameDayBudget();
     const triggerReward = useRewardMoment();
     const { speak, encourageRetry } = useAudio();
-    const [showHint, dismissHint] = useHintTimer([roundIndex, target?.id], 6000);
+    const checkCalmingMode = useCalmingModeMonitor('sosyal-tanima');
+    const [showHint, dismissHint] = useHintTimer([target?.id], 6000);
+    const previousTargetIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         listFamilyMembers().then((result) => {
@@ -47,48 +60,62 @@ export default function FamilyAlbumGame() {
         });
     }, []);
 
-    const startRound = useCallback(
-        (index: number, pool: FamilyMemberData[]) => {
-            if (pool.length < 2) return;
-            const t = pool[index % pool.length];
-            const distractors = shuffle(pool.filter((m) => m.id !== t.id)).slice(0, OPTIONS_PER_ROUND - 1);
-            setOptions(shuffle([t, ...distractors]));
-            setTarget(t);
-            setFeedback('idle');
-            setIsLocked(false);
-            speak('Bu kim?').catch(() => {});
-        },
-        [speak]
-    );
+    const startRound = useCallback(async (pool: FamilyMemberData[]) => {
+        if (pool.length < 2) return;
+
+        const state = await getFamilyAlbumDailyState().catch(() => null);
+        setDailyLimit(state);
+        if (state?.isFamilyAlbumLimitReached) return;
+
+        // Rastgele hedef seçimi + ardışık aynı hedef koruması (Gölge
+        // Eşleştirme/Harf Avı'ndaki kesin desenin aynısı) — sıralı
+        // `pool[index % pool.length]` döngüsü yerine.
+        let candidates = shuffle(pool);
+        if (candidates[0].id === previousTargetIdRef.current && pool.length > 1) {
+            candidates = [...candidates.slice(1), candidates[0]];
+        }
+        const t = candidates[0];
+        previousTargetIdRef.current = t.id;
+
+        const optionCount = Math.min(state?.optionCount ?? 2, pool.length);
+        const distractors = shuffle(pool.filter((m) => m.id !== t.id)).slice(0, optionCount - 1);
+        setOptions(shuffle([t, ...distractors]));
+        setTarget(t);
+        setFeedback('idle');
+        setWrongPickId(null);
+        setIsLocked(false);
+        speak('Bu kim?').catch(() => {});
+    }, [speak]);
 
     useEffect(() => {
         if (loaded && members.length >= 2) {
-            startRound(0, members);
+            startRound(members);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loaded, members]);
 
     const handleSelect = (candidate: FamilyMemberData) => {
-        if (isLocked || !target || dayBudget?.isDayComplete) return;
+        if (isLocked || !target || dayBudget?.isDayComplete || dailyLimit?.isFamilyAlbumLimitReached) return;
 
         const isMatch = candidate.id === target.id;
         setIsLocked(true);
         dismissHint();
         recordSkillAttempt('sosyal-tanima', 'family-album', isMatch).catch(() => {});
+        checkCalmingMode(isMatch);
 
         if (isMatch) {
             setFeedback('correct');
             triggerReward({ message: `Bu ${target.name}!` });
             setTimeout(() => {
-                const next = roundIndex + 1;
-                setRoundIndex(next);
-                startRound(next, members);
+                startRound(members);
             }, 1200);
         } else {
             setFeedback('wrong');
+            setWrongPickId(candidate.id);
             encourageRetry().catch(() => {});
             setTimeout(() => {
                 setFeedback('idle');
+                setWrongPickId(null);
                 setIsLocked(false);
             }, 900);
         }
@@ -103,7 +130,7 @@ export default function FamilyAlbumGame() {
         () => {
             if (target) handleSelect(target);
         },
-        !isLocked && !!target && !dayBudget?.isDayComplete
+        !isLocked && !!target && !dayBudget?.isDayComplete && !dailyLimit?.isFamilyAlbumLimitReached
     );
 
     if (!loaded) {
@@ -128,17 +155,34 @@ export default function FamilyAlbumGame() {
         );
     }
 
+    const isLimitReached = !!dailyLimit?.isFamilyAlbumLimitReached;
+
     return (
         <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-6">
             <div className="shrink-0">
-                <GameHud />
+                <GameHud
+                    center={
+                        dailyLimit && !isLimitReached ? (
+                            <div className="bg-papatya-petal/15 px-6 py-2 lg:px-8 lg:py-3 rounded-full border-2 border-papatya-petal/40">
+                                <span className="text-papatya-petal-deep font-bold text-p-sm lg:text-p-base whitespace-nowrap">
+                                    Bugün {dailyLimit.roundsPlayedToday}/{dailyLimit.dailyFamilyAlbumLimit}
+                                </span>
+                            </div>
+                        ) : undefined
+                    }
+                />
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
                 <GameIntroCard gameId="family-album" variant="banner" />
 
-                {target && (
+                {isLimitReached ? (
+                    <div className="flex flex-col items-center gap-2 text-center">
+                        <p className="text-p-lg font-bold text-papatya-ink">Bugünkü {dailyLimit?.dailyFamilyAlbumLimit} turluk hakkın doldu</p>
+                        <p className="text-p-base text-papatya-ink-soft">Yarın devam edebilirsin!</p>
+                    </div>
+                ) : target && (
                     <div className="flex flex-col items-center gap-4">
                         {/* Doğru cevap zaten useRewardMoment'ın kendi toast'ıyla (role="status") duyuruluyor — burada yalnızca yanlış cevap için ek bir ekran okuyucu duyurusu gerekiyor. */}
                         <span role="status" aria-live="polite" className="sr-only">
@@ -166,11 +210,13 @@ export default function FamilyAlbumGame() {
                                         className={`min-h-tap px-6 py-3 rounded-p-md font-bold text-p-base shadow-sm transition-colors ${
                                             feedback === 'correct' && option.id === target.id
                                                 ? 'bg-papatya-leaf text-white'
-                                                : feedback === 'wrong' && option.id !== target.id
-                                                  ? 'bg-papatya-surface text-papatya-ink-soft'
-                                                  : isHinted
-                                                    ? 'bg-papatya-petal/40 text-papatya-ink'
-                                                    : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
+                                                : feedback === 'wrong' && option.id === wrongPickId
+                                                  ? 'bg-papatya-rose/20 text-papatya-rose border-2 border-papatya-rose/50'
+                                                  : feedback === 'wrong' && option.id !== target.id
+                                                    ? 'bg-papatya-surface text-papatya-ink-soft'
+                                                    : isHinted
+                                                      ? 'bg-papatya-petal/40 text-papatya-ink'
+                                                      : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
                                         } disabled:opacity-70`}
                                     >
                                         {option.name}
