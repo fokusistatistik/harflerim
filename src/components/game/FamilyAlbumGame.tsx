@@ -11,7 +11,7 @@ import { recordSkillAttempt } from '@/actions/skills';
 import { listFamilyMembers, getFamilyAlbumDailyState, type FamilyMemberData } from '@/actions/familyMembers';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Volume2 } from 'lucide-react';
 import { useParentGateStore } from '@/store/parentGateStore';
 import { GameHud } from './GameHud';
 
@@ -31,6 +31,14 @@ function shuffle<T>(arr: T[]): T[] {
  * 2-4 arası), günlük round limiti (`dailyFamilyAlbumLimit`), sakinleştirme
  * modu (`useCalmingModeMonitor`), rastgele hedef seçimi + ardışık aynı
  * hedef koruması (eski `pool[index % pool.length]` sıralı döngüsü yerine).
+ *
+ * 2026-09-15 (kullanıcı isteği) — seçenekler ve sözlü onay artık ÖZEL AD
+ * değil YAKINLIK DERECESİ gösteriyor/dinliyor (okuma-yazma bilmeyen bir
+ * çocuk için "Hatice" değil "Babaanne" anlamlı — çocuğun o kişiye
+ * seslendiği kelime). Aynı round'da hedefle aynı yakınlığa sahip kişiler
+ * çeldirici havuzundan çıkarılır (iki "Amca" aynı anda gösterilmez).
+ * Ayrıca 10sn cevapsız kalınca beliren, tıklanınca doğru yakınlığı sesli
+ * söyleyen "Sesli ipucu" butonu eklendi (bkz. `seslendirmeler.md` A4).
  */
 export default function FamilyAlbumGame() {
     const [members, setMembers] = useState<FamilyMemberData[]>([]);
@@ -52,6 +60,12 @@ export default function FamilyAlbumGame() {
     const { speak, encourageRetry } = useAudio();
     const checkCalmingMode = useCalmingModeMonitor('sosyal-tanima');
     const [showHint, dismissHint] = useHintTimer([target?.id], 6000);
+    // 2026-09-15 — kullanıcı isteği: sesli destek butonu, görsel ipucudan
+    // (6sn) biraz daha geç (10sn) beliren ikinci bir kademe — çocuk isterse
+    // dokunup doğru yakınlık kelimesini duyabilir, otomatik seslenmez
+    // (istenmeyen tekrar/beklenmedik ses otizmli çocuklar için rahatsız
+    // edici olabilir, bu yüzden BUTON — otomatik değil).
+    const [showVoiceHintButton, dismissVoiceHintButton] = useHintTimer([target?.id], 10000);
     const previousTargetIdRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -68,18 +82,48 @@ export default function FamilyAlbumGame() {
         setDailyLimit(state);
         if (state?.isFamilyAlbumLimitReached) return;
 
+        // 2026-09-15 — kullanıcı isteği: oyunda özel ad yerine yakınlık
+        // derecesi gösteriliyor/soruluyor (okuma-yazma bilmeyen çocuk için
+        // "Hatice" değil "Babaanne" anlamlı). Bu yüzden aynı round'da hedefle
+        // AYNI yakınlık etiketine sahip kişiler çeldirici havuzundan
+        // çıkarılır — çocuğa asla aynı yazılı iki buton (iki "Amca")
+        // gösterilmez. Bunun sonucu: hedef, havuzda en az bir FARKLI
+        // yakınlıklı kişi bulunan bir kayıttan seçilmeli — aksi halde round
+        // tek seçenekli (anlamsız) olurdu. Tüm kayıtlar aynı yakınlığa
+        // sahipse (ör. yalnızca 2 "Amca" varsa) bu havuz boş kalır, o zaman
+        // eski davranışa (yakınlık ayrımı yapılmadan) düşülür — round yine
+        // de oynanabilir olsun diye.
+        const eligibleTargets = pool.filter((m) => pool.some((other) => other.id !== m.id && other.relation !== m.relation));
+        const targetPool = eligibleTargets.length > 0 ? eligibleTargets : pool;
+
         // Rastgele hedef seçimi + ardışık aynı hedef koruması (Gölge
         // Eşleştirme/Harf Avı'ndaki kesin desenin aynısı) — sıralı
         // `pool[index % pool.length]` döngüsü yerine.
-        let candidates = shuffle(pool);
-        if (candidates[0].id === previousTargetIdRef.current && pool.length > 1) {
+        let candidates = shuffle(targetPool);
+        if (candidates[0].id === previousTargetIdRef.current && targetPool.length > 1) {
             candidates = [...candidates.slice(1), candidates[0]];
         }
         const t = candidates[0];
         previousTargetIdRef.current = t.id;
 
+        // Çeldiriciler yalnızca hedeften değil, BİRBİRLERİNDEN de farklı
+        // yakınlıkta olmalı — aksi halde iki çeldirici aynı etikete sahip
+        // olabilir (ör. iki "Amca") ve aynı round'da aynı yazılı iki buton
+        // görünürdü. Sırayla seç: her seçilen çeldiricinin yakınlığı,
+        // kalan havuzdan da elenir. Yeterli çeşitlilik yoksa (nadir —
+        // örn. 3 farklı yakınlıktan fazlası gerekiyor ama havuzda o kadar
+        // çeşit yoksa) eldeki kadarıyla devam edilir, round az seçenekle
+        // de olsa oynanabilir kalır.
         const optionCount = Math.min(state?.optionCount ?? 2, pool.length);
-        const distractors = shuffle(pool.filter((m) => m.id !== t.id)).slice(0, optionCount - 1);
+        const usedRelations = new Set([t.relation]);
+        const remainingPool = shuffle(pool.filter((m) => m.id !== t.id));
+        const distractors: FamilyMemberData[] = [];
+        for (const candidate of remainingPool) {
+            if (distractors.length >= optionCount - 1) break;
+            if (usedRelations.has(candidate.relation)) continue;
+            distractors.push(candidate);
+            usedRelations.add(candidate.relation);
+        }
         setOptions(shuffle([t, ...distractors]));
         setTarget(t);
         setFeedback('idle');
@@ -101,12 +145,13 @@ export default function FamilyAlbumGame() {
         const isMatch = candidate.id === target.id;
         setIsLocked(true);
         dismissHint();
+        dismissVoiceHintButton();
         recordSkillAttempt('sosyal-tanima', 'family-album', isMatch).catch(() => {});
         checkCalmingMode(isMatch);
 
         if (isMatch) {
             setFeedback('correct');
-            triggerReward({ message: `Bu ${target.name}!` });
+            triggerReward({ message: `Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}!` });
             setTimeout(() => {
                 startRound(members);
             }, 1200);
@@ -127,7 +172,7 @@ export default function FamilyAlbumGame() {
     // useVoiceConfirm doc-comment'i). Dokunmatik yol HER ZAMAN çalışmaya
     // devam eder; bu yalnızca ek bir alternatif, tek yol değil.
     useVoiceConfirm(
-        target?.name ?? null,
+        target?.relation ?? null,
         () => {
             if (target) handleSelect(target);
         },
@@ -166,7 +211,7 @@ export default function FamilyAlbumGame() {
     const isLimitReached = !!dailyLimit?.isFamilyAlbumLimitReached;
 
     return (
-        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-6">
+        <div className="h-app bg-papatya-cream p-4 flex flex-col gap-6 overflow-hidden">
             <div className="shrink-0">
                 <GameHud
                     center={
@@ -181,7 +226,7 @@ export default function FamilyAlbumGame() {
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 overflow-y-auto py-2">
                 <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
                 <GameIntroCard gameId="family-album" variant="banner" />
 
@@ -206,6 +251,17 @@ export default function FamilyAlbumGame() {
                                 </div>
                             }
                         />
+                        {/* 2026-09-15 — kullanıcı isteği: sesli destek butonu, 10sn cevapsız kalınca belirir; tıklanınca doğru yakınlığı sesli söyler. Otomatik seslenmez (bilerek) — çocuk isterse kullanır. */}
+                        {showVoiceHintButton && !isLocked && (
+                            <button
+                                type="button"
+                                onClick={() => speak(`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}`).catch(() => {})}
+                                className="flex items-center gap-2 min-h-tap px-5 py-2 bg-papatya-sky/15 text-papatya-sky rounded-full font-bold text-p-sm shadow-sm hover:bg-papatya-sky/25 transition-colors"
+                                aria-label="Sesli ipucu dinle"
+                            >
+                                <Volume2 size={18} /> Sesli ipucu
+                            </button>
+                        )}
                         <div className="flex flex-wrap gap-3 justify-center">
                             {options.map((option) => {
                                 const isHinted = showHint && option.id === target.id;
@@ -227,7 +283,7 @@ export default function FamilyAlbumGame() {
                                                       : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
                                         } disabled:opacity-70`}
                                     >
-                                        {option.name}
+                                        {option.relation}
                                     </button>
                                 );
                             })}

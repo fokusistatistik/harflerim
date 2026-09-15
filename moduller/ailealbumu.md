@@ -2,11 +2,11 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (üçüncü tur — kullanıcının doğrudan taleple gündeme getirdiği 5 iyileştirme: kategorik yakınlık derecesi dropdown'ı, 1 MB fotoğraf boyut sınırı, boş-durum ekranından tek tıkla "Aile Bireyi Ekle" akışı, fotoğraf önizlemesi, düzenlemede mevcut sesi dinleme).
+> Son güncelleme: 2026-09-15 (dördüncü tur — otizm-temelli pedagojik değişiklik: oyun artık özel ad değil yakınlık derecesi gösteriyor/soruyor; masaüstü boşluk düzeltmesi; ebeveyn formunda yakınlık kelimesini TTS ile dinleme).
 
 ## Özet
 
-Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (2. turdan itibaren adaptif zorluğa göre 2-4 arası) isim seçeneği arasından doğru cevabı seçer (dokunarak ya da ismi söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
+Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (2. turdan itibaren adaptif zorluğa göre 2-4 arası) **yakınlık derecesi** seçeneği arasından doğru cevabı seçer (dokunarak ya da yakınlık kelimesini söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). 4. turdan itibaren seçenekler ÖZEL AD değil YAKINLIK DERECESİ gösteriyor (örn. "Hatice" değil "Babaanne") — okuma-yazma bilmeyen/henüz konuşmayan bir çocuk için özel ad anlamsız, çocuğun o kişiye seslendiği kelime anlamlı; kullanıcı isteğiyle değiştirildi. Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
 
 **Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`, `getFamilyAlbumDailyState`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts`, `useCalmingModeMonitor.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/lib/adaptiveDifficulty.ts` (`getAdaptiveFamilyAlbumConfig`) · `src/config/familyRelations.ts` (kategorik yakınlık derecesi listesi) · `src/store/parentGateStore.ts` (`requestedTab` — oyundan doğrudan sekmeye yönlendirme) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
 
@@ -24,6 +24,8 @@
 - ✅ Rozet mekanizması aynı merkezi `recordSkillAttempt`/`Skill` katmanını kullanıyor, spam değil.
 - ✅ Pekiştirme doğru cevapta `useRewardMoment` (ses + konfeti + toast) — diğer oyunlarla aynı, tutarlı.
 - ✅ İpucu sistemi var: 6 saniye sonra doğru seçeneğin rengi hafifçe değişiyor (`bg-papatya-petal/40`), ismi vermiyor — makul bir ipucu şiddeti.
+- ✅ (2026-09-15, 4. tur) **Oyun artık özel ad değil yakınlık derecesi gösteriyor/soruyor.** Kullanıcı isteği: okuma-yazma bilmeyen/henüz konuşmayan bir çocuk için "Hatice" gibi özel ad anlamsız, "Babaanne"/"Amca" gibi çocuğun o kişiye seslendiği kelime anlamlı ve pedagojik olarak daha doğru. Seçenek butonları, doğru-cevap toast'ı ("Bu senin babaannen!") ve sözlü onay (`useVoiceConfirm`, artık `target.relation`'ı dinliyor — çocuğun "amca" demesi kabul edilir) hepsi güncellendi. Aynı round'da hedefle aynı yakınlığa sahip kişiler (ör. iki "Amca") çeldirici havuzundan çıkarılır — çocuğa asla aynı yazılı iki buton gösterilmez; hedef de en az bir farklı-yakınlıklı kayıt bulunan bir kişiden seçilir (aksi halde round tek seçenekli olurdu). Tüm kayıtlar aynı yakınlıktaysa (nadir, ör. yalnızca 2 "Amca" varsa) eski davranışa (ayrım yapılmadan) güvenli şekilde düşülür.
+- ✅ (2026-09-15, 4. tur) **"Sesli ipucu" butonu eklendi.** 10 saniye cevapsız kalınırsa (görsel ipucudan — 6sn — biraz daha geç, kademeli destek) fotoğrafın altında bir buton belirir; tıklanınca `speak()` ile "Bu senin [yakınlık]" sesli söylenir. Otomatik seslenmez, bilinçli bir tasarım kararı (istenmeyen/beklenmedik ses otizmli çocuklar için rahatsız edici olabilir) — çocuk isterse dokunup kullanır. Bu ses metinleri `seslendirmeler.md`'nin A4 bölümüne (21 yakınlık kelimesi, 1 taşıyıcı cümle) eklendi, gelecekteki ElevenLabs geçişi için envanterlendi.
 
 ---
 
@@ -42,7 +44,7 @@
 
 ## Blok (c) — UI/UX
 
-**Durum: İki turda düzeltildi — layout, erişilebilirlik, PC genişletme ve yanlış-seçenek vurgusu.**
+**Durum: Dört turda düzeltildi — layout, erişilebilirlik, PC genişletme, yanlış-seçenek vurgusu, fotoğraf önizlemesi, sesli ipucu.**
 
 - ✅ (2026-09-15) **Kırık görsel riski giderildi.** Hedef fotoğraf düz `<img>` yerine `ImageWithFallback` ile render ediliyor artık — dosya silinmiş/bozuksa kırık görsel ikonu yerine sakin bir kullanıcı ikonu placeholder'ı gösteriliyor (diğer oyunlarda zaten kullanılan desen, bu oyunda eksikti).
 - ✅ (2026-09-15) **Dikey ortalama/PC boşluk sorunu düzeltildi.** Ana oyun kapsayıcısı `items-center` içeriyordu ama `justify-center` yoktu — içerik ekranın üst kısmında kümeleniyor, geniş ekranlarda (1920px) altta büyük boş alan kalıyordu. `GameHud`'ı `shrink-0` ile üstte sabit tutup geri kalan içeriği ayrı bir `flex-1 justify-center` kapsayıcısına almak suretiyle düzeltildi — geri düğmesi artık her zaman üstte, oyun içeriği dikeyde gerçekten ortalanıyor. Gerçek tarayıcıda 375/800/1920px'te doğrulandı.
@@ -52,6 +54,10 @@
 - ✅ (2026-09-15, 2. tur) **Yanlış cevapta tıklanan seçenek artık ayrı vurgulanıyor.** `wrongPickId` state'i eklendi — tıklanan yanlış seçenek `bg-papatya-rose/20` + `border-papatya-rose/50` ile (diğer yanlış/nötr seçeneklerden ayrı bir stil) işaretleniyor, 900ms sonra sıfırlanıyor. `papatya-rose` projede zaten "dikkat/uyarı" rengi olarak kullanılıyor (`MagicWordsGame.tsx`), sert bir "hata" kırmızısı değil — "Başarısızlık yok" ilkesiyle çelişmiyor, yalnızca hangi seçeneğin tıklandığını görsel olarak netleştiriyor.
 - ✅ (2026-09-15, 3. tur) **Boş-durum ekranına doğrudan "Aile Bireyi Ekle" butonu eklendi.** Kullanıcı bulgusu: "en az 2 aile bireyi eklemelisiniz" mesajı yalnızca metindi, ebeveyn Ebeveyn Alanı'nı manuel açıp doğru sekmeyi bulmak zorundaydı. Çözüm: `parentGateStore.ts`'e `requestedTab`/`consumeRequestedTab` eklendi — `openPinPrompt('aile')` çağrıldığında PIN doğrulandıktan sonra `ParentGate` otomatik olarak "Aile" sekmesini açıyor. Buton PIN ekranını `requestedTab: 'aile'` ile açıyor, ebeveyn PIN'i girer girmez doğrudan aile bireyi ekleme formuna düşüyor (ara tıklama yok). Diğer üç çağrı noktası (`Header.tsx`, `NavGrid.tsx`, `HomeAvatar.tsx`) parametresiz çağırmaya devam ediyor, davranışları değişmedi (`requestedTab` `undefined` kalır, varsayılan "Genel" sekmesi açılır).
 - ⚠️ Banner tanıtım kartı (`GameIntroCard variant="banner"`) her oyun açılışında yeniden görünüyor olabilir mi doğrulanmadı — `localStorage`'da kapatma tercihi tutulduğu biliniyor (kod incelemesiyle), ama bu oyunda ayrıca test edilmedi.
+- ✅ (2026-09-15, 4. tur) **Fotoğraf seçildiğinde anında küçük önizleme gösteriliyor.** Kullanıcı bulgusu: "yüklenen fotoğrafın önizlemesi gelmiyor, yüklendi mi yüklenmedi mi hiç belli değil." `URL.createObjectURL` ile `FamilyMembersTab.tsx`'te (hem yeni ekleme hem düzenleme modunda mevcut fotoğraf için) anında bir küçük önizleme eklendi; obje URL'i `useEffect` cleanup ile serbest bırakılıyor, bellek sızıntısı yok.
+- ✅ (2026-09-15, 4. tur) **Düzenleme modunda mevcut ses kaydı dinlenebiliyor.** "Mevcut sesi dinle" butonu eklendi — kayıt listesindeki Play butonuyla aynı desen, önceden yalnızca liste görünümünde vardı.
+- ✅ (2026-09-15, 4. tur) **Ebeveyn formunda yakınlık kelimesini TTS ile dinleme.** Dropdown'dan bir yakınlık seçilince ("Diğer" hariç) yanında bir hoparlör butonu beliriyor, `useAudio().speak()` ile kelimenin sesli okunuşu duyulabiliyor — ebeveyn doğru telaffuzu/hitabı referans alabilir.
+- ✅ (2026-09-15, 4. tur) **Oyun ekranında masaüstü boşluk düzeltmesi.** Kullanıcı bulgusu: masaüstünde GameHud ile içerik arasında gereksiz büyük boşluk vardı. Kök neden: `min-h-app` (`min-height`, viewport büyükse devasa alan bırakıyor) kullanılıyordu — visual-match/Harf Avı'nın kanıtlanmış `h-app overflow-hidden` (sabit yükseklik) desenine geçirildi, içerik bloğuna `overflow-y-auto` eklendi (taşma riski için). Mobil/tablet regresyon olmadan doğrulandı — boş-durum ekranları (yükleniyor, "en az 2 aile bireyi") `min-h-app` ile kaldı çünkü içerik zaten az, taşma riski yok.
 
 **Kalan:** Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi — insan/cihaz adımı, diğer dört modülde de aynı durum.
 
@@ -167,6 +173,20 @@ Test verileri (3 aile bireyi + yüklenen fotoğraflar) UI üzerinden silindi, `d
 - Konsol hatası: yalnızca ilgisiz bir dev-sunucusu chunk 404'ü (hot-reload kaynaklı, koddan bağımsız).
 
 Test verileri ("Test Dayı", "Test Komşu Çocuğu", "Test Ses Kişisi" + geçici 1.5MB test dosyası) UI/scratchpad üzerinden tamamen temizlendi — `FamilyMember` tablosu 0 satıra döndü.
+
+## Genel geliştirme önerileri — 4. tur (otizm-temelli pedagojik değişiklik + UX bulgusu, kullanıcı doğrudan talebi)
+
+1. ✅ **Oyunda özel ad yerine yakınlık derecesi gösterimi.** Seçenekler, toast, sözlü onay — hepsi `target.relation` kullanıyor artık, `target.name` değil (blok a).
+2. ✅ **Aynı round'da çakışan yakınlık koruması** — iki "Amca" aynı anda gösterilmez, hedef seçimi de bu kısıtı gözetir (blok a). **Gerçek bug bulunup düzeltildi:** ilk implementasyon yalnızca çeldiricilerin HEDEFTEN farklı yakınlıkta olmasını kontrol ediyordu, çeldiricilerin BİRBİRİNDEN farklı olmasını kontrol etmiyordu — 4+ kayıtlı test verisiyle (2 "Amca" dahil) Playwright doğrulamasında bazı round'larda iki "Amca" butonunun aynı anda göründüğü tespit edildi. Düzeltme: çeldiriciler artık sırayla seçiliyor, her seçilenin yakınlığı bir `usedRelations` Set'ine eklenip sonraki adaylardan aynı yakınlıktakiler eleniyor — hem hedeften hem birbirinden farklı olmaları garanti ediliyor.
+3. ✅ **"Sesli ipucu" butonu** — 10sn cevapsız kalınca belirir, tıklanınca doğru yakınlığı sesli söyler, otomatik seslenmez (blok a).
+4. ✅ **Oyun ekranında masaüstü boşluk düzeltmesi** — `min-h-app` → `h-app overflow-hidden` (Harf Avı/Gölge Eşleştirme'nin kanıtlanmış deseni), mobil/tablet regresyonsuz (blok c).
+5. ✅ **`seslendirmeler.md` güncellendi** — A4 bölümüne 21 yakınlık kelimesi (1 taşıyıcı cümleyle) eklendi, gelecekteki ElevenLabs geçişi için envanterlendi (kod değişikliği değil, doküman).
+
+**Doğrulama (4. tur):** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042) iki ayrı turda doğrulandı:
+- İlk turda masaüstü boşluk düzeltmesi (1920x1080'de scroll yok, GameHud-içerik arası boşluk normalleşti, 375/800px regresyonsuz), yakınlık gösterimi (seçenekler/toast doğru), TTS dinleme butonu (hem ekleme hem düzenleme modunda, "Diğer"de gizli) PASS geldi — ama çeldirici çakışma korumasında GERÇEK BİR BUG bulundu (yukarıda anlatıldı) ve düzeltildi.
+- İkinci turda (bug düzeltmesi sonrası) 2× "Amca" içeren bilinçli çakışma senaryosuyla 20 round oynandı — HİÇBİRİNDE aynı yazılı iki buton görülmedi, "Amca" geçen 14 round'un hepsinde tam olarak bir "Amca" vardı. PASS.
+
+Test verileri (toplam 40+ geçici kayıt, iki turda) tamamen temizlendi, `dailyFamilyAlbumLimit` geçici olarak değiştirilip 20'ye geri döndürüldü, `FamilyMember`/`SkillAttempt(family-album)` count 0.
 
 ## Açık kalan işler (roadmap referansı)
 

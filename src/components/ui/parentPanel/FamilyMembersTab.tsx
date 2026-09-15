@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Mic, Square, Trash2, Play, Pencil, X } from 'lucide-react';
+import { Mic, Square, Trash2, Play, Pencil, X, Volume2 } from 'lucide-react';
 import {
     listFamilyMembers,
     createFamilyMember,
@@ -10,6 +10,7 @@ import {
     type FamilyMemberData,
 } from '@/actions/familyMembers';
 import { FAMILY_RELATIONS } from '@/config/familyRelations';
+import { useAudio } from '@/components/AudioProvider';
 
 /** 2026-09-15 — fotoğraf/ses yükleme boyut sınırı (kullanıcı isteği, disk/DB şişmesini önler). Server tarafında da aynı sınır (bkz. familyMembers.ts) — client kontrolü yalnızca hızlı geri bildirim içindir. */
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024;
@@ -37,6 +38,7 @@ export function FamilyMembersTab() {
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
+    const { speak } = useAudio();
 
     // 2026-09-15 — kullanıcı bulgusu: dosya seçildiğinde ekranda yalnızca
     // dosya adı görünüyordu, gerçekten doğru/bozuk olmayan bir görsel mi
@@ -249,20 +251,34 @@ export function FamilyMembersTab() {
                         onChange={(e) => setName(e.target.value)}
                         className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
-                    <select
-                        value={relation}
-                        onChange={(e) => setRelation(e.target.value)}
-                        className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                    >
-                        <option value="" disabled>
-                            Yakınlık derecesi seç
-                        </option>
-                        {FAMILY_RELATIONS.map((option) => (
-                            <option key={option} value={option}>
-                                {option}
+                    <div className="flex items-center gap-2 min-w-0">
+                        <select
+                            value={relation}
+                            onChange={(e) => setRelation(e.target.value)}
+                            className="min-w-0 flex-1 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                        >
+                            <option value="" disabled>
+                                Yakınlık derecesi seç
                             </option>
-                        ))}
-                    </select>
+                            {FAMILY_RELATIONS.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </select>
+                        {/* 2026-09-15 — kullanıcı isteği: "Dede" seçilince "dede" kelimesinin nasıl okunduğunu duyabilme (kayıtlı kişinin kendi sesi değil, TTS ile kelimenin sesli okunuşu). "Diğer" hariç — o zaten anlamlı bir kelime değil, serbest metin. */}
+                        {relation && relation !== 'Diğer' && (
+                            <button
+                                type="button"
+                                onClick={() => speak(relation).catch(() => {})}
+                                className="min-w-tap min-h-tap flex items-center justify-center text-papatya-sky shrink-0"
+                                aria-label={`"${relation}" kelimesini dinle`}
+                                title={`"${relation}" kelimesini dinle`}
+                            >
+                                <Volume2 size={18} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 {relation === 'Diğer' && (
                     <input

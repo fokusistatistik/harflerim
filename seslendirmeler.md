@@ -57,6 +57,44 @@ A, Be, Ce, Çe, De, E, Fe, Ge, Yumuşak Ge, He, I, İ, Je, Ke, Le, Me, Ne, O, Ö
 16. Bu kim?
 ```
 
+### A4. Aile Albümü — yakınlık derecesi kelimeleri (2026-09-15 eklendi)
+
+Oyun artık özel ad değil yakınlık derecesi soruyor/gösteriyor (`src/config/familyRelations.ts`, 21 sabit seçenek — "Diğer" hariç, o serbest metin). Bu liste SABİT olduğu için (proje-geneli, ebeveyn ekleyip çıkaramaz) dinamik değil, ElevenLabs'a UYGUN — D bölümündeki "gerçek dinamik içerik" (DB'den gelen nesne/kelime adları) kategorisine girmiyor. İki kullanım noktası var: (1) doğru cevap toast'ı `"Bu senin {{yakınlık}}!"`, (2) sesli ipucu butonu `"Bu senin {{yakınlık}}"`. Taşıyıcı cümle sabit, yalnızca `{{yakınlık}}` değişiyor — A1'deki harf şablonlarıyla aynı desen (87-dosya vs. ses-birleştirme kararı burada da geçerli, ama yalnızca 21 kelime × 1 taşıyıcı cümle = çok daha az varyasyon, muhtemelen tam-cümle üretimi pratik).
+
+**Taşıyıcı cümle şablonu:**
+```
+17. Bu senin {{yakınlık}}!
+```
+
+**21 yakınlık kelimesi (`familyRelations.ts` ile birebir aynı sırada):**
+```
+Anne
+Baba
+Abla
+Ağabey
+Kız Kardeş
+Erkek Kardeş
+Anneanne
+Babaanne
+Dede (anne tarafı)
+Dede (baba tarafı)
+Teyze
+Hala
+Dayı
+Amca
+Kuzen
+Yenge
+Enişte
+Arkadaş
+Öğretmen
+Bakıcı
+Komşu
+```
+
+**Not:** "Diğer" ile serbest metin girilen kayıtlar (örn. "Aile dostu") bu sabit listede yer almaz — bunlar her zaman dinamik kalır, Piper'a düşer (D bölümündeki mantıkla aynı).
+
+**Kod entegrasyonu (henüz uygulanmadı, ayrı bir iş):** `FamilyAlbumGame.tsx`'teki `speak(\`Bu senin ${target.relation.toLocaleLowerCase('tr-TR')}\`)` çağrısı şu an Piper/tarayıcı zincirinden geçiyor (`useAudio().speak`) — ElevenLabs statik dosyaları hazır olduğunda, `target.relation` bu 21 sabit kelimeden biriyse yerel dosya çalınır, "Diğer" ile serbest girilmişse Piper'a düşülür (üstteki mimari önerideki aynı örüntü).
+
 ### A3. AAC Tahtası — 18 kelime (`src/store/aacData.ts`, her biri tek başına okunuyor, interpolasyon yok)
 
 **İhtiyaçlar (6):**
@@ -89,7 +127,7 @@ Oynamak
 Uyumak
 ```
 
-**Toplam Kadın Ses üretimi: 3 şablon (+ 29 harf ismi opsiyonel) + 1 sabit cümle + 18 AAC kelimesi = 22 zorunlu metin (+ 29 opsiyonel harf ismi).**
+**Toplam Kadın Ses üretimi: 3 şablon (+ 29 harf ismi opsiyonel) + 1 sabit cümle + 18 AAC kelimesi + 21 yakınlık kelimesi (1 taşıyıcı cümleyle) = 43 zorunlu metin (+ 29 opsiyonel harf ismi).**
 
 ---
 
@@ -164,8 +202,9 @@ Bu dosyalar insan sesi değil, oyun efekti — ElevenLabs kapsamı dışında am
 
 1. **Faz 1 (en yüksek etki, en düşük risk):** B bölümündeki 9 erkek ses cümlesi + A2'deki "Bu kim?" — bunlar sabit, kısa, sık duyulan cümleler; ilk ElevenLabs üretimi burada yapılabilir.
 2. **Faz 2:** A3'teki 18 AAC kelimesi — çocuğun "kendi sesi" gibi davranan, iletişim için kritik önemde metinler.
-3. **Faz 3 (teknik karar gerektirir):** A1'deki harf sorma şablonları — 87-dosya mı yoksa ses-birleştirme mi kararı verilmeli, sonra üretilmeli.
-4. **Kod entegrasyonu:** Her faz üretildikçe `useTurkishSpeech.ts`'e (veya yeni bir `useElevenLabsAudio.ts`'e) sabit-metin-eşleştirmeli bir önbellek katmanı eklenir — metin tanınırsa yerel dosya çalınır, tanınmazsa (dinamik kelimeler) Piper'a düşülür.
+3. **Faz 2b (2026-09-15 eklendi):** A4'teki 21 yakınlık kelimesi (1 taşıyıcı cümleyle) — Aile Albümü'nün sesli ipucu butonu ve doğru-cevap toast'ı için, A3 ile benzer öncelikte (sık duyulan, sabit, kısa).
+4. **Faz 3 (teknik karar gerektirir):** A1'deki harf sorma şablonları — 87-dosya mı yoksa ses-birleştirme mi kararı verilmeli, sonra üretilmeli.
+5. **Kod entegrasyonu:** Her faz üretildikçe `useTurkishSpeech.ts`'e (veya yeni bir `useElevenLabsAudio.ts`'e) sabit-metin-eşleştirmeli bir önbellek katmanı eklenir — metin tanınırsa yerel dosya çalınır, tanınmazsa (dinamik kelimeler) Piper'a düşülür.
 
 ## Açık kalan kararlar
 
