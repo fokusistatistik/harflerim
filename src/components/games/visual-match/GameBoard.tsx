@@ -30,17 +30,38 @@ import { GameHud } from '@/components/game/GameHud';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 
 /**
- * Renkli fotoğrafı gölgemsi bir görünüme çeviren CSS filtresi — ayrı bir
+ * Renkli fotoğrafı düz renkli bir siluete çeviren SVG filtresi — ayrı bir
  * siluet görseli üretmeden mevcut ComparisonItem fotoğraflarını kullanır.
- * `brightness(0)` (tam siyah) hem nesneyi hem fotoğrafın kendi (çoğunlukla
- * açık/krem tonlu) zeminini aynı koyulukta bırakıp düz bir blok gibi
- * görünmesine yol açıyordu. Yüksek `contrast` + düşük `brightness`
- * kombinasyonu fotoğrafın açık zeminini beyaza, nesnenin koyu kısımlarını
- * derin siyaha "eşikleyerek" gerçek bir siluet keskinliği veriyor —
- * kullanıcı bulgusu: önceki (contrast 1.4) hâlâ düz/soluk bir blok gibi
- * duruyordu.
+ * Önceki iki deneme başarısızdı: (1) `brightness(0)` + basit filtre
+ * kombinasyonu nesnenin KENDİ renginden bağımsız değildi (koyu nesnelerde
+ * arka planla birleşip düz siyah blok, açık nesnelerde siluet hiç belli
+ * olmuyordu); (2) `mask-image`/`mask-mode: luminance` JPEG'lerde tarayıcı
+ * bazında güvenilmez çalıştı (görsel maskelenmeden renkli kaldı). Kesin
+ * çözüm: standart bir SVG `<filter>` — `feColorMatrix` ile gri tonlamaya
+ * çevirip `feComponentTransfer`/`feFuncA` ile bir eşik (threshold)
+ * uyguluyor: luminance %70'in altındaki her piksel tam opak koyu siluet,
+ * üstündeki (fotoğrafın açık zemini) şeffaf oluyor — ilk denemedeki %50
+ * eşik bazı fotoğraflarda (orta tonlu nesneler) siluetin neredeyse
+ * kaybolmasına yol açıyordu, %70'e çekilince tutarlı hale geldi. SVG
+ * filtreleri tüm modern tarayıcılarda tutarlı çalışır, nesnenin rengi ne
+ * olursa olsun aynı sonucu verir.
  */
-const SILHOUETTE_STYLE: React.CSSProperties = { filter: 'grayscale(1) brightness(0.4) contrast(3)' };
+function SilhouetteFilterDefs() {
+    return (
+        <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+            <filter id="visual-match-silhouette">
+                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.299 0.587 0.114 0 0" result="luminance" />
+                <feComponentTransfer in="luminance" result="alphaMask">
+                    <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 0 0 0" />
+                </feComponentTransfer>
+                <feFlood floodColor="rgb(var(--papatya-ink-soft))" result="fillColor" />
+                <feComposite in="fillColor" in2="alphaMask" operator="in" />
+            </filter>
+        </svg>
+    );
+}
+
+const SILHOUETTE_STYLE: React.CSSProperties = { filter: 'url(#visual-match-silhouette)' };
 
 export function GameBoard() {
     const [playSuccess] = useSound('/sounds/success.wav', { volume: 0.5 });
@@ -163,25 +184,38 @@ export function GameBoard() {
 
     return (
         <div className="flex flex-col h-app w-full bg-papatya-cream overflow-hidden relative">
+            <SilhouetteFilterDefs />
+
             {/* Success Confetti — reduceMotion açıkken hiç gösterilmez (Faz 2.11 denetimi) */}
             {isMatched && !prefersReducedMotion && (
                 <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={80} colors={['#E8B33C', '#5F7A52', '#6B87A8', '#C4756A']} />
             )}
 
-            {/* Header / Nav — Faz 1.8: paylaşılan GameHud */}
-            <div className="absolute top-4 left-4 right-4 lg:top-8 lg:left-8 lg:right-8 z-10">
-                <GameHud right={<GameIntroCard gameId="visual-match" variant="tooltip" />} />
+            {/* Header / Nav — Faz 1.8: paylaşılan GameHud, Harf Avı'ndaki desenin aynısı (normal akışta, absolute değil) */}
+            <div className="w-full p-4 lg:p-8 pb-0 shrink-0">
+                <GameHud
+                    center={
+                        dailyLimit && !isLimitReached ? (
+                            <div className="bg-papatya-petal/15 px-6 py-2 lg:px-8 lg:py-3 rounded-full border-2 border-papatya-petal/40">
+                                <span className="text-papatya-petal-deep font-bold text-p-sm lg:text-p-base whitespace-nowrap">
+                                    Bugün {dailyLimit.roundsPlayedToday}/{dailyLimit.dailyVisualMatchLimit}
+                                </span>
+                            </div>
+                        ) : undefined
+                    }
+                    right={<GameIntroCard gameId="visual-match" variant="tooltip" />}
+                />
             </div>
 
             {!loaded ? (
-                <p className="h-full flex items-center justify-center text-p-base text-papatya-ink-soft">Yükleniyor...</p>
+                <p className="flex-1 flex items-center justify-center text-p-base text-papatya-ink-soft">Yükleniyor...</p>
             ) : isLimitReached ? (
-                <div className="h-full flex flex-col items-center justify-center p-4 gap-4 text-center">
+                <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 text-center">
                     <p className="text-p-lg font-bold text-papatya-ink">Bugünkü {dailyLimit?.dailyVisualMatchLimit} turluk hakkın doldu</p>
                     <p className="text-p-base text-papatya-ink-soft">Yarın devam edebilirsin!</p>
                 </div>
             ) : !target ? (
-                <p className="h-full flex items-center justify-center text-p-base text-papatya-ink-soft text-center px-4">
+                <p className="flex-1 flex items-center justify-center text-p-base text-papatya-ink-soft text-center px-4">
                     Şu an gösterilecek nesne bulunamadı.
                 </p>
             ) : (
@@ -192,14 +226,8 @@ export function GameBoard() {
                     onDragEnd={handleDragEnd}
                     modifiers={[restrictToWindowEdges]}
                 >
-                    <div className="h-full flex flex-col items-center p-4 pt-20 lg:pt-24 gap-6">
-                        {dailyLimit && (
-                            <p className="text-p-sm text-papatya-ink-soft whitespace-nowrap text-center">
-                                Bugün {dailyLimit.roundsPlayedToday}/{dailyLimit.dailyVisualMatchLimit}
-                            </p>
-                        )}
-
-                        <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 xl:gap-20 w-full">
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
+                        <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 xl:gap-20 w-full">
                             {/* Target Zone (Silhouette) — masaüstünde solda */}
                             <div className="relative shrink-0">
                                 <Droppable id="target-zone" isMatched={isMatched}>
