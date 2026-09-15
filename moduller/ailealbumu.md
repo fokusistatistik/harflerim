@@ -2,7 +2,7 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (beşinci tur — minimum 3 seçenek, görsel boyutu büyütme, masaüstü boşluk düzeltmesi (kesinleştirildi), mikrofon durumu rozeti, 30sn round süresi, günlük limit varsayılanı/aralığı Aile Albümü'ne özel 25/10-100'e çekildi).
+> Son güncelleme: 2026-09-15 (altıncı tur — 6sn otomatik görsel ipucu kaldırıldı, artık cevabı doğrudan vermiyor; ayrıca 5. turda minimum 3 seçenek, görsel boyutu büyütme, masaüstü boşluk düzeltmesi (kesinleştirildi), mikrofon durumu rozeti, 30sn round süresi, günlük limit varsayılanı/aralığı Aile Albümü'ne özel 25/10-100'e çekildi).
 
 ## Özet
 
@@ -206,6 +206,12 @@ Test verileri (toplam 40+ geçici kayıt, iki turda) tamamen temizlendi, `dailyF
 - Günlük limit formu `min=10 max=100`, varsayılan 25 doğru geldi; hem tarayıcı native kısıtı hem sunucu tarafı (5 ve 150 gibi sınır dışı değerlerle) "10-100 arasında olmalı" hatasıyla doğru reddetti.
 
 **Kritik doğrulama:** Test sırasında DB'de zaten "Emre" (Baba) dahil 4 aile bireyi kaydı vardı (kullanıcının önceki oturumlarda eklediği gerçek veriler) — test için yeni kayıt eklenmedi, "Emre" kaydına KESİNLİKLE dokunulmadığı ayrıca doğrulandı (id ile teyit edildi). Gerçek bir hata bulunmadı.
+
+## Genel geliştirme önerileri — 6. tur (kullanıcı bulgusu, hemen ardından)
+
+1. ✅ **6sn otomatik görsel ipucu (doğru seçeneğin otomatik renklenmesi) kaldırıldı.** Kullanıcı ekran görüntüsüyle bulgu verdi: seçenekler artık özel ad değil yakınlık derecesi gösterdiği için ("Dede (anne tarafı)" gibi) eski 6sn'lik otomatik renklenme doğrudan cevabı vermek anlamına geliyordu — çocuk hiç düşünmeden görebiliyordu. `useHintTimer([target?.id], 6000)`/`showHint`/`isHinted`/`dismissHint` tamamen kaldırıldı. Artık TEK ipucu yolu 10sn'deki manuel "Sesli ipucu" butonu — çocuk isterse kullanır, otomatik verilmez (blok a).
+
+**Doğrulama (6. tur):** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda 7. saniyede (eski otomatik ipucunun tetikleneceği an) hiçbir butonun ipucu rengini (`papatya-petal/40`) almadığı, 11. saniyede "Sesli ipucu dinle" butonunun doğru şekilde göründüğü ekran görüntüsüyle doğrulandı.
 
 ## Açık kalan işler (roadmap referansı)
 

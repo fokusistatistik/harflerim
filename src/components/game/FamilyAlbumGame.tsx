@@ -39,6 +39,11 @@ function shuffle<T>(arr: T[]): T[] {
  * çeldirici havuzundan çıkarılır (iki "Amca" aynı anda gösterilmez).
  * Ayrıca 10sn cevapsız kalınca beliren, tıklanınca doğru yakınlığı sesli
  * söyleyen "Sesli ipucu" butonu eklendi (bkz. `seslendirmeler.md` A4).
+ * 2026-09-15 (kullanıcı bulgusu) — eski 6sn otomatik görsel ipucu (doğru
+ * seçeneğin kendiliğinden renklenmesi) kaldırıldı: artık seçenekler özel ad
+ * değil yakınlık gösterdiği için bu otomatik renklenme doğrudan cevabı
+ * vermek anlamına geliyordu. Tek ipucu yolu artık manuel "Sesli ipucu"
+ * butonu (10sn) — çocuk isterse kullanır, otomatik verilmez.
  */
 export default function FamilyAlbumGame() {
     const [members, setMembers] = useState<FamilyMemberData[]>([]);
@@ -59,12 +64,13 @@ export default function FamilyAlbumGame() {
     const triggerReward = useRewardMoment();
     const { speak, encourageRetry } = useAudio();
     const checkCalmingMode = useCalmingModeMonitor('sosyal-tanima');
-    const [showHint, dismissHint] = useHintTimer([target?.id], 6000);
-    // 2026-09-15 — kullanıcı isteği: sesli destek butonu, görsel ipucudan
-    // (6sn) biraz daha geç (10sn) beliren ikinci bir kademe — çocuk isterse
-    // dokunup doğru yakınlık kelimesini duyabilir, otomatik seslenmez
-    // (istenmeyen tekrar/beklenmedik ses otizmli çocuklar için rahatsız
-    // edici olabilir, bu yüzden BUTON — otomatik değil).
+    // 2026-09-15 — kullanıcı bulgusu: eskiden 6sn'de doğru seçenek otomatik
+    // renkleniyordu (diğer oyunlardan miras kalan görsel ipucu deseni) —
+    // artık seçenekler özel ad değil yakınlık gösterdiği için ("Dede (anne
+    // tarafı)" gibi) bu otomatik renklendirme doğrudan cevabı vermek anlamına
+    // geliyordu, çocuk hiç düşünmeden görebiliyordu. Kaldırıldı — yalnızca
+    // 10sn'deki manuel "Sesli ipucu" butonu kaldı (çocuk isterse kullanır,
+    // otomatik verilmez).
     const [showVoiceHintButton, dismissVoiceHintButton] = useHintTimer([target?.id], 10000);
     // 2026-09-15 — kullanıcı bulgusu: sesli ipucu butonuna basılınca cihazın
     // hoparlöründen çıkan "Bu senin annen" sesi mikrofona geri yansıyıp
@@ -161,7 +167,6 @@ export default function FamilyAlbumGame() {
 
         const isMatch = candidate.id === target.id;
         setIsLocked(true);
-        dismissHint();
         dismissVoiceHintButton();
         recordSkillAttempt('sosyal-tanima', 'family-album', isMatch).catch(() => {});
         checkCalmingMode(isMatch);
@@ -195,7 +200,6 @@ export default function FamilyAlbumGame() {
         if (isLocked || !target || dayBudget?.isDayComplete || dailyLimit?.isFamilyAlbumLimitReached) return;
 
         setIsLocked(true);
-        dismissHint();
         dismissVoiceHintButton();
         recordSkillAttempt('sosyal-tanima', 'family-album', false).catch(() => {});
         checkCalmingMode(false);
@@ -325,30 +329,25 @@ export default function FamilyAlbumGame() {
                             </button>
                         )}
                         <div className="flex flex-wrap gap-3 justify-center">
-                            {options.map((option) => {
-                                const isHinted = showHint && option.id === target.id;
-                                return (
-                                    <button
-                                        key={option.id}
-                                        type="button"
-                                        onClick={() => handleSelect(option)}
-                                        disabled={isLocked}
-                                        className={`min-h-tap px-6 py-3 rounded-p-md font-bold text-p-base shadow-sm transition-colors ${
-                                            feedback === 'correct' && option.id === target.id
-                                                ? 'bg-papatya-leaf text-white'
-                                                : feedback === 'wrong' && option.id === wrongPickId
-                                                  ? 'bg-papatya-rose/20 text-papatya-rose border-2 border-papatya-rose/50'
-                                                  : feedback === 'wrong' && option.id !== target.id
-                                                    ? 'bg-papatya-surface text-papatya-ink-soft'
-                                                    : isHinted
-                                                      ? 'bg-papatya-petal/40 text-papatya-ink'
-                                                      : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
-                                        } disabled:opacity-70`}
-                                    >
-                                        {option.relation}
-                                    </button>
-                                );
-                            })}
+                            {options.map((option) => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => handleSelect(option)}
+                                    disabled={isLocked}
+                                    className={`min-h-tap px-6 py-3 rounded-p-md font-bold text-p-base shadow-sm transition-colors ${
+                                        feedback === 'correct' && option.id === target.id
+                                            ? 'bg-papatya-leaf text-white'
+                                            : feedback === 'wrong' && option.id === wrongPickId
+                                              ? 'bg-papatya-rose/20 text-papatya-rose border-2 border-papatya-rose/50'
+                                              : feedback === 'wrong' && option.id !== target.id
+                                                ? 'bg-papatya-surface text-papatya-ink-soft'
+                                                : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
+                                    } disabled:opacity-70`}
+                                >
+                                    {option.relation}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 )}
