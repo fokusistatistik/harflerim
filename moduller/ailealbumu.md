@@ -6,7 +6,7 @@
 
 ## Özet
 
-Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna 3 isim seçeneği arasından doğru cevabı seçer (dokunarak ya da ismi söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
+Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (2. turdan itibaren adaptif zorluğa göre 2-4 arası) isim seçeneği arasından doğru cevabı seçer (dokunarak ya da ismi söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
 
 **Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
 
@@ -40,7 +40,7 @@
 
 ## Blok (c) — UI/UX
 
-**Durum: Bu turda düzeltildi — layout, erişilebilirlik ve PC genişletme.**
+**Durum: İki turda düzeltildi — layout, erişilebilirlik, PC genişletme ve yanlış-seçenek vurgusu.**
 
 - ✅ (2026-09-15) **Kırık görsel riski giderildi.** Hedef fotoğraf düz `<img>` yerine `ImageWithFallback` ile render ediliyor artık — dosya silinmiş/bozuksa kırık görsel ikonu yerine sakin bir kullanıcı ikonu placeholder'ı gösteriliyor (diğer oyunlarda zaten kullanılan desen, bu oyunda eksikti).
 - ✅ (2026-09-15) **Dikey ortalama/PC boşluk sorunu düzeltildi.** Ana oyun kapsayıcısı `items-center` içeriyordu ama `justify-center` yoktu — içerik ekranın üst kısmında kümeleniyor, geniş ekranlarda (1920px) altta büyük boş alan kalıyordu. `GameHud`'ı `shrink-0` ile üstte sabit tutup geri kalan içeriği ayrı bir `flex-1 justify-center` kapsayıcısına almak suretiyle düzeltildi — geri düğmesi artık her zaman üstte, oyun içeriği dikeyde gerçekten ortalanıyor. Gerçek tarayıcıda 375/800/1920px'te doğrulandı.
