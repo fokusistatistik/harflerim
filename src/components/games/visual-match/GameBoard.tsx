@@ -20,28 +20,29 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { useGameDayBudget } from '@/hooks/useGameDayBudget';
 import { recordSkillAttempt } from '@/actions/skills';
-import { getVisualMatchDailyState } from '@/actions/visualMatch';
+import { getVisualMatchDailyState, getVisualMatchRoundPool, type VisualMatchCard } from '@/actions/visualMatch';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { useAudio } from '@/components/AudioProvider';
 import { GameHud } from '@/components/game/GameHud';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 
-const LETTERS = [
-    'A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'Ğ', 'H', 'I', 'İ', 'J', 'K', 'L', 'M',
-    'N', 'O', 'Ö', 'P', 'R', 'S', 'Ş', 'T', 'U', 'Ü', 'V', 'Y', 'Z',
-];
-
-function pickDistractors(target: string, count: number): string[] {
-    const pool = LETTERS.filter((l) => l !== target);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
-}
+/**
+ * Renkli fotoğrafı gölgemsi bir görünüme çeviren CSS filtresi — ayrı bir
+ * siluet görseli üretmeden mevcut ComparisonItem fotoğraflarını kullanır.
+ * `brightness(0)` (tam siyah) hem nesneyi hem fotoğrafın kendi (çoğunlukla
+ * açık/krem tonlu) zeminini aynı koyulukta bırakıp düz bir blok gibi
+ * görünmesine yol açıyordu. Yüksek `contrast` + düşük `brightness`
+ * kombinasyonu fotoğrafın açık zeminini beyaza, nesnenin koyu kısımlarını
+ * derin siyaha "eşikleyerek" gerçek bir siluet keskinliği veriyor —
+ * kullanıcı bulgusu: önceki (contrast 1.4) hâlâ düz/soluk bir blok gibi
+ * duruyordu.
+ */
+const SILHOUETTE_STYLE: React.CSSProperties = { filter: 'grayscale(1) brightness(0.4) contrast(3)' };
 
 export function GameBoard() {
-    // Faz 1.8: Ses dosyası adları düzeltildi (ding.mp3/pop.mp3 hiç var olmayan
-    // dosyalardı) — projede zaten mevcut olan public/sounds/*.wav kullanılıyor.
     const [playSuccess] = useSound('/sounds/success.wav', { volume: 0.5 });
     const [playPop] = useSound('/sounds/pop.wav', { volume: 0.25 });
     const { encourageRetry } = useAudio();
@@ -49,13 +50,14 @@ export function GameBoard() {
     const checkCalmingMode = useCalmingModeMonitor('golge-eslestirme'); // Faz 3.2b
     const prefersReducedMotion = useReducedMotion();
 
-    const [targetLetter, setTargetLetter] = useState('A');
-    const previousLetterRef = useRef<string | null>(null);
-    const [cardLetters, setCardLetters] = useState<string[]>(['A']);
+    const [target, setTarget] = useState<VisualMatchCard | null>(null);
+    const [cards, setCards] = useState<VisualMatchCard[]>([]);
+    const previousTargetIdRef = useRef<string | null>(null);
     const [isMatched, setIsMatched] = useState(false);
-    const [activeId, setActiveId] = useState<string | null>(null);
+    const [activeCard, setActiveCard] = useState<VisualMatchCard | null>(null);
     const [shakeToken, setShakeToken] = useState(0);
     const [dailyLimit, setDailyLimit] = useState<{ roundsPlayedToday: number; dailyVisualMatchLimit: number; isVisualMatchLimitReached: boolean } | null>(null);
+    const [loaded, setLoaded] = useState(false);
 
     // For window size (Confetti)
     const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -81,20 +83,31 @@ export function GameBoard() {
     const startNewLevel = useCallback(async () => {
         const state = await getVisualMatchDailyState().catch(() => null);
         setDailyLimit(state);
-        if (state?.isVisualMatchLimitReached) return;
+        if (state?.isVisualMatchLimitReached) {
+            setLoaded(true);
+            return;
+        }
 
-        // Ardışık aynı harf asla seçilmez (Harf Avı'ndaki kesin korumanın aynısı) — havuzda alternatif varken.
-        const pool = LETTERS.filter((l) => l !== previousLetterRef.current);
-        const randomLetter = pool[Math.floor(Math.random() * pool.length)];
-        previousLetterRef.current = randomLetter;
+        const cardCount = 1 + (state?.distractorCount ?? 0);
+        // Havuzdan bir round'luk kartı çek — ardışık aynı hedef gelmesin diye
+        // gerekirse bir kez daha çekilir (Harf Avı'ndaki kesin korumanın aynısı).
+        let pool = await getVisualMatchRoundPool(cardCount).catch(() => []);
+        for (let attempt = 0; attempt < 3 && pool[0]?.id === previousTargetIdRef.current && pool.length > 0; attempt++) {
+            pool = await getVisualMatchRoundPool(cardCount).catch(() => []);
+        }
 
-        const distractorCount = state?.distractorCount ?? 0;
-        const distractors = pickDistractors(randomLetter, distractorCount);
-        setCardLetters([randomLetter, ...distractors].sort(() => Math.random() - 0.5));
+        if (pool.length === 0) {
+            setLoaded(true);
+            return;
+        }
 
-        setTargetLetter(randomLetter);
+        const newTarget = pool[0];
+        previousTargetIdRef.current = newTarget.id;
+        setTarget(newTarget);
+        setCards([...pool].sort(() => Math.random() - 0.5));
         setIsMatched(false);
         setShakeToken(0);
+        setLoaded(true);
     }, []);
 
     useEffect(() => {
@@ -103,15 +116,16 @@ export function GameBoard() {
 
     const handleDragStart = (event: DragStartEvent) => {
         if (dayBudget?.isDayComplete || dailyLimit?.isVisualMatchLimitReached) return;
-        setActiveId(event.active.id as string);
+        const card = cards.find((c) => c.id === event.active.id) ?? null;
+        setActiveCard(card);
         playPop();
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        setActiveId(null);
+        setActiveCard(null);
         if (dayBudget?.isDayComplete || dailyLimit?.isVisualMatchLimitReached) return;
         const { over, active } = event;
-        const isCorrectCard = active.id === targetLetter;
+        const isCorrectCard = target && active.id === target.id;
 
         if (over && over.id === 'target-zone' && isCorrectCard) {
             setIsMatched(true);
@@ -159,11 +173,17 @@ export function GameBoard() {
                 <GameHud right={<GameIntroCard gameId="visual-match" variant="tooltip" />} />
             </div>
 
-            {isLimitReached ? (
+            {!loaded ? (
+                <p className="h-full flex items-center justify-center text-p-base text-papatya-ink-soft">Yükleniyor...</p>
+            ) : isLimitReached ? (
                 <div className="h-full flex flex-col items-center justify-center p-4 gap-4 text-center">
                     <p className="text-p-lg font-bold text-papatya-ink">Bugünkü {dailyLimit?.dailyVisualMatchLimit} turluk hakkın doldu</p>
                     <p className="text-p-base text-papatya-ink-soft">Yarın devam edebilirsin!</p>
                 </div>
+            ) : !target ? (
+                <p className="h-full flex items-center justify-center text-p-base text-papatya-ink-soft text-center px-4">
+                    Şu an gösterilecek nesne bulunamadı.
+                </p>
             ) : (
                 <DndContext
                     id="visual-match-dnd"
@@ -172,66 +192,80 @@ export function GameBoard() {
                     onDragEnd={handleDragEnd}
                     modifiers={[restrictToWindowEdges]}
                 >
-                    <div className="h-full flex flex-col items-center justify-center p-4 gap-10 lg:gap-16 xl:gap-24">
-
-                        {/* Target Zone (Shadow) */}
-                        <div className="relative">
-                            <Droppable id="target-zone" isMatched={isMatched}>
-                                <div
-                                    className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 flex items-center justify-center text-9xl xl:text-[10rem] font-bold text-papatya-rule select-none"
-                                    style={{ fontFamily: 'var(--font-andika)' }}
-                                >
-                                    {targetLetter}
-                                </div>
-                            </Droppable>
-
-                            {/* Success Thumbs Up */}
-                            <AnimatePresence>
-                                {isMatched && (
-                                    <motion.div
-                                        initial={{ scale: 0, rotate: -45 }}
-                                        animate={{ scale: 1, rotate: 0 }}
-                                        exit={{ scale: 0 }}
-                                        aria-hidden="true"
-                                        className="absolute -top-12 -right-12 text-8xl z-20 drop-shadow-lg"
-                                    >
-                                        👍
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Draggable Letter(s) — zorluk arttıkça çeldirici harfler eklenir (Faz 2.11 adaptif zorluk) */}
-                        {!isMatched && (
-                            <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-10 mt-8">
-                                {cardLetters.map((letter) => (
-                                    <motion.div
-                                        key={letter}
-                                        animate={shakeToken > 0 && letter !== targetLetter ? { x: [0, -8, 8, -8, 0] } : { x: 0 }}
-                                        transition={{ duration: 0.4 }}
-                                    >
-                                        <Draggable id={letter} disabled={dayBudget?.isDayComplete}>
-                                            <div
-                                                className="w-32 h-32 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64 bg-papatya-sky rounded-3xl flex items-center justify-center text-7xl lg:text-8xl font-bold text-white shadow-xl cursor-grab active:cursor-grabbing border-4 border-white select-none"
-                                                style={{ fontFamily: 'var(--font-andika)' }}
-                                            >
-                                                {letter}
-                                            </div>
-                                        </Draggable>
-                                    </motion.div>
-                                ))}
-                            </div>
+                    <div className="h-full flex flex-col items-center p-4 pt-20 lg:pt-24 gap-6">
+                        {dailyLimit && (
+                            <p className="text-p-sm text-papatya-ink-soft whitespace-nowrap text-center">
+                                Bugün {dailyLimit.roundsPlayedToday}/{dailyLimit.dailyVisualMatchLimit}
+                            </p>
                         )}
+
+                        <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 xl:gap-20 w-full">
+                            {/* Target Zone (Silhouette) — masaüstünde solda */}
+                            <div className="relative shrink-0">
+                                <Droppable id="target-zone" isMatched={isMatched}>
+                                    <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 flex items-center justify-center p-6 select-none bg-papatya-cream rounded-3xl">
+                                        <ImageWithFallback
+                                            src={target.imageUrl}
+                                            alt={`${target.name} gölgesi`}
+                                            className="w-full h-full object-contain"
+                                            fallback={<span className="text-p-lg font-bold text-papatya-ink-soft">{target.name}</span>}
+                                            style={SILHOUETTE_STYLE}
+                                        />
+                                    </div>
+                                </Droppable>
+
+                                {/* Success Thumbs Up */}
+                                <AnimatePresence>
+                                    {isMatched && (
+                                        <motion.div
+                                            initial={{ scale: 0, rotate: -45 }}
+                                            animate={{ scale: 1, rotate: 0 }}
+                                            exit={{ scale: 0 }}
+                                            aria-hidden="true"
+                                            className="absolute -top-12 -right-12 text-8xl z-20 drop-shadow-lg"
+                                        >
+                                            👍
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Draggable nesne kartları — masaüstünde sağda, en az 3 alternatif (Faz 2.11 adaptif zorluk) */}
+                            {!isMatched && (
+                                <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-8 lg:max-w-md xl:max-w-lg">
+                                    {cards.map((card) => (
+                                        <motion.div
+                                            key={card.id}
+                                            animate={shakeToken > 0 && card.id !== target.id ? { x: [0, -8, 8, -8, 0] } : { x: 0 }}
+                                            transition={{ duration: 0.4 }}
+                                        >
+                                            <Draggable id={card.id} label={`${card.name}, sürüklenebilir`} disabled={dayBudget?.isDayComplete}>
+                                                <div className="w-32 h-32 md:w-40 md:h-40 lg:w-36 lg:h-36 xl:w-44 xl:h-44 bg-papatya-surface rounded-3xl flex items-center justify-center p-3 shadow-xl cursor-grab active:cursor-grabbing border-4 border-white select-none overflow-hidden">
+                                                    <ImageWithFallback
+                                                        src={card.imageUrl}
+                                                        alt={card.name}
+                                                        className="w-full h-full object-cover rounded-2xl"
+                                                        fallback={<span className="text-p-base font-bold text-papatya-ink text-center px-2">{card.name}</span>}
+                                                    />
+                                                </div>
+                                            </Draggable>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Drag Overlay (What follows the cursor) */}
                     <DragOverlay dropAnimation={dropAnimation}>
-                        {activeId ? (
-                            <div
-                                className="w-32 h-32 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64 bg-papatya-sky rounded-3xl flex items-center justify-center text-7xl lg:text-8xl font-bold text-white shadow-2xl opacity-90 border-4 border-white select-none scale-110 rotate-3"
-                                style={{ fontFamily: 'var(--font-andika)' }}
-                            >
-                                {activeId}
+                        {activeCard ? (
+                            <div className="w-32 h-32 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64 bg-papatya-surface rounded-3xl flex items-center justify-center p-3 shadow-2xl opacity-90 border-4 border-white select-none scale-110 rotate-3 overflow-hidden">
+                                <ImageWithFallback
+                                    src={activeCard.imageUrl}
+                                    alt={activeCard.name}
+                                    className="w-full h-full object-cover rounded-2xl"
+                                    fallback={<span className="text-p-base font-bold text-papatya-ink text-center px-2">{activeCard.name}</span>}
+                                />
                             </div>
                         ) : null}
                     </DragOverlay>

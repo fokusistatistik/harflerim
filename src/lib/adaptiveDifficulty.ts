@@ -99,21 +99,27 @@ export async function getAdaptiveMemoryConfig(userId: string): Promise<MemoryAda
 }
 
 export interface VisualMatchAdaptiveConfig {
-    /** Sürüklenebilir gölge/hedef çiftinin yanına eklenen, seçilmemesi gereken yanlış harf sayısı. */
+    /** Siluet hedefinin altına eklenen, doğru nesnenin yanı sıra seçilmemesi gereken yanlış nesne fotoğrafı sayısı. */
     distractorCount: number;
 }
 
-const MIN_DISTRACTORS = 0;
+// 2026-09-15 — kullanıcı isteği: her round en az 3 alternatif (1 doğru + en
+// az 2 çeldirici) göstersin, tek kartlı round hiç olmasın — bu yüzden taban
+// 0 değil 2 çeldirici (Harf Avı'ndaki "ilk round en kolay" ilkesiyle
+// çelişmiyor, zorluk hâlâ üst sınıra doğru artabiliyor, yalnızca taban
+// yükseltildi).
+const MIN_DISTRACTORS = 2;
 const MAX_DISTRACTORS = 3;
 
-/** Hiç geçmiş yokken (ilk round) — en kolay ayar, hiç çeldirici yok (tek hedef/tek kart). */
+/** Hiç geçmiş yokken (ilk round) — en kolay ayar, taban çeldirici sayısı (bkz. yukarıdaki not). */
 export const BASE_VISUAL_MATCH_ADAPTIVE_CONFIG: VisualMatchAdaptiveConfig = { distractorCount: MIN_DISTRACTORS };
 
 /**
- * 2026-09-15 — Faz 2.11 denetimindeki "hâlâ sabit sistemde" bulgusunun
- * düzeltmesi. `getAdaptiveConfig`/`getAdaptiveMemoryConfig` ile aynı desen
- * ve aynı `detectErrorStreak` altyapısı, farklı beceri anahtarı
- * (`golge-eslestirme`) ve farklı çıktı şekli (çeldirici sayısı).
+ * 2026-09-15 (2. tur) — `getAdaptiveConfig`/`getAdaptiveMemoryConfig` ile
+ * aynı desen ve aynı `detectErrorStreak` altyapısı, farklı beceri anahtarı
+ * (`golge-eslestirme`) ve farklı çıktı şekli (çeldirici sayısı). Oyun 2.
+ * turda harf tabanlı mekanikten gerçek bir nesne-siluet eşleştirmesine
+ * geçirildi — bkz. GameBoard.tsx.
  */
 export async function getAdaptiveVisualMatchConfig(userId: string): Promise<VisualMatchAdaptiveConfig> {
     const stats = await detectErrorStreak(userId, 'golge-eslestirme');
@@ -126,12 +132,8 @@ export async function getAdaptiveVisualMatchConfig(userId: string): Promise<Visu
 
     const basari = stats.sonDenemeBasariOrani ?? 0;
 
-    if (basari >= 0.8) {
+    if (basari >= 0.6) {
         return { distractorCount: MAX_DISTRACTORS };
-    }
-
-    if (basari >= 0.5) {
-        return { distractorCount: 1 };
     }
 
     return { distractorCount: MIN_DISTRACTORS };

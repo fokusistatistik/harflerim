@@ -2,15 +2,15 @@
 
 > Faz 2.11 denetim çeklistinin üçüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (2. tur — kullanıcı kararlarıyla adaptif zorluk, günlük round limiti, klavye erişilebilirliği, yanlış cevap geri bildirimi ve daha fazlası uygulandı; ayrıntı için aşağıdaki "İkinci tur" bölümüne bakın).
+> Son güncelleme: 2026-09-15 (3. tur — kullanıcı bulgusu: harf tabanlı mekanik "Gölge Eşleştirme" adıyla hiç alakalı değildi, Harf Avı'yla birebir aynı mantıktı. Oyun tamamen gerçek bir nesne-siluet mekaniğine dönüştürüldü; ayrıntı için aşağıdaki "Üçüncü tur" bölümüne bakın. Bu turdan önceki blok metinleri hâlâ harf-tabanlı mekaniği anlatıyor olabilir, güncel olan yalnızca en alttaki "Üçüncü tur" özetidir).
 
 ## Özet
 
-Sürükle-bırak mekaniğiyle çalışan oyun: ekranda hedef bir harf gölgesi (ana hatları çizili, dolgusuz) belirir, çocuk aynı harfi taşıyan dolu bir kartı bu gölgenin üzerine sürükler. Ölçtüğü beceri `golge-eslestirme` (SkillAttempt). 2. turda gerçek bir adaptif zorluk motoruna kavuştu: başarı arttıkça hedefin yanına 1-3 çeldirici (yanlış) harf eklenir, çocuk doğru olanı seçip sürükler — artık gerçek bir ayırt etme görevi var (bkz. Blok a/d).
+Sürükle-bırak mekaniğiyle çalışan oyun: ekranda hedef bir nesnenin SİLUETİ (CSS filtresiyle koyulaştırılmış gerçek fotoğraf, `ComparisonItem` havuzundan — Hafıza Kartları'nın "Nesnelerle" moduyla aynı 100 fotoğraflık kaynak) belirir, çocuk doğru nesnenin renkli fotoğrafını bu siluetin üzerine sürükler. Ölçtüğü beceri `golge-eslestirme` (SkillAttempt). Her round en az 3 alternatif (1 doğru + en az 2 çeldirici) gösterir — gerçek bir görsel ayırt etme görevi. Masaüstünde hedef solda, alternatifler sağda yan yana; mobilde/tablette dikey akışa döner.
 
-**Ana dosyalar:** `src/components/games/visual-match/GameBoard.tsx`, `Draggable.tsx`, `Droppable.tsx` · `src/app/games/visual-match/page.tsx` · `src/actions/skills.ts` (`recordSkillAttempt`), `src/actions/visualMatch.ts` (`getVisualMatchDailyState` — adaptif config + günlük limit) · `src/lib/adaptiveDifficulty.ts` (`getAdaptiveVisualMatchConfig`) · `src/hooks/useGameDayBudget.ts`, `useCalmingModeMonitor.ts` (paylaşılan, diğer oyunlarla aynı) · `src/config/gameIntros.ts` (tanıtım metni) · `src/actions/parentSettings.ts` (`dailyVisualMatchLimit`) · `src/components/ui/parentPanel/ScreenTimeTab.tsx` (ebeveyn ayarı).
+**Ana dosyalar:** `src/components/games/visual-match/GameBoard.tsx`, `Draggable.tsx`, `Droppable.tsx` · `src/app/games/visual-match/page.tsx` · `src/actions/skills.ts` (`recordSkillAttempt`), `src/actions/visualMatch.ts` (`getVisualMatchDailyState`, `getVisualMatchRoundPool` — `ComparisonItem` havuzundan round çekimi) · `src/lib/adaptiveDifficulty.ts` (`getAdaptiveVisualMatchConfig`) · `src/components/ui/ImageWithFallback.tsx` (siluet CSS filtresi için `style` prop'u eklendi) · `src/hooks/useGameDayBudget.ts`, `useCalmingModeMonitor.ts` (paylaşılan, diğer oyunlarla aynı) · `src/config/gameIntros.ts` (tanıtım metni) · `src/actions/parentSettings.ts` (`dailyVisualMatchLimit`) · `src/components/ui/parentPanel/ScreenTimeTab.tsx` (ebeveyn ayarı).
 
-**Harf Avı/Hafıza Kartları'na göre kalan fark:** çeldirici sayısı dışında zorluk boyutu yok (hedef/kart boyutu, gecikme gibi diğer değişkenler sabit); "Nesnelerle" modu gibi harf-bağımsız bir alternatif yok.
+**Harf Avı/Hafıza Kartları'na göre fark:** artık harften tamamen bağımsız, Hafıza Kartları'nın "Nesnelerle" moduyla aynı içerik havuzunu kullanıyor — ama mekanik farklı (eşleştirme değil, siluet→doğru görsel sürükleme).
 
 ---
 
@@ -136,14 +136,30 @@ Sürükle-bırak mekaniğiyle çalışan oyun: ekranda hedef bir harf gölgesi (
 8. ✅ **Konfeti azaltıldı + reduceMotion'a bağlandı** (blok e) — 200→80 parça, `reduceMotion` açıkken hiç gösterilmiyor.
 9. ✅ **PC'de içerik genişletildi** (blok c) — `xl:` kademesi eklendi.
 
-**Bilinçli olarak kapsam dışı bırakılan (kullanıcı kararı):** Oyunun tam bir "farklı görsel/nesne" mekaniğine dönüştürülmesi — çeldiriciler de birer harf, gerçek fotoğraf/nesne karşılaştırması hâlâ yok. "Nesnelerle" modu (Hafıza Kartları'ndaki gibi) ayrı bir olası gelecek iş olarak roadmap'te kalıyor.
+**2. tur bilinçli kapsam dışı:** oyunun tam bir "farklı görsel/nesne" mekaniğine dönüştürülmesi kararı bekletilmişti — 3. turda bu tam olarak yapıldı (aşağıya bakın).
 
-**Doğrulama (1. ve 2. tur birlikte):** `tsc --noEmit` ve `eslint` (tüm değişen dosyalar) temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042) 375px/800px/1920px'te: sayfa yükleme + giriş akışı + doğru/yanlış kart sürükleme (fare) + klavye ile sürükleme (Tab→Space→ok tuşları→Space) + günlük limit ekranı + ebeveyn panelindeki yeni alan (görüntüleme + kaydetme + DB doğrulama) test edildi, konsol hatası sıfır, `scrollHeight === innerHeight` (taşma yok).
+**Doğrulama (1. ve 2. tur, harf tabanlı mekanik için):** `tsc --noEmit` ve `eslint` (tüm değişen dosyalar) temiz. Gerçek tarayıcıda 375/800/1920px'te doğrulandı — bu doğrulama artık 3. turda değişen dosyalar için geçerli değil, bkz. aşağıdaki 3. tur doğrulaması.
+
+## Üçüncü tur (2026-09-15) — kullanıcı bulgusu: mekanik isimle alakasız, harf avıyla aynıydı
+
+Kullanıcı geri bildirimi tam olarak şuydu: *"harf avındaki gibi public görseller değil, sadece 2 seçenek geliyor ve çok basit kalıyor, harf avı ile aynı mantık hiç gölge ile alakası yok"* — ardından somut bir yön belirledi: gerçek bir siluet mekaniği, mevcut fotoğraflardan CSS ile üretilen siluet, siluet=hedef/renkli foto=sürüklenen kart, aynı `golge-eslestirme` skillKey korunsun.
+
+1. ✅ **Harf mekaniği tamamen kaldırıldı, `ComparisonItem` havuzuna geçirildi.** `LETTERS` sabiti ve harf render mantığı silindi. Yeni `getVisualMatchRoundPool(cardCount)` (`actions/visualMatch.ts`) `ComparisonItem` tablosundan (Hafıza Kartları "Nesnelerle" moduyla aynı 100 fotoğraf) rastgele bir round çekiyor — ilk eleman hedef, geri kalanı çeldirici.
+2. ✅ **Siluet CSS ile üretiliyor, ayrı görsel dosyası gerekmiyor.** İlk deneme (`brightness(0)`) fotoğrafı TAMAMEN karartıp düz bir blok gibi gösteriyordu (arka plan da nesne kadar koyulaşıyordu) — kullanıcı bunu "gölge CSS'i çok iyi değil" diye işaretledi. Kesin çözüm: `grayscale(1) brightness(0.4) contrast(3)` — yüksek kontrast fotoğrafın açık zeminini beyaza, nesnenin koyu kısımlarını derin siyaha "eşikliyor", gerçek bir siluet keskinliği veriyor.
+3. ✅ **Her round en az 3 alternatif.** `adaptiveDifficulty.ts`'teki `MIN_DISTRACTORS` 0'dan 2'ye çıkarıldı (1 doğru + en az 2 çeldirici = min 3 kart), `MAX_DISTRACTORS` 3'te kaldı — kullanıcı "başlangıç en az 3 alternatiften gelsin" dedi, tek-kartlı ilk round kaldırıldı.
+4. ✅ **Masaüstünde yan yana düzen.** Kullanıcı "masaüstünde ana öğe solda, gölge alternatifleri sağda, alt alta değil" dedi — iç kapsayıcı `flex-col` (mobil/tablet, dikey) → `lg:flex-row` (masaüstü, hedef solda/kartlar sağda `flex-wrap` ile) yapıldı. Kart boyutları `lg:`/`xl:` kademesinde küçültüldü (artık 3-4 kart aynı anda sığması gerektiği için).
+5. ✅ **Progress göstergesi ("Bugün N/Limit") eklendi ve konumlandırma bug'ı düzeltildi.** İlk denemede `GameHud`'ın `center` prop'u + `absolute` header içinde metin, header'ın `justify-center` flex davranışı yüzünden alttaki siluet kutusunun İÇİNE düşüyordu (`pt-*` padding'i flex `justify-center` ortalamasında içeriği aşağı itmiyor, yalnızca kullanılabilir alanı daraltıyor). Çözüm: progress metni header'ın DIŞINA, içerik akışının kendi ilk satırı olarak taşındı (`justify-start` düzende), header'la hiçbir örtüşme kalmadı.
+6. ✅ **Tanıtım metni tekrar güncellendi** — "Nesnenin gölgesine bak, doğru resmi bul ve gölgenin üzerine sürükle. Görsel tanımayı ve ayırt etmeyi öğretir."
+7. ✅ **`ImageWithFallback`'e `style` prop'u eklendi** — paylaşılan bileşen, CSS filtresi geçirebilmek için genişletildi (geriye dönük uyumlu, opsiyonel prop).
+
+**Bu turda korunan (2. turdan devralınan, hâlâ geçerli):** adaptif zorluk motoru (artık çeldirici sayısını, harf yerine nesne fotoğrafı sayısını belirliyor), ardışık-aynı-hedef koruması, günlük round limiti, klavye-only sürükle-bırak, yanlış cevapta ses+shake, azaltılmış/reduceMotion'a bağlı konfeti, `DndContext id` sabitlemesi (hydration fix), erişilebilirlik etiketleri.
+
+**Doğrulama (3. tur):** `tsc --noEmit` ve `eslint` (tüm değişen dosyalar) temiz. Gerçek tarayıcıda 375px/800px/1920px'te: her round en az 3 kart geliyor, doğru kartın sürüklenmesi (fare VE klavye — Tab→Space→ok tuşları→Space) başarılı eşleşmeye yol açıyor, masaüstünde yan yana/mobilde dikey düzen doğrulandı, progress göstergesi artık hiçbir öğeyle çakışmıyor, konsol hatası sıfır, scroll taşması yok.
 
 ## Açık kalan işler (roadmap referansı)
 
 - Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi ve klinik/pedagojik uzman denetimi — Faz 3'ün "Uzman denetimi" ve "Tam gerçek-cihaz QA" notlarının kapsamında, Harf Avı/Hafıza Kartları ile aynı insan/cihaz adımı.
 - Pekiştirme yoğunluğunun aralıklı hale getirilmesi (blok a) — üç oyunda da ortak, henüz hiçbirinde ele alınmadı.
-- Gerçek bir "farklı görsel/nesne" mekaniğine (Hafıza Kartları'nın "Nesnelerle" modu gibi) geçiş — kullanıcı kararıyla bu turda bilinçli olarak ertelendi.
 - `sensoryProfile` JSON'unun oyun davranışına bağlanması (blok e) — proje-geneli, diğer iki modülde de aynı not var.
 - Ebeveyn panelinde `golge-eslestirme` becerisinin `ProgressTab.tsx`'te ayrıca görünür kılınması (blok b) — doğrulanmadı.
+- Blok (a)-(g) metinlerinin (dosyanın üst kısmı) 3. turdaki harf→nesne geçişini yansıtacak şekilde tam olarak yeniden yazılması — şu an yalnızca bu son özet güncel, üstteki bloklar hâlâ harf-tabanlı mekaniği anlatıyor (sonraki bir turda ele alınabilir).

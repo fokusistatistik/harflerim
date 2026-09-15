@@ -4,17 +4,19 @@ import { motion } from 'framer-motion';
 
 interface DraggableProps {
     id: string;
+    /** Ekran okuyucu için tam etiket, ör. "Arı, sürüklenebilir". */
+    label: string;
     children: React.ReactNode;
     disabled?: boolean;
 }
 
-export function Draggable({ id, children, disabled }: DraggableProps) {
+export function Draggable({ id, label, children, disabled }: DraggableProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: id,
         disabled: disabled,
     });
 
-    // Note: We use Framer Motion for smooth visual updates, 
+    // Note: We use Framer Motion for smooth visual updates,
     // but DnD Kit handles the logic. transform needs to be applied carefully.
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -26,7 +28,7 @@ export function Draggable({ id, children, disabled }: DraggableProps) {
             style={style}
             {...listeners}
             {...attributes}
-            aria-label={`${id} harfi, sürüklenebilir`}
+            aria-label={label}
             className="z-50 touch-none"
         >
             <motion.div

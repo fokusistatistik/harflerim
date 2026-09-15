@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useState, type CSSProperties, type ReactNode } from 'react';
 
 interface ImageWithFallbackProps {
     src: string;
@@ -10,6 +10,8 @@ interface ImageWithFallbackProps {
     fallback: ReactNode;
     /** Native `<img loading>` — anlık gösterilen ipucu görselleri gibi yerlerde 'eager' gecikmeyi önler. */
     loading?: 'eager' | 'lazy';
+    /** Ek inline stil — ör. görseli siluete çeviren bir CSS filtresi (bkz. visual-match). */
+    style?: CSSProperties;
 }
 
 /**
@@ -28,7 +30,7 @@ interface ImageWithFallbackProps {
  * kullanılıyor: element bağlandığı anda `complete` zaten true ise yükleme
  * React devreye girmeden bitmiş demektir, sonucu oradan okuyoruz.
  */
-export function ImageWithFallback({ src, alt, className, fallback, loading }: ImageWithFallbackProps) {
+export function ImageWithFallback({ src, alt, className, fallback, loading, style }: ImageWithFallbackProps) {
     const [failed, setFailed] = useState(false);
 
     // Bazı sunucular 404 için bile 200 + HTML gövdesi döndürebilir —
@@ -48,6 +50,7 @@ export function ImageWithFallback({ src, alt, className, fallback, loading }: Im
             src={src}
             alt={alt}
             className={className}
+            style={style}
             loading={loading}
             onError={() => setFailed(true)}
             onLoad={(e) => {

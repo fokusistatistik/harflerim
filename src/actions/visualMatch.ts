@@ -14,6 +14,12 @@ export interface VisualMatchDailyState extends VisualMatchAdaptiveConfig {
     isVisualMatchLimitReached: boolean;
 }
 
+export interface VisualMatchCard {
+    id: string;
+    name: string;
+    imageUrl: string;
+}
+
 /** Bugün bu kullanıcı için kaç SkillAttempt (=round) kaydedilmiş — Hafıza Kartları'nın `Session.roundsPlayed` sayacına denk, ayrı bir tablo gerektirmez çünkü zorluk motoru zaten her denemeyi SkillAttempt'e yazıyor. */
 async function countTodaysAttempts(userId: string, skillId: string): Promise<number> {
     const startOfDay = new Date();
@@ -50,4 +56,26 @@ export async function getVisualMatchDailyState(): Promise<VisualMatchDailyState>
         dailyVisualMatchLimit,
         isVisualMatchLimitReached: roundsPlayedToday >= dailyVisualMatchLimit,
     };
+}
+
+/**
+ * 2026-09-15 (2. tur) — kullanıcı bulgusu: harf tabanlı mekanik "Gölge
+ * Eşleştirme" adına hiç yakışmıyordu (Harf Avı'yla aynı mantık, isimle
+ * alakasız). Gerçek bir siluet/gölge görevi için `ComparisonItem` havuzunu
+ * (Hafıza Kartları'nın "Nesnelerle" moduyla aynı kaynak, 100 gerçek
+ * nesne fotoğrafı) kullanıyoruz — hedef bir nesnenin SİLUETİ (client
+ * tarafında CSS filtresiyle üretilir, bkz. GameBoard.tsx), doğru kart o
+ * nesnenin renkli fotoğrafı.
+ */
+export async function getVisualMatchRoundPool(cardCount: number): Promise<VisualMatchCard[]> {
+    const count = Math.max(1, Math.min(4, Math.round(cardCount)));
+
+    const items = await db.comparisonItem.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, imageUrl: true },
+    });
+    if (items.length === 0) return [];
+
+    const shuffled = [...items].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
 }
