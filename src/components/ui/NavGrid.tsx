@@ -69,14 +69,20 @@ const ACCENT_CLASSES: Record<NavAccent, { border: string; borderHover: string; i
     },
 };
 
+/** GEÇİCİ (kullanıcı isteği) — denetimi tamamlanmış (moduller/*.md raporu
+ * hazır) alanları ana sayfada kırmızı border ile işaretler, fark edilmeleri
+ * için. Denetim süreci bitince kaldırılmalı. */
+const RECENTLY_CHANGED_IDS = ['letter-hunt', 'visual-match', 'memory-match', 'family-album'];
+
 function CardShell({ area, children }: { area: NavArea; children: React.ReactNode }) {
     const accent = ACCENT_CLASSES[area.accent];
     const isSoon = area.status === 'soon';
+    const isRecentlyChanged = RECENTLY_CHANGED_IDS.includes(area.id);
 
     const inner = (
         <div
             className={`relative bg-papatya-surface border-4 rounded-p-lg p-4 flex flex-col items-center justify-center gap-3 h-full transition-all
-                ${isSoon ? 'border-papatya-rule opacity-70' : `${accent.border} ${accent.borderHover} shadow-xl hover:shadow-2xl`}`}
+                ${isRecentlyChanged ? 'border-red-500 shadow-xl hover:shadow-2xl' : isSoon ? 'border-papatya-rule opacity-70' : `${accent.border} ${accent.borderHover} shadow-xl hover:shadow-2xl`}`}
         >
             {children}
             <div className="flex flex-col items-center text-center w-full px-2">
