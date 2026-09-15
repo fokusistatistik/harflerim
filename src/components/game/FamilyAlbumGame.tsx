@@ -9,6 +9,8 @@ import { useVoiceConfirm } from '@/hooks/useVoiceConfirm';
 import { recordSkillAttempt } from '@/actions/skills';
 import { listFamilyMembers, type FamilyMemberData } from '@/actions/familyMembers';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
+import { User as UserIcon } from 'lucide-react';
 import { GameHud } from './GameHud';
 
 const OPTIONS_PER_ROUND = 3;
@@ -127,45 +129,58 @@ export default function FamilyAlbumGame() {
     }
 
     return (
-        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-6 items-center">
-            <GameHud />
-            <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
-            <GameIntroCard gameId="family-album" variant="banner" />
+        <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-6">
+            <div className="shrink-0">
+                <GameHud />
+            </div>
 
-            {target && (
-                <div className="flex flex-col items-center gap-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={target.photoPath}
-                        alt="Aile bireyi"
-                        className="w-48 h-48 md:w-64 md:h-64 object-cover rounded-p-lg shadow-lg"
-                    />
-                    <div className="flex flex-wrap gap-3 justify-center">
-                        {options.map((option) => {
-                            const isHinted = showHint && option.id === target.id;
-                            return (
-                                <button
-                                    key={option.id}
-                                    type="button"
-                                    onClick={() => handleSelect(option)}
-                                    disabled={isLocked}
-                                    className={`min-h-tap px-6 py-3 rounded-p-md font-bold text-p-base shadow-sm transition-colors ${
-                                        feedback === 'correct' && option.id === target.id
-                                            ? 'bg-papatya-leaf text-white'
-                                            : feedback === 'wrong' && option.id !== target.id
-                                              ? 'bg-papatya-surface text-papatya-ink-soft'
-                                              : isHinted
-                                                ? 'bg-papatya-petal/40 text-papatya-ink'
-                                                : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
-                                    } disabled:opacity-70`}
-                                >
-                                    {option.name}
-                                </button>
-                            );
-                        })}
+            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                <h1 className="text-p-2xl font-bold text-center">Bu Kim?</h1>
+                <GameIntroCard gameId="family-album" variant="banner" />
+
+                {target && (
+                    <div className="flex flex-col items-center gap-4">
+                        {/* Doğru cevap zaten useRewardMoment'ın kendi toast'ıyla (role="status") duyuruluyor — burada yalnızca yanlış cevap için ek bir ekran okuyucu duyurusu gerekiyor. */}
+                        <span role="status" aria-live="polite" className="sr-only">
+                            {feedback === 'wrong' ? 'Tekrar deneyelim' : ''}
+                        </span>
+                        <ImageWithFallback
+                            src={target.photoPath}
+                            alt="Aile bireyi"
+                            className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 object-cover rounded-p-lg shadow-lg"
+                            fallback={
+                                <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 rounded-p-lg shadow-lg bg-papatya-petal/20 flex items-center justify-center">
+                                    <UserIcon className="text-papatya-petal-deep" size={64} />
+                                </div>
+                            }
+                        />
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            {options.map((option) => {
+                                const isHinted = showHint && option.id === target.id;
+                                return (
+                                    <button
+                                        key={option.id}
+                                        type="button"
+                                        onClick={() => handleSelect(option)}
+                                        disabled={isLocked}
+                                        className={`min-h-tap px-6 py-3 rounded-p-md font-bold text-p-base shadow-sm transition-colors ${
+                                            feedback === 'correct' && option.id === target.id
+                                                ? 'bg-papatya-leaf text-white'
+                                                : feedback === 'wrong' && option.id !== target.id
+                                                  ? 'bg-papatya-surface text-papatya-ink-soft'
+                                                  : isHinted
+                                                    ? 'bg-papatya-petal/40 text-papatya-ink'
+                                                    : 'bg-papatya-surface text-papatya-ink hover:bg-papatya-petal/20'
+                                        } disabled:opacity-70`}
+                                    >
+                                        {option.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
