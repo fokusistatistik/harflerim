@@ -2,7 +2,7 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (üçüncü tur — kullanıcının doğrudan taleple gündeme getirdiği 3 iyileştirme: kategorik yakınlık derecesi dropdown'ı, 1 MB fotoğraf boyut sınırı, boş-durum ekranından tek tıkla "Aile Bireyi Ekle" akışı).
+> Son güncelleme: 2026-09-15 (üçüncü tur — kullanıcının doğrudan taleple gündeme getirdiği 5 iyileştirme: kategorik yakınlık derecesi dropdown'ı, 1 MB fotoğraf boyut sınırı, boş-durum ekranından tek tıkla "Aile Bireyi Ekle" akışı, fotoğraf önizlemesi, düzenlemede mevcut sesi dinleme).
 
 ## Özet
 
@@ -148,11 +148,13 @@
 
 Test verileri (3 aile bireyi + yüklenen fotoğraflar) UI üzerinden silindi, `dailyFamilyAlbumLimit` zaten hiç değiştirilmemişti (20 kaldı) — DB'de kalıcı kirlilik yok, `FamilyMember` tablosu 0 satıra döndü.
 
-## Genel geliştirme önerileri — 3. tur (kullanıcı doğrudan talebi, 3/3 tamamlandı)
+## Genel geliştirme önerileri — 3. tur (kullanıcı doğrudan talebi, 5/5 tamamlandı)
 
 1. ✅ Fotoğraf yükleme için 1 MB boyut sınırı — client + server (blok b).
 2. ✅ Yakınlık derecesi kategorik `<select>`'e geçirildi (kan bağı olan/olmayan, "Diğer" ile serbest metin desteği korunuyor) (blok b).
 3. ✅ Boş-durum ekranına doğrudan "Aile Bireyi Ekle" butonu — PIN sonrası otomatik "Aile" sekmesi (blok c).
+4. ✅ Fotoğraf seçildiğinde anında küçük önizleme gösteriliyor — kullanıcı bulgusu: dosya seçildiğinde yalnızca dosya adı görünüyordu, doğru/bozuk yüklendiği belli değildi (blok c).
+5. ✅ Düzenleme modunda mevcut ses kaydı (varsa) "Mevcut sesi dinle" butonuyla dinlenebiliyor — kayıt listesindeki Play butonuyla aynı desen, önceden yalnızca liste görünümünde vardı (blok c).
 
 **Doğrulama (3. tur):** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042):
 - Dropdown'da 22 seçeneğin (21 kategori + "Diğer") tam listesi doğrulandı; "Dayı" seçilip kaydedilen kayıt listede doğru göründü.
@@ -160,9 +162,11 @@ Test verileri (3 aile bireyi + yüklenen fotoğraflar) UI üzerinden silindi, `d
 - Düzenleme akışında hem sabit listedeki değerin (dropdown'da otomatik seçili) hem sabit listede olmayan eski/serbest bir değerin ("Diğer" otomatik seçilip metin serbest alana taşınarak, veri kaybı olmadan) doğru haritalandığı doğrulandı.
 - 1 MB üstü bir dosya seçilince client tarafında anında "1 MB sınırını aşıyor" hatası çıktığı, `photo` state'inin `null` kaldığı (submit engellendiği) doğrulandı; server tarafındaki aynı kontrol kod incelemesiyle teyit edildi.
 - "Aile Bireyi Ekle" butonuna tıklayıp PIN girildikten hemen sonra Ebeveyn Yönetim Alanı'nın doğrudan "Aile" sekmesinde ("Yeni aile bireyi ekle" formu görünür) açıldığı ekran görüntüsüyle doğrulandı — ara tıklama gerekmiyor.
+- Fotoğraf seçilince `URL.createObjectURL` ile anında küçük bir önizleme (`w-14 h-14`) göründüğü, dosya inputunun yanında yer aldığı ekran görüntüsüyle doğrulandı; düzenleme modunda yeni fotoğraf seçilmezse mevcut kayıtlı fotoğrafın önizleme olarak göründüğü de teyit edildi.
+- Ses kaydı eklenip kaydedilen bir aile bireyi düzenleme moduna alındığında "Mevcut sesi dinle" butonunun "Yeniden kaydet" butonunun yanında göründüğü, yeni bir kayıt alınana kadar kalıcı olduğu ekran görüntüsüyle doğrulandı (fake mikrofon cihazıyla, `--use-fake-device-for-media-stream`).
 - Konsol hatası: yalnızca ilgisiz bir dev-sunucusu chunk 404'ü (hot-reload kaynaklı, koddan bağımsız).
 
-Test verileri ("Test Dayı", "Test Komşu Çocuğu" + geçici 1.5MB test dosyası) UI/scratchpad üzerinden tamamen temizlendi — `FamilyMember` tablosu 0 satıra döndü.
+Test verileri ("Test Dayı", "Test Komşu Çocuğu", "Test Ses Kişisi" + geçici 1.5MB test dosyası) UI/scratchpad üzerinden tamamen temizlendi — `FamilyMember` tablosu 0 satıra döndü.
 
 ## Açık kalan işler (roadmap referansı)
 

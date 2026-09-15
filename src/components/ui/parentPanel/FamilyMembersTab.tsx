@@ -23,10 +23,13 @@ export function FamilyMembersTab() {
     const [members, setMembers] = useState<FamilyMemberData[]>([]);
     const [loaded, setLoaded] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingPhotoPath, setEditingPhotoPath] = useState<string | null>(null);
+    const [editingVoicePath, setEditingVoicePath] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [relation, setRelation] = useState('');
     const [customRelation, setCustomRelation] = useState('');
     const [photo, setPhoto] = useState<File | null>(null);
+    const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
     const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -34,6 +37,21 @@ export function FamilyMembersTab() {
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
+
+    // 2026-09-15 — kullanıcı bulgusu: dosya seçildiğinde ekranda yalnızca
+    // dosya adı görünüyordu, gerçekten doğru/bozuk olmayan bir görsel mi
+    // yüklendiği hiç belli değildi. `URL.createObjectURL` ile anında bir
+    // küçük önizleme üretilir; obje URL'i bellek sızıntısı yapmasın diye
+    // `photo` değiştiğinde bir önceki URL serbest bırakılır (cleanup).
+    useEffect(() => {
+        if (!photo) {
+            setPhotoPreviewUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(photo);
+        setPhotoPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [photo]);
 
     const refresh = () => {
         listFamilyMembers().then((result) => {
@@ -71,6 +89,8 @@ export function FamilyMembersTab() {
 
     const resetForm = () => {
         setEditingId(null);
+        setEditingPhotoPath(null);
+        setEditingVoicePath(null);
         setName('');
         setRelation('');
         setCustomRelation('');
@@ -81,6 +101,8 @@ export function FamilyMembersTab() {
 
     const startEdit = (member: FamilyMemberData) => {
         setEditingId(member.id);
+        setEditingPhotoPath(member.photoPath);
+        setEditingVoicePath(member.voicePath);
         setName(member.name);
         // Kayıtlı değer sabit listede varsa dropdown'da seçili gelir; yoksa
         // (eski serbest-metin kayıtları veya "Diğer" ile girilenler) "Diğer"
@@ -245,7 +267,7 @@ export function FamilyMembersTab() {
                 {relation === 'Diğer' && (
                     <input
                         type="text"
-                        placeholder="Yakınlık derecesini yaz (ör. Vaftiz annesi)"
+                        placeholder="Yakınlık derecesi yazın (ör. Aile dostu)"
                         value={customRelation}
                         onChange={(e) => setCustomRelation(e.target.value)}
                         className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
@@ -253,23 +275,33 @@ export function FamilyMembersTab() {
                 )}
                 <label className="flex flex-col gap-1">
                     {editingId && <span className="text-p-sm text-papatya-ink-soft">Yeni fotoğraf (boş bırakırsan mevcut kalır)</span>}
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setPhoto(handlePhotoChange(e.target.files?.[0] ?? null))}
-                        className="text-p-sm"
-                    />
+                    <div className="flex items-center gap-3">
+                        {(photoPreviewUrl || editingPhotoPath) && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                                src={photoPreviewUrl ?? editingPhotoPath ?? undefined}
+                                alt="Seçilen fotoğraf önizlemesi"
+                                className="w-14 h-14 rounded-p-md object-cover border-2 border-papatya-rule shrink-0"
+                            />
+                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setPhoto(handlePhotoChange(e.target.files?.[0] ?? null))}
+                            className="text-p-sm min-w-0"
+                        />
+                    </div>
                     <span className="text-p-sm text-papatya-ink-soft">En fazla 1 MB.</span>
                 </label>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     {!isRecording ? (
                         <button
                             type="button"
                             onClick={startRecording}
                             className="flex items-center gap-1 min-h-tap px-3 bg-papatya-leaf/20 text-papatya-leaf rounded-p-md text-p-sm font-bold"
                         >
-                            <Mic size={16} /> {voiceBlob ? 'Yeniden kaydet' : 'İsteğe bağlı ses kaydı'}
+                            <Mic size={16} /> {voiceBlob || editingVoicePath ? 'Yeniden kaydet' : 'İsteğe bağlı ses kaydı'}
                         </button>
                     ) : (
                         <button
@@ -278,6 +310,16 @@ export function FamilyMembersTab() {
                             className="flex items-center gap-1 min-h-tap px-3 bg-papatya-rose/20 text-papatya-rose rounded-p-md text-p-sm font-bold"
                         >
                             <Square size={16} /> Kaydı durdur
+                        </button>
+                    )}
+                    {/* 2026-09-15 — kullanıcı isteği: düzenlerken mevcut sesi (varsa) dinleyebilme — kayıt listesindeki Play butonuyla aynı desen, yeni bir kayıt henüz alınmadıysa gösterilir. */}
+                    {editingVoicePath && !voiceBlob && !isRecording && (
+                        <button
+                            type="button"
+                            onClick={() => new Audio(editingVoicePath).play()}
+                            className="flex items-center gap-1 min-h-tap px-3 bg-papatya-sky/15 text-papatya-sky rounded-p-md text-p-sm font-bold"
+                        >
+                            <Play size={16} /> Mevcut sesi dinle
                         </button>
                     )}
                     {voiceBlob && !isRecording && <span className="text-p-sm text-papatya-leaf">Ses kaydedildi ✓</span>}
