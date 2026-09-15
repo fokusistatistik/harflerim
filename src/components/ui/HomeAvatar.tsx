@@ -21,7 +21,7 @@ export function HomeAvatar({ avatarUrl, firstName }: HomeAvatarProps) {
     return (
         <button
             type="button"
-            onClick={openPinPrompt}
+            onClick={() => openPinPrompt()}
             className="w-full h-full rounded-full block"
             aria-label="Profili yönet"
             title="Profili yönet"

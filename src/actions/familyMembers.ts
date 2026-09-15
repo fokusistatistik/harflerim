@@ -15,6 +15,9 @@ export interface FamilyMemberData {
     voicePath: string | null;
 }
 
+/** 2026-09-15 — fotoğraf yükleme boyut sınırı (kullanıcı isteği). Sunucu tarafı gerçek sınır — client (FamilyMembersTab.tsx) yalnızca hızlı geri bildirim için aynı değeri ayrıca kontrol eder. */
+const MAX_PHOTO_SIZE_BYTES = 1 * 1024 * 1024;
+
 export interface FamilyAlbumDailyState extends FamilyAlbumAdaptiveConfig {
     roundsPlayedToday: number;
     dailyFamilyAlbumLimit: number;
@@ -99,6 +102,9 @@ export async function createFamilyMember(
     if (!(photo instanceof File) || photo.size === 0) {
         return { ok: false, error: 'Fotoğraf gerekli.' };
     }
+    if (photo.size > MAX_PHOTO_SIZE_BYTES) {
+        return { ok: false, error: 'Fotoğraf 1 MB sınırını aşıyor.' };
+    }
 
     const photoPath = await saveUploadedFile(photo, 'family');
     const voicePath = voice instanceof File && voice.size > 0 ? await saveUploadedFile(voice, 'voice') : null;
@@ -145,6 +151,9 @@ export async function updateFamilyMember(
 
     let photoPath = member.photoPath;
     if (photo instanceof File && photo.size > 0) {
+        if (photo.size > MAX_PHOTO_SIZE_BYTES) {
+            return { ok: false, error: 'Fotoğraf 1 MB sınırını aşıyor.' };
+        }
         photoPath = await saveUploadedFile(photo, 'family');
         await deleteUploadedFile(member.photoPath);
     }

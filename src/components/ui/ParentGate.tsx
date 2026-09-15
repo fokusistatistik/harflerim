@@ -44,7 +44,7 @@ type TabKey = (typeof TABS)[number]['key'];
  * ile sekmeli hale geldi (bkz. TABS).
  */
 export function ParentGate() {
-    const { isPinPromptOpen, isUnlocked, closePinPrompt, unlock, lock } = useParentGateStore();
+    const { isPinPromptOpen, isUnlocked, closePinPrompt, unlock, lock, consumeRequestedTab } = useParentGateStore();
 
     const [pin, setPin] = useState('');
     const [pinError, setPinError] = useState('');
@@ -94,6 +94,8 @@ export function ParentGate() {
         setPin('');
         if (ok) {
             unlock();
+            const requestedTab = consumeRequestedTab();
+            if (requestedTab) setActiveTab(requestedTab);
         } else {
             setPinError('Yanlış PIN. Tekrar deneyin.');
         }

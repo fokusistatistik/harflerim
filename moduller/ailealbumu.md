@@ -2,13 +2,13 @@
 
 > Faz 2.11 denetim çeklistinin dördüncü modülü — format `moduller/harfavi.md` / `moduller/hafizakartlari.md` / `moduller/gorseleslestirme.md`'yi birebir izler.
 >
-> Son güncelleme: 2026-09-15 (ikinci tur — ilk turda öneriye bırakılan büyük/mimari bulguların dördü kullanıcı onayıyla uygulandı: adaptif zorluk + günlük limit, sakinleştirme modu, rastgele hedef seçimi + ardışık koruma, yanlış-seçenek görsel vurgusu).
+> Son güncelleme: 2026-09-15 (üçüncü tur — kullanıcının doğrudan taleple gündeme getirdiği 3 iyileştirme: kategorik yakınlık derecesi dropdown'ı, 1 MB fotoğraf boyut sınırı, boş-durum ekranından tek tıkla "Aile Bireyi Ekle" akışı).
 
 ## Özet
 
 Çoktan-seçmeli tanıma oyunu: ekranda ebeveynin yüklediği gerçek bir aile bireyi fotoğrafı belirir, çocuk "Bu kim?" sorusuna (2. turdan itibaren adaptif zorluğa göre 2-4 arası) isim seçeneği arasından doğru cevabı seçer (dokunarak ya da ismi söyleyerek — sözlü onay isteğe bağlı bir alternatif, dokunmatik yol her zaman birincil). Ölçtüğü beceri `sosyal-tanima` (SkillAttempt). Diğer dört oyundan farklı olarak içerik havuzu proje-geneli değil, tamamen ebeveynin kendi yüklediği aile fotoğraflarından (`FamilyMember` modeli) oluşuyor — bu yüzden oyunun oynanabilmesi için ebeveyn panelinden en az 2 aile bireyi kaydı gerekiyor.
 
-**Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
+**Ana dosyalar:** `src/components/game/FamilyAlbumGame.tsx` · `src/app/games/family-album/page.tsx` · `src/actions/familyMembers.ts` (`listFamilyMembers`, `createFamilyMember`, `updateFamilyMember`, `deleteFamilyMember`, `getFamilyAlbumDailyState`) · `src/actions/skills.ts` (`recordSkillAttempt`, `getAllSkillProgress`) · `src/hooks/useHintTimer.ts`, `useRewardMoment.ts`, `useVoiceConfirm.ts`, `useGameDayBudget.ts`, `useCalmingModeMonitor.ts` (paylaşılan, "GameShell" altyapısı) · `src/lib/mediaStorage.ts` (fotoğraf/ses dosyası kaydı) · `src/lib/adaptiveDifficulty.ts` (`getAdaptiveFamilyAlbumConfig`) · `src/config/familyRelations.ts` (kategorik yakınlık derecesi listesi) · `src/store/parentGateStore.ts` (`requestedTab` — oyundan doğrudan sekmeye yönlendirme) · `src/components/ui/parentPanel/FamilyMembersTab.tsx` (ebeveyn tarafı: kayıt ekleme/düzenleme/silme).
 
 **Diğer dört oyuna göre en belirgin fark (2. turda kapatıldı):** Bu modül ilk denetim turunda adaptif zorluk motoruna (`adaptiveDifficulty.ts`) hiç bağlı değildi — seçenek sayısı sabit 3 (`OPTIONS_PER_ROUND`), hedef seçimi rastgele değil sıralı bir döngü (`pool[index % pool.length]`). 2. turda `getAdaptiveFamilyAlbumConfig` eklenip diğer üç oyunla aynı `detectErrorStreak` desenine bağlandı, hedef seçimi rastgele + ardışık-aynı-hedef korumasına geçirildi — artık diğer oyunlarla aynı gelişim eğrisinde.
 
@@ -32,6 +32,8 @@
 **Durum: Aile bireyi yönetimi güçlü, oyuna özel günlük limit 2. turda eklendi.**
 
 - ✅ **Aile bireyi yönetimi (`FamilyMembersTab.tsx`) eksiksiz.** Ekleme/düzenleme/silme, fotoğraf (zorunlu) + ses (isteğe bağlı, `MediaRecorder` ile tarayıcıdan kayıt) — düzenleme akışı da var (2026-09-13 denetiminde "düzenleme hiç yazılmamıştı" bulgusu daha önce kapatılmış).
+- ✅ (2026-09-15, kullanıcı isteği) **Yakınlık derecesi serbest metinden kategorik `<select>`'e geçirildi.** `src/config/familyRelations.ts`'te 21 sabit seçenek (Anne, Baba, Abla, Ağabey, Kız/Erkek Kardeş, Anneanne, Babaanne, iki taraflı Dede, Teyze, Hala, Dayı, Amca, Kuzen, Yenge, Enişte gibi kan bağı olanlar + Arkadaş, Öğretmen, Bakıcı, Komşu gibi kan bağı olmayanlar) + "Diğer" (seçilince serbest metin alanı açılır). `FamilyMember.relation` şeması hâlâ düz `String` — kod tarafında kısıtlama, veritabanı değişikliği gerekmedi. Düzenleme akışında kayıtlı değer sabit listede yoksa (eski serbest-metin kayıtları) otomatik "Diğer" seçilip mevcut metin serbest alana taşınıyor — veri kaybı yok.
+- ✅ (2026-09-15, kullanıcı isteği) **Fotoğraf yükleme için 1 MB boyut sınırı eklendi.** Hem client tarafında (`FamilyMembersTab.tsx`, seçim anında anlık hata mesajı) hem server tarafında (`familyMembers.ts`, `createFamilyMember`/`updateFamilyMember` içinde `MAX_PHOTO_SIZE_BYTES` kontrolü — asıl güvenlik sınırı, client kontrolü yalnızca hızlı geri bildirim). Önceden hiçbir boyut sınırı yoktu, proje genelinde de bir upload boyut sınırı deseni bulunmuyordu — ilk kez burada tanımlandı.
 - ✅ **`sosyal-tanima` becerisi `ProgressTab.tsx`'te görünüyor.** `getAllSkillProgress()` tüm `Skill` kayıtlarını filtresiz listeliyor — gerçek tarayıcıda birkaç round oynanıp ebeveyn panelinin İlerleme sekmesi açıldığında hem "👪 Sosyal Tanıma" rozetinde hem beceri ilerlemesi listesinde (yüzdelik oranla) doğrulandı.
 - ✅ (2026-09-15, 2. tur) **Günlük round limiti eklendi.** `dailyFamilyAlbumLimit` (`UserSettings`, varsayılan 20, 10-50 arası) — `dailyLetterHuntLimit`/`dailyMemoryMatchLimit`/`dailyVisualMatchLimit` ile birebir aynı desen: `ScreenTimeTab.tsx`'te 5. alan olarak eklendi (grid `lg:grid-cols-4`→`xl:grid-cols-5`), `updateFamilyAlbumLimit` action'ı ve `getFamilyAlbumDailyState` sorgu fonksiyonu (`familyMembers.ts`) eklendi. Oyun ekranında GameHud'ın ortasında "Bugün X/Y" rozeti gösteriliyor, limit dolunca oyun durup "Yarın devam edebilirsin!" ekranı çıkıyor (Gölge Eşleştirme ile aynı UX).
 - N/A İçerik kontrol listesi/onay akışı (Müzik/Video sekmelerindeki gibi) — aile fotoğrafları zaten yalnızca ebeveyn tarafından yüklenebiliyor, ayrı bir onay adımı gerektirmiyor.
@@ -48,6 +50,7 @@
 - ✅ (2026-09-15) **Erişilebilirlik duyurusu eklendi (yalnızca gerekli olan kısmına).** İlk denemede hem doğru hem yanlış durumu için bir `aria-live` span'ı eklendi, ama gerçek tarayıcı testinde doğru cevabın zaten `useRewardMoment`'ın kendi toast'ı (`role="status"`, `ToastHost.tsx`) tarafından duyurulduğu görüldü — çift duyuru olmasın diye yalnızca yanlış cevap durumu (`Tekrar deneyelim`) için `aria-live` bırakıldı. Gerçek tarayıcıda hem doğru (toast üzerinden) hem yanlış (yeni span üzerinden) durumun ekran okuyucuya ayrı ayrı ulaştığı doğrulandı.
 - ✅ Dokunma hedefleri: seçenek butonları `min-h-tap` + yeterli yatay dolgu (`px-6 py-3`), WCAG standardını karşılıyor.
 - ✅ (2026-09-15, 2. tur) **Yanlış cevapta tıklanan seçenek artık ayrı vurgulanıyor.** `wrongPickId` state'i eklendi — tıklanan yanlış seçenek `bg-papatya-rose/20` + `border-papatya-rose/50` ile (diğer yanlış/nötr seçeneklerden ayrı bir stil) işaretleniyor, 900ms sonra sıfırlanıyor. `papatya-rose` projede zaten "dikkat/uyarı" rengi olarak kullanılıyor (`MagicWordsGame.tsx`), sert bir "hata" kırmızısı değil — "Başarısızlık yok" ilkesiyle çelişmiyor, yalnızca hangi seçeneğin tıklandığını görsel olarak netleştiriyor.
+- ✅ (2026-09-15, 3. tur) **Boş-durum ekranına doğrudan "Aile Bireyi Ekle" butonu eklendi.** Kullanıcı bulgusu: "en az 2 aile bireyi eklemelisiniz" mesajı yalnızca metindi, ebeveyn Ebeveyn Alanı'nı manuel açıp doğru sekmeyi bulmak zorundaydı. Çözüm: `parentGateStore.ts`'e `requestedTab`/`consumeRequestedTab` eklendi — `openPinPrompt('aile')` çağrıldığında PIN doğrulandıktan sonra `ParentGate` otomatik olarak "Aile" sekmesini açıyor. Buton PIN ekranını `requestedTab: 'aile'` ile açıyor, ebeveyn PIN'i girer girmez doğrudan aile bireyi ekleme formuna düşüyor (ara tıklama yok). Diğer üç çağrı noktası (`Header.tsx`, `NavGrid.tsx`, `HomeAvatar.tsx`) parametresiz çağırmaya devam ediyor, davranışları değişmedi (`requestedTab` `undefined` kalır, varsayılan "Genel" sekmesi açılır).
 - ⚠️ Banner tanıtım kartı (`GameIntroCard variant="banner"`) her oyun açılışında yeniden görünüyor olabilir mi doğrulanmadı — `localStorage`'da kapatma tercihi tutulduğu biliniyor (kod incelemesiyle), ama bu oyunda ayrıca test edilmedi.
 
 **Kalan:** Gerçek ekran okuyucu (VoiceOver/NVDA) uçtan uca testi — insan/cihaz adımı, diğer dört modülde de aynı durum.
@@ -144,6 +147,22 @@
 - 1920px'te layout diğer oyunlarla tutarlı, taşma/boşluk yok; konsol/network'te hydration hatası, React uyarısı, 4xx/5xx sıfır.
 
 Test verileri (3 aile bireyi + yüklenen fotoğraflar) UI üzerinden silindi, `dailyFamilyAlbumLimit` zaten hiç değiştirilmemişti (20 kaldı) — DB'de kalıcı kirlilik yok, `FamilyMember` tablosu 0 satıra döndü.
+
+## Genel geliştirme önerileri — 3. tur (kullanıcı doğrudan talebi, 3/3 tamamlandı)
+
+1. ✅ Fotoğraf yükleme için 1 MB boyut sınırı — client + server (blok b).
+2. ✅ Yakınlık derecesi kategorik `<select>`'e geçirildi (kan bağı olan/olmayan, "Diğer" ile serbest metin desteği korunuyor) (blok b).
+3. ✅ Boş-durum ekranına doğrudan "Aile Bireyi Ekle" butonu — PIN sonrası otomatik "Aile" sekmesi (blok c).
+
+**Doğrulama (3. tur):** `tsc --noEmit` ve `eslint` temiz. Gerçek tarayıcıda (Playwright, `dev:agent`/3042):
+- Dropdown'da 22 seçeneğin (21 kategori + "Diğer") tam listesi doğrulandı; "Dayı" seçilip kaydedilen kayıt listede doğru göründü.
+- "Diğer" seçilince serbest metin alanının açıldığı, "Mahalle arkadaşı" gibi bir değerin doğru kaydedildiği doğrulandı.
+- Düzenleme akışında hem sabit listedeki değerin (dropdown'da otomatik seçili) hem sabit listede olmayan eski/serbest bir değerin ("Diğer" otomatik seçilip metin serbest alana taşınarak, veri kaybı olmadan) doğru haritalandığı doğrulandı.
+- 1 MB üstü bir dosya seçilince client tarafında anında "1 MB sınırını aşıyor" hatası çıktığı, `photo` state'inin `null` kaldığı (submit engellendiği) doğrulandı; server tarafındaki aynı kontrol kod incelemesiyle teyit edildi.
+- "Aile Bireyi Ekle" butonuna tıklayıp PIN girildikten hemen sonra Ebeveyn Yönetim Alanı'nın doğrudan "Aile" sekmesinde ("Yeni aile bireyi ekle" formu görünür) açıldığı ekran görüntüsüyle doğrulandı — ara tıklama gerekmiyor.
+- Konsol hatası: yalnızca ilgisiz bir dev-sunucusu chunk 404'ü (hot-reload kaynaklı, koddan bağımsız).
+
+Test verileri ("Test Dayı", "Test Komşu Çocuğu" + geçici 1.5MB test dosyası) UI/scratchpad üzerinden tamamen temizlendi — `FamilyMember` tablosu 0 satıra döndü.
 
 ## Açık kalan işler (roadmap referansı)
 

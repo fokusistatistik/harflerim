@@ -12,6 +12,7 @@ import { listFamilyMembers, getFamilyAlbumDailyState, type FamilyMemberData } fr
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { User as UserIcon } from 'lucide-react';
+import { useParentGateStore } from '@/store/parentGateStore';
 import { GameHud } from './GameHud';
 
 function shuffle<T>(arr: T[]): T[] {
@@ -145,11 +146,18 @@ export default function FamilyAlbumGame() {
         return (
             <div className="min-h-app bg-papatya-cream p-4 flex flex-col gap-4">
                 <GameHud />
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center gap-4">
                     <p className="text-center text-papatya-ink-soft max-w-sm">
                         Bu oyunu oynamak için en az 2 aile bireyi eklemelisiniz. Ebeveyn
                         Alanı&apos;ndaki &quot;Aile Bireyleri&quot; sekmesinden ekleyebilirsiniz.
                     </p>
+                    <button
+                        type="button"
+                        onClick={() => useParentGateStore.getState().openPinPrompt('aile')}
+                        className="min-h-tap px-6 py-3 bg-papatya-sky text-white font-bold rounded-p-md shadow-sm"
+                    >
+                        Aile Bireyi Ekle
+                    </button>
                 </div>
             </div>
         );

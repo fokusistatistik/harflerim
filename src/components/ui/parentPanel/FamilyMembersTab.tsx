@@ -9,6 +9,10 @@ import {
     deleteFamilyMember,
     type FamilyMemberData,
 } from '@/actions/familyMembers';
+import { FAMILY_RELATIONS } from '@/config/familyRelations';
+
+/** 2026-09-15 — fotoğraf/ses yükleme boyut sınırı (kullanıcı isteği, disk/DB şişmesini önler). Server tarafında da aynı sınır (bkz. familyMembers.ts) — client kontrolü yalnızca hızlı geri bildirim içindir. */
+const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024;
 
 /**
  * Faz 2.2 — aile bireyleri kaydı. Ses kaydı tarayıcı MediaRecorder API'siyle
@@ -21,6 +25,7 @@ export function FamilyMembersTab() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [relation, setRelation] = useState('');
+    const [customRelation, setCustomRelation] = useState('');
     const [photo, setPhoto] = useState<File | null>(null);
     const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
     const [isRecording, setIsRecording] = useState(false);
@@ -68,6 +73,7 @@ export function FamilyMembersTab() {
         setEditingId(null);
         setName('');
         setRelation('');
+        setCustomRelation('');
         setPhoto(null);
         setVoiceBlob(null);
         setError('');
@@ -76,10 +82,28 @@ export function FamilyMembersTab() {
     const startEdit = (member: FamilyMemberData) => {
         setEditingId(member.id);
         setName(member.name);
-        setRelation(member.relation);
+        // Kayıtlı değer sabit listede varsa dropdown'da seçili gelir; yoksa
+        // (eski serbest-metin kayıtları veya "Diğer" ile girilenler) "Diğer"
+        // seçilip mevcut metin customRelation alanına taşınır.
+        if ((FAMILY_RELATIONS as readonly string[]).includes(member.relation)) {
+            setRelation(member.relation);
+            setCustomRelation('');
+        } else {
+            setRelation('Diğer');
+            setCustomRelation(member.relation);
+        }
         setPhoto(null);
         setVoiceBlob(null);
         setError('');
+    };
+
+    const handlePhotoChange = (file: File | null) => {
+        if (file && file.size > MAX_FILE_SIZE_BYTES) {
+            setError('Seçilen fotoğraf 1 MB sınırını aşıyor, daha küçük bir dosya seçin.');
+            return null;
+        }
+        setError('');
+        return file;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -91,9 +115,15 @@ export function FamilyMembersTab() {
             return;
         }
 
+        const finalRelation = relation === 'Diğer' ? customRelation.trim() : relation;
+        if (!finalRelation) {
+            setError('Yakınlık derecesi gerekli.');
+            return;
+        }
+
         const fd = new FormData();
         fd.set('name', name);
-        fd.set('relation', relation);
+        fd.set('relation', finalRelation);
         if (photo) fd.set('photo', photo);
         if (voiceBlob) fd.set('voice', new File([voiceBlob], 'ses.webm', { type: 'audio/webm' }));
 
@@ -197,22 +227,39 @@ export function FamilyMembersTab() {
                         onChange={(e) => setName(e.target.value)}
                         className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
-                    <input
-                        type="text"
-                        placeholder="Yakınlık derecesi (ör. Anne, Baba)"
+                    <select
                         value={relation}
                         onChange={(e) => setRelation(e.target.value)}
                         className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
-                    />
+                    >
+                        <option value="" disabled>
+                            Yakınlık derecesi seç
+                        </option>
+                        {FAMILY_RELATIONS.map((option) => (
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+                {relation === 'Diğer' && (
+                    <input
+                        type="text"
+                        placeholder="Yakınlık derecesini yaz (ör. Vaftiz annesi)"
+                        value={customRelation}
+                        onChange={(e) => setCustomRelation(e.target.value)}
+                        className="min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
+                    />
+                )}
                 <label className="flex flex-col gap-1">
                     {editingId && <span className="text-p-sm text-papatya-ink-soft">Yeni fotoğraf (boş bırakırsan mevcut kalır)</span>}
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+                        onChange={(e) => setPhoto(handlePhotoChange(e.target.files?.[0] ?? null))}
                         className="text-p-sm"
                     />
+                    <span className="text-p-sm text-papatya-ink-soft">En fazla 1 MB.</span>
                 </label>
 
                 <div className="flex items-center gap-2">
