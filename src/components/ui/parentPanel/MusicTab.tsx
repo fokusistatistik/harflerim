@@ -107,9 +107,9 @@ export function MusicTab() {
                 </ul>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3 max-w-3xl">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3">
                 <h3 className="text-p-base font-bold text-papatya-ink-soft">Yeni şarkı ekle</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end max-w-3xl">
                     <label className="flex flex-col gap-1 min-w-0">
                         <span className="text-p-sm text-papatya-ink-soft">YouTube linki</span>
                         <input
@@ -156,7 +156,7 @@ export function MusicTab() {
                 <button
                     type="submit"
                     disabled={isSaving || !url}
-                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
+                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 self-start px-6"
                 >
                     {isSaving ? 'Ekleniyor...' : 'Ekle'}
                 </button>

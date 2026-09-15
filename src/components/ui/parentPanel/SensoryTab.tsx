@@ -37,8 +37,8 @@ export function SensoryTab() {
     };
 
     return (
-        <div className="flex flex-col gap-3 max-w-3xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {TOGGLES.map((toggle) => (
                     <label
                         key={toggle.key}

@@ -50,8 +50,8 @@ export function ScreenTimeTab() {
     }
 
     return (
-        <form onSubmit={handleSave} className="flex flex-col gap-3 max-w-3xl">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form onSubmit={handleSave} className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
                 <label className="flex flex-col gap-1">
                     <span className="text-p-sm text-papatya-ink-soft">Günlük ekran süresi (dakika)</span>
                     <input
@@ -91,16 +91,16 @@ export function ScreenTimeTab() {
                         className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
                     />
                 </label>
+                <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 px-6 whitespace-nowrap"
+                >
+                    {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
             </div>
             {error && <p className="text-p-sm text-papatya-rose">{error}</p>}
             {saved && <p className="text-p-sm text-papatya-leaf">Kaydedildi.</p>}
-            <button
-                type="submit"
-                disabled={isSaving}
-                className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
-            >
-                {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-            </button>
         </form>
     );
 }

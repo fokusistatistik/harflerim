@@ -85,7 +85,7 @@ export function ChildProfileTab() {
     }
 
     return (
-        <form onSubmit={handleSave} className="flex flex-col gap-4 max-w-3xl max-h-[60vh] overflow-y-auto pr-1">
+        <form onSubmit={handleSave} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
             <p className="text-p-sm text-papatya-ink-soft">
                 Bu bilgiler bir tanı aracı değildir; yalnızca kişiselleştirme içindir. Hiçbir alan zorunlu değil.
             </p>
@@ -139,7 +139,7 @@ export function ChildProfileTab() {
                 </label>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1 min-w-0">
                     <span className="text-p-sm text-papatya-ink-soft">İlgi alanları (virgülle ayır)</span>
                     <input
@@ -150,7 +150,7 @@ export function ChildProfileTab() {
                         className="w-full min-w-0 border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky"
                     />
                 </label>
-                <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex flex-col gap-1 min-w-0">
                     <span className="text-p-sm text-papatya-ink-soft">Duyusal hassasiyet</span>
                     <div className="grid grid-cols-3 gap-2">
                         {(['sound', 'light', 'touch'] as const).map((dim) => (
@@ -180,7 +180,7 @@ export function ChildProfileTab() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1 min-w-0">
                     <span className="text-p-sm text-papatya-ink-soft">Tetikleyiciler (virgülle ayır)</span>
                     <input
@@ -206,7 +206,7 @@ export function ChildProfileTab() {
             <button
                 type="submit"
                 disabled={isSaving}
-                className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 sticky bottom-0"
+                className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 self-start px-6"
             >
                 {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>

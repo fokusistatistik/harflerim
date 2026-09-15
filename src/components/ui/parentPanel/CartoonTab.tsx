@@ -96,9 +96,9 @@ export function CartoonTab() {
                 </ul>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3 max-w-3xl">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-papatya-rule pt-3">
                 <h3 className="text-p-base font-bold text-papatya-ink-soft">Yeni video/hikâye ekle</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl">
                     <input
                         type="text"
                         placeholder="Başlık"
@@ -135,7 +135,7 @@ export function CartoonTab() {
                 <button
                     type="submit"
                     disabled={isSaving}
-                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
+                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 self-start px-6"
                 >
                     {isSaving ? 'Yükleniyor...' : 'Ekle'}
                 </button>

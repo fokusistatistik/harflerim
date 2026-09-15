@@ -136,7 +136,7 @@ export function ParentGate() {
         >
             <div
                 className={`bg-papatya-surface text-papatya-ink rounded-p-lg shadow-2xl w-full p-4 sm:p-6 relative ${
-                    isUnlocked ? 'max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl max-h-[92vh] overflow-y-auto' : 'max-w-sm'
+                    isUnlocked ? 'max-w-md md:max-w-3xl lg:max-w-6xl xl:max-w-7xl max-h-[92vh] overflow-y-auto' : 'max-w-sm'
                 }`}
             >
                 <button
@@ -202,13 +202,13 @@ export function ParentGate() {
 
                         <div className="min-h-[200px]">
                             {activeTab === 'genel' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+                                <div className="flex flex-col gap-5">
                                     <IdentitySection />
 
-                                    <div className="flex flex-col gap-4">
+                                    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 border-t border-papatya-rule pt-4">
                                         <form onSubmit={handleChangePin} className="flex flex-col gap-2">
                                             <h3 className="text-p-base font-bold text-papatya-ink-soft">PIN Değiştir</h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
                                                 <input
                                                     type="password"
                                                     inputMode="numeric"
@@ -236,25 +236,26 @@ export function ParentGate() {
                                                     onChange={(e) => setNewPin2(digitsOnly(e.target.value))}
                                                     className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-sky min-w-0"
                                                 />
+                                                <button
+                                                    type="submit"
+                                                    disabled={isSaving || newPin.length < 4}
+                                                    className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50 px-6 whitespace-nowrap"
+                                                >
+                                                    {isSaving ? 'Kaydediliyor...' : 'Güncelle'}
+                                                </button>
                                             </div>
                                             <p className="text-p-sm text-papatya-ink-soft">4-6 hane.</p>
                                             {changeError && <p className="text-p-sm text-papatya-rose">{changeError}</p>}
                                             {changeSuccess && <p className="text-p-sm text-papatya-leaf">PIN güncellendi.</p>}
-                                            <button
-                                                type="submit"
-                                                disabled={isSaving || newPin.length < 4}
-                                                className="min-h-tap bg-papatya-sky text-white font-bold rounded-p-md disabled:opacity-50"
-                                            >
-                                                {isSaving ? 'Kaydediliyor...' : 'Güncelle'}
-                                            </button>
                                         </form>
 
-                                        <div className="border-t border-papatya-rule pt-4">
+                                        <div className="flex flex-col lg:border-l lg:border-papatya-rule lg:pl-6">
+                                            <h3 className="text-p-base font-bold text-papatya-ink-soft mb-2">Oturum</h3>
                                             <button
                                                 type="button"
                                                 onClick={handleLogout}
                                                 disabled={isLoggingOut}
-                                                className="w-full min-h-tap flex items-center justify-center gap-2 bg-papatya-rose/15 text-papatya-rose font-bold rounded-p-md disabled:opacity-50"
+                                                className="min-h-tap flex items-center justify-center gap-2 bg-papatya-rose/15 text-papatya-rose font-bold rounded-p-md disabled:opacity-50 px-6"
                                             >
                                                 <LogOut size={18} />
                                                 {isLoggingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
