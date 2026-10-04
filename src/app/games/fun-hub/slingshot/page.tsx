@@ -1,7 +1,7 @@
 import { SlingshotGame } from '@/components/game/SlingshotGame';
 
 export const metadata = {
-    title: 'Sapanla Papatya — Papatya',
+    title: 'Sapanla Papatya — Papatyalar',
     description: 'Çek-fırlat sapan fiziğiyle hedefi bulan eğlenceli çocuk oyunu.',
 };
 

@@ -14,7 +14,7 @@ export default function CameraCharacterPage() {
             <div className="absolute top-20 left-4 right-4">
                 <GameHud />
             </div>
-            <h1 className="text-2xl md:text-3xl font-hand font-bold text-papatya-leaf">Papatya Seninle Hareket Ediyor</h1>
+            <h1 className="text-2xl md:text-3xl font-hand font-bold text-papatya-leaf">Papatyalar Seninle Hareket Ediyor</h1>
             <p className="text-papatya-ink-soft max-w-md">
                 Kamera ayarı ebeveyn panelinden açıksa karakter senin hareketlerini takip eder. Kapalıysa sakin duruşunda bekler.
             </p>

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# PAPATYA ÇOCUK PLATFORMU - GÜVENLİ VE DİSK DOSTU DEPLOYMENT SCRIPTI
+# PAPATYALAR ÇOCUK PLATFORMU - GÜVENLİ VE DİSK DOSTU DEPLOYMENT SCRIPTI
 # ==============================================================================
 # - Veritabanını (dev.db) otomatik yedekler, ASLA sıfırlamaz / ezmez.
 # - Next.js cache ve PM2 loglarını temizleyerek disk şişmesini önler.
@@ -13,7 +13,7 @@ APP_DIR="/var/www/harflerim"
 cd "$APP_DIR" || exit 1
 
 echo "=========================================="
-echo "🚀 Papatya Güncelleme Başlıyor: $(date)"
+echo "🚀 Papatyalar Güncelleme Başlıyor: $(date)"
 echo "=========================================="
 
 # ------------------------------------------------------------------------------

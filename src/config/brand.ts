@@ -1,4 +1,4 @@
-export const APP_NAME = 'Papatya';
+export const APP_NAME = 'Papatyalar';
 
 /// Turkish possessive suffix depends on whether the final vowel is front or back,
 /// and whether the name ends in a vowel: Melike -> "Melike'nin", Emre -> "Emre'nin",

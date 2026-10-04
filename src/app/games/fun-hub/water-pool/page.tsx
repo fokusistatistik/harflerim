@@ -1,7 +1,7 @@
 import { WaterPoolGame } from '@/components/game/WaterPoolGame';
 
 export const metadata = {
-    title: 'Neşeli Havuz — Papatya',
+    title: 'Neşeli Havuz — Papatyalar',
     description: 'Melike için özel su ve yüzen oyuncaklar oyunu.',
 };
 

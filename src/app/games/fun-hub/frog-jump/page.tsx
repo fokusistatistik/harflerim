@@ -1,7 +1,7 @@
 import { FrogJumpGame } from '@/components/game/FrogJumpGame';
 
 export const metadata = {
-    title: 'Neşeli Kurbağa — Papatya',
+    title: 'Neşeli Kurbağa — Papatyalar',
     description: 'Nilüfer yaprağına zamanlama ile zıplayan sevimli kurbağa oyunu.',
 };
 

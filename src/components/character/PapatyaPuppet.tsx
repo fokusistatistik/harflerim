@@ -24,7 +24,7 @@ export function PapatyaPuppet({ pose, size = 240 }: PapatyaPuppetProps) {
             height={size}
             viewBox="0 0 200 200"
             role="img"
-            aria-label="Papatya karakteri"
+            aria-label="Papatyalar karakteri"
         >
             {/* Gövde — omuz eğimine göre hafifçe döner */}
             <motion.g

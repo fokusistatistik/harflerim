@@ -3,7 +3,7 @@ import { t, tArray, interpolate } from './i18n';
 
 describe('i18n', () => {
     it('resolves a dot-path string value', () => {
-        expect(t('app.title')).toBe('Papatya');
+        expect(t('app.title')).toBe('Papatyalar');
     });
 
     it('resolves a dot-path array value', () => {

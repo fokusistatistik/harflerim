@@ -1,6 +1,6 @@
 {
-    "name": "Papatya",
-    "short_name": "Papatya",
+    "name": "Papatyalar",
+    "short_name": "Papatyalar",
     "description": "Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması",
     "start_url": "/",
     "display": "standalone",
