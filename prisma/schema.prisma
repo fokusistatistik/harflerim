@@ -194,6 +194,8 @@ model UserSettings {
   /// ayrı olmalı" — 10-100 arası, varsayılan 25. Diğer üç oyun (10-50/20)
   /// kasıtlı olarak değiştirilmedi.
   dailyFamilyAlbumLimit Int @default(25)
+  /// Oyun Dünyası günlük süre bütçesi (saniye, varsayılan: 1800 sn = 30 dk, 10-60 dk arası ayarlanabilir).
+  dailyArcadeScreenLimit Int @default(1800)
   reduceMotion     Boolean @default(false)
   highContrast     Boolean @default(false)
   speechEnabled    Boolean @default(true)

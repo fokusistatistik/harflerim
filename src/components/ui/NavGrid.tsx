@@ -13,6 +13,7 @@ import {
     ShieldCheck,
     Puzzle,
     Target,
+    Gamepad2,
 } from 'lucide-react';
 import { NAV_AREAS, type NavArea, type NavAccent } from '@/config/navAreas';
 import { useParentGateStore } from '@/store/parentGateStore';
@@ -34,6 +35,7 @@ const ICONS: Record<string, typeof Mic> = {
     'drawing-board': Paintbrush,
     'writing-practice': PenLine,
     'aac-board': MessageSquare,
+    'fun-games': Gamepad2,
     'parent-area': ShieldCheck,
 };
 

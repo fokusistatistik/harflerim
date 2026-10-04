@@ -8,10 +8,12 @@ import {
     updateMemoryMatchLimit,
     updateVisualMatchLimit,
     updateFamilyAlbumLimit,
+    updateArcadeScreenLimitMinutes,
 } from '@/actions/parentSettings';
 
 export function ScreenTimeTab() {
     const [minutes, setMinutes] = useState(30);
+    const [arcadeMinutes, setArcadeMinutes] = useState(30);
     const [letterHuntLimit, setLetterHuntLimit] = useState(100);
     const [memoryMatchLimit, setMemoryMatchLimit] = useState(20);
     const [visualMatchLimit, setVisualMatchLimit] = useState(20);
@@ -26,6 +28,7 @@ export function ScreenTimeTab() {
         getParentPreferences().then((prefs) => {
             if (!cancelled && prefs) {
                 setMinutes(prefs.dailyScreenLimitMinutes);
+                setArcadeMinutes(prefs.dailyArcadeScreenLimitMinutes ?? 30);
                 setLetterHuntLimit(prefs.dailyLetterHuntLimit);
                 setMemoryMatchLimit(prefs.dailyMemoryMatchLimit);
                 setVisualMatchLimit(prefs.dailyVisualMatchLimit);
@@ -43,19 +46,21 @@ export function ScreenTimeTab() {
         setError('');
         setSaved(false);
         setIsSaving(true);
-        const [screenResult, letterHuntResult, memoryMatchResult, visualMatchResult, familyAlbumResult] = await Promise.all([
+        const [screenResult, arcadeResult, letterHuntResult, memoryMatchResult, visualMatchResult, familyAlbumResult] = await Promise.all([
             updateScreenTimeLimit(minutes),
+            updateArcadeScreenLimitMinutes(arcadeMinutes),
             updateLetterHuntLimit(letterHuntLimit),
             updateMemoryMatchLimit(memoryMatchLimit),
             updateVisualMatchLimit(visualMatchLimit),
             updateFamilyAlbumLimit(familyAlbumLimit),
         ]);
         setIsSaving(false);
-        if (screenResult.ok && letterHuntResult.ok && memoryMatchResult.ok && visualMatchResult.ok && familyAlbumResult.ok) {
+        if (screenResult.ok && arcadeResult.ok && letterHuntResult.ok && memoryMatchResult.ok && visualMatchResult.ok && familyAlbumResult.ok) {
             setSaved(true);
         } else {
             setError(
                 screenResult.error ??
+                    arcadeResult.error ??
                     letterHuntResult.error ??
                     memoryMatchResult.error ??
                     visualMatchResult.error ??
@@ -71,9 +76,9 @@ export function ScreenTimeTab() {
 
     return (
         <form onSubmit={handleSave} className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-end">
                 <label className="flex flex-col gap-1">
-                    <span className="text-p-sm text-papatya-ink-soft">Günlük ekran süresi (dakika)</span>
+                    <span className="text-p-sm text-papatya-ink-soft">Genel ekran süresi (dk)</span>
                     <input
                         id="daily-limit"
                         type="number"
@@ -86,7 +91,20 @@ export function ScreenTimeTab() {
                     />
                 </label>
                 <label className="flex flex-col gap-1">
-                    <span className="text-p-sm text-papatya-ink-soft">Harf Avı günlük tur limiti</span>
+                    <span className="text-p-sm text-papatya-ink-soft">Oyun Dünyası süresi (dk)</span>
+                    <input
+                        id="arcade-limit"
+                        type="number"
+                        min={10}
+                        max={60}
+                        step={5}
+                        value={arcadeMinutes}
+                        onChange={(e) => setArcadeMinutes(Number(e.target.value))}
+                        className="border-2 border-papatya-rule rounded-p-md px-3 py-2 bg-papatya-cream focus:outline-none focus:border-papatya-petal min-w-0 font-bold text-papatya-petal"
+                    />
+                </label>
+                <label className="flex flex-col gap-1">
+                    <span className="text-p-sm text-papatya-ink-soft">Harf Avı tur limiti</span>
                     <input
                         id="letter-hunt-limit"
                         type="number"
@@ -99,7 +117,7 @@ export function ScreenTimeTab() {
                     />
                 </label>
                 <label className="flex flex-col gap-1">
-                    <span className="text-p-sm text-papatya-ink-soft">Hafıza Kartları günlük tur limiti</span>
+                    <span className="text-p-sm text-papatya-ink-soft">Hafıza Kartları tur limiti</span>
                     <input
                         id="memory-match-limit"
                         type="number"
@@ -112,7 +130,7 @@ export function ScreenTimeTab() {
                     />
                 </label>
                 <label className="flex flex-col gap-1">
-                    <span className="text-p-sm text-papatya-ink-soft">Gölge Eşleştirme günlük tur limiti</span>
+                    <span className="text-p-sm text-papatya-ink-soft">Gölge Eşleştirme tur limiti</span>
                     <input
                         id="visual-match-limit"
                         type="number"
@@ -125,7 +143,7 @@ export function ScreenTimeTab() {
                     />
                 </label>
                 <label className="flex flex-col gap-1">
-                    <span className="text-p-sm text-papatya-ink-soft">Aile Albümü günlük tur limiti</span>
+                    <span className="text-p-sm text-papatya-ink-soft">Aile Albümü tur limiti</span>
                     <input
                         id="family-album-limit"
                         type="number"

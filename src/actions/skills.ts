@@ -12,6 +12,11 @@ const BADGE_EMOJI: Record<string, string> = {
     'golge-eslestirme': '🌗',
     'sosyal-tanima': '👪',
     'el-yazisi': '✍️',
+    // Oyun Dünyası rozetleri
+    'duyusal-su-etkilesimi': '🌊',
+    'ritim-zamanlama': '🐸',
+    'motor-hedefleme': '🏹',
+    'gorsel-takip': '🎈',
 };
 
 /**

@@ -116,6 +116,15 @@ export const NAV_AREAS: NavArea[] = [
         imageSrc: '/ikonlar/nav_aac_board.png',
     },
     {
+        id: 'fun-games',
+        label: 'Oyun Dünyası',
+        subtitle: 'Eğlenceli Oyunlar',
+        href: '/games/fun-hub',
+        status: 'active',
+        accent: 'petal',
+        imageSrc: '/ikonlar/kupa.png',
+    },
+    {
         id: 'parent-area',
         label: 'Ebeveyn Alanı',
         subtitle: 'PIN gerekli',

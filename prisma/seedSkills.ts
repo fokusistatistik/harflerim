@@ -19,6 +19,11 @@ const SKILLS = [
     // ceza yok ilkesi), isCorrect her zaman true — yalnızca "bu harf
     // çalışıldı" varlığını kaydeder.
     { key: 'el-yazisi', label: 'El Yazısı' },
+    // Oyun Dünyası (Eğlenceli Oyunlar Hub'ı) Becerileri
+    { key: 'duyusal-su-etkilesimi', label: 'Neşeli Havuz' },
+    { key: 'ritim-zamanlama', label: 'Neşeli Kurbağa' },
+    { key: 'motor-hedefleme', label: 'Sapanla Papatya' },
+    { key: 'gorsel-takip', label: 'Sakin Balonlar' },
 ];
 
 async function main() {

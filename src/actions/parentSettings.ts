@@ -14,6 +14,8 @@ export interface ParentPreferences {
     dailyVisualMatchLimit: number;
     /** 2026-09-15 — Aile Albümü'ne özel, süre bütçesine EK günlük round limiti. */
     dailyFamilyAlbumLimit: number;
+    /** Oyun Dünyası günlük süre limiti (dakika). Varsayılan: 30 dk, 10-60 dk arası. */
+    dailyArcadeScreenLimitMinutes: number;
     reduceMotion: boolean;
     highContrast: boolean;
     speechEnabled: boolean;
@@ -37,6 +39,7 @@ export async function getParentPreferences(): Promise<ParentPreferences | null> 
         dailyMemoryMatchLimit: s.dailyMemoryMatchLimit,
         dailyVisualMatchLimit: s.dailyVisualMatchLimit,
         dailyFamilyAlbumLimit: s.dailyFamilyAlbumLimit,
+        dailyArcadeScreenLimitMinutes: Math.round((s.dailyArcadeScreenLimit ?? 1800) / 60),
         reduceMotion: s.reduceMotion,
         highContrast: s.highContrast,
         speechEnabled: s.speechEnabled,
@@ -129,6 +132,23 @@ export async function updateFamilyAlbumLimit(rounds: number): Promise<{ ok: bool
     return { ok: true };
 }
 
+export async function updateArcadeScreenLimitMinutes(minutes: number): Promise<{ ok: boolean; error?: string }> {
+    const user = await getCurrentUser();
+    if (!user?.settings) return { ok: false, error: 'Oturum bulunamadı.' };
+
+    if (!Number.isFinite(minutes) || minutes < 10 || minutes > 60) {
+        return { ok: false, error: 'Oyun Dünyası süresi 10-60 dakika arasında olmalı.' };
+    }
+
+    await db.userSettings.update({
+        where: { userId: user.id },
+        data: { dailyArcadeScreenLimit: Math.round(minutes) * 60 },
+    });
+    await logAudit('SETTINGS_CHANGED', user.id, `Oyun Dünyası günlük süre limiti ${Math.round(minutes)} dakika olarak güncellendi`);
+
+    return { ok: true };
+}
+
 export async function updateSensoryToggles(
     partial: Partial<
         Omit<
@@ -138,6 +158,7 @@ export async function updateSensoryToggles(
             | 'dailyMemoryMatchLimit'
             | 'dailyVisualMatchLimit'
             | 'dailyFamilyAlbumLimit'
+            | 'dailyArcadeScreenLimitMinutes'
         >
     >
 ): Promise<{ ok: boolean; error?: string }> {

@@ -101,6 +101,25 @@
   --papatya-duration-slow: 0ms;
 }
 
+/* Sakin Balonlar: yeni sticker deftere ulaşınca defter düğmesinde tek, yumuşak
+   nabız. Yanıp sönme yok (tek tekrar); "hareketi azalt" açıkken tamamen kapalı. */
+@keyframes balloonBookBump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+.balloon-book-bump {
+  animation: balloonBookBump 0.6s ease-out 1;
+}
+[data-reduce-motion="true"] .balloon-book-bump {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .balloon-book-bump {
+    animation: none;
+  }
+}
+
 /* Yüksek kontrast (UserSettings.highContrast, Faz 1.17): metin/zemin ayrımı
    ve kural çizgileri belirginleştirilir, renk paleti değişmez. Tema (açık/koyu)
    ile aynı üç durumlu desenle birleşir: bare → sistem koyu → açık kilit. */
