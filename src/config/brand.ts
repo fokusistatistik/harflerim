@@ -1,5 +1,7 @@
 export const APP_NAME = 'Papatyalar';
+export const PRIMARY_DOMAIN = 'papatyalar.com';
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://papatyalar.com';
+export const SUPPORT_EMAIL = 'destek@papatyalar.com';
 export const APP_TAGLINE =
     'Otizmli Çocuklar İçin Özel Eğitim, AAC İletişim ve Duyusal Öğrenme Platformu';
 export const APP_DESCRIPTION =

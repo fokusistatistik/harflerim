@@ -1,8 +1,10 @@
 {
-    "name": "Papatyalar",
+    "id": "https://papatyalar.com/",
+    "name": "Papatyalar — Otizm Özel Eğitim ve Oyun Platformu",
     "short_name": "Papatyalar",
     "description": "Otizm spektrumundaki (ASD) çocuklar için kişiselleştirilebilir Türkçe harf eğitimi, AAC iletişim tahtası ve duyusal sakinleştirici oyun platformu",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#FBF8EF",
     "theme_color": "#FBF8EF",
