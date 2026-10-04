@@ -2,8 +2,9 @@ import { CartoonPlayer } from '@/components/cartoon/CartoonPlayer';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Çizgi Filmim',
-    description: 'Ebeveynin eklediği videoları ve resimli hikâyeleri kontrollü bir şekilde izle.',
+    title: 'Çizgi Filmim — Güvenli ve Kontrollü Video İzleme',
+    description: 'Yalnızca ebeveyn onayından geçmiş, reklamsız, dış bağlantısız ve güvenli çocuk çizgi filmleri ve hikâyeleri.',
+    keywords: ['çizgi film', 'güvenli video', 'reklamsız çizgi film', 'çocuk hikayeleri', 'ebeveyn kontrollü video'],
 };
 
 export const viewport: Viewport = {

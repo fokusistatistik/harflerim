@@ -1,8 +1,12 @@
 import { WaterPoolGame } from '@/components/game/WaterPoolGame';
 
-export const metadata = {
-    title: 'Neşeli Havuz — Papatyalar',
-    description: 'Melike için özel su ve yüzen oyuncaklar oyunu.',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Neşeli Havuz — Sulu Oyun ve Yüzen Oyuncaklar',
+    description:
+        'Su fiziği, dalgalar ve yüzen sevimli oyuncaklarla sakinleştirici dokunma ve su havuzu simülasyonu oyunu.',
+    keywords: ['su oyunu', 'sulu havuz', 'sakinleştirici duyusal oyun', 'yüzen ördek oyunu'],
 };
 
 export default function WaterPoolPage() {

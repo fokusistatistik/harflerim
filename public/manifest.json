@@ -1,7 +1,7 @@
 {
     "name": "Papatyalar",
     "short_name": "Papatyalar",
-    "description": "Otizmli çocuklar için kişiselleştirilebilir öğrenme ve iletişim uygulaması",
+    "description": "Otizm spektrumundaki (ASD) çocuklar için kişiselleştirilebilir Türkçe harf eğitimi, AAC iletişim tahtası ve duyusal sakinleştirici oyun platformu",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#FBF8EF",
@@ -23,7 +23,9 @@
     ],
     "categories": [
         "education",
-        "kids"
+        "kids",
+        "accessibility",
+        "games"
     ],
     "lang": "tr",
     "dir": "ltr"

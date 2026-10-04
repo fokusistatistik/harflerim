@@ -3,7 +3,12 @@ import { getCurrentUser } from '@/lib/auth';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { APP_NAME } from '@/config/brand';
 
-export const metadata = { title: `${APP_NAME} · Giriş` };
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: `Giriş Yap`,
+    description: `${APP_NAME} çocuk ve ebeveyn giriş ekranı. Güvenli, şifreli ve kişiselleştirilmiş özel eğitim alanı.`,
+};
 
 export default async function LoginPage() {
     if (await getCurrentUser()) redirect('/');

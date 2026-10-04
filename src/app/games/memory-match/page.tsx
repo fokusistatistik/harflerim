@@ -2,8 +2,9 @@ import MemoryMatchGame from '@/components/game/MemoryMatchGame';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Hafıza Kartları - Eşleştirme Oyunu',
-    description: 'Kartları çevir, aynı olanları bul ve hafızanı güçlendir!',
+    title: 'Hafıza Kartları — Eşleştirme Oyunu',
+    description: 'Kartları çevir, aynı harf ve görselleri bul; görsel hafıza ve dikkat becerilerini güçlendir.',
+    keywords: ['hafıza kartları', 'eşleştirme oyunu', 'dikkat geliştirme', 'özel eğitim görsel hafıza'],
 };
 
 export const viewport: Viewport = {

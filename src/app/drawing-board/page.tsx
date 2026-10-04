@@ -2,8 +2,9 @@ import { DrawingBoard } from '@/components/drawing/DrawingBoard';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Çizim Tahtası',
-    description: 'Parmakla veya fareyle serbest çizim yap.',
+    title: 'Çizim Tahtası — Serbest Çizim ve Boyama',
+    description: 'Pastel renkler, yumuşak fırçalar ve sakinleştirici seslerle çocuklara özel duyusal serbest çizim tahtası.',
+    keywords: ['çizim tahtası', 'çocuk çizim', 'duyusal boyama', 'ince motor beceri', 'otizm sanat'],
 };
 
 export const viewport: Viewport = {

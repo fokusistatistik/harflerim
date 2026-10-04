@@ -2,8 +2,9 @@ import MagicWordsGame from '@/components/game/MagicWordsGame';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Sihirli Kelimeler - Sesli Oyun',
-    description: 'Konuşarak kelimeleri tanıdığın sihirli bir oyun!',
+    title: 'Sihirli Kelimeler — Sesli Konuşma Oyunu',
+    description: 'Mikrofon ile konuşarak sesli sözcükleri tanıdığın, konuşma terapisi destekli sihirli çocuk oyunu.',
+    keywords: ['sihirli kelimeler', 'konuşma oyunu', 'sesli harfler', 'özel eğitim konuşma', 'otizm dil gelişimi'],
 };
 
 export const viewport: Viewport = {

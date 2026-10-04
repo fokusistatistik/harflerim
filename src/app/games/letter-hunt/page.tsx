@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { getDailySession } from '@/actions/game';
 import { GameInitializer } from '@/components/game/GameInitializer';
 import GameBoard from '@/components/game/GameBoard';
+import { APP_NAME } from '@/config/brand';
+
+export const metadata: Metadata = {
+    title: `Harf Avı — Günlük Görev`,
+    description: 'Otizmli çocuklar için fonetik sesler ve görsel kartlarla Türkçe harf tanıma oyunu.',
+    keywords: ['harf avı', 'türkçe harfler', 'özel eğitim harf tanıma', 'otizm harf oyunu', APP_NAME],
+};
 
 export default async function DailyGamePage() {
     try {

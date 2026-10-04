@@ -8,7 +8,8 @@ import { ToastHost } from '@/components/ui/ToastHost';
 import { ParentGate } from '@/components/ui/ParentGate';
 import { BackgroundAwareness } from '@/components/ui/BackgroundAwareness';
 import { MotionPreference } from '@/components/MotionPreference';
-import { APP_NAME } from '@/config/brand';
+import { APP_NAME, SITE_URL, APP_TAGLINE, APP_DESCRIPTION, APP_KEYWORDS } from '@/config/brand';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { getCurrentUser } from '@/lib/auth';
 import './globals.css';
 
@@ -27,9 +28,22 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-    title: APP_NAME,
-    description: 'ASD odaklı Türkçe harf tanıma ve işitsel-görsel eşleştirme uygulaması',
+    metadataBase: new URL(SITE_URL),
+    title: {
+        default: `${APP_NAME} — ${APP_TAGLINE}`,
+        template: `%s | ${APP_NAME}`,
+    },
+    description: APP_DESCRIPTION,
+    keywords: APP_KEYWORDS,
+    applicationName: APP_NAME,
+    authors: [{ name: APP_NAME, url: SITE_URL }],
+    creator: APP_NAME,
+    publisher: APP_NAME,
+    category: 'education',
     manifest: '/manifest.json',
+    alternates: {
+        canonical: '/',
+    },
     icons: {
         icon: '/icon-192.png',
         apple: '/apple-icon.png',
@@ -38,6 +52,40 @@ export const metadata: Metadata = {
         capable: true,
         statusBarStyle: 'default',
         title: APP_NAME,
+    },
+    openGraph: {
+        type: 'website',
+        locale: 'tr_TR',
+        url: SITE_URL,
+        siteName: APP_NAME,
+        title: `${APP_NAME} — ${APP_TAGLINE}`,
+        description: APP_DESCRIPTION,
+        images: [
+            {
+                url: `${SITE_URL}/icon-512.png`,
+                width: 512,
+                height: 512,
+                alt: `${APP_NAME} Özel Eğitim ve Öğrenme Platformu`,
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: `${APP_NAME} — ${APP_TAGLINE}`,
+        description: APP_DESCRIPTION,
+        images: [`${SITE_URL}/icon-512.png`],
+        creator: '@papatyalar',
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
     },
 };
 
@@ -73,6 +121,7 @@ export default async function RootLayout({
             data-theme="light"
         >
             <body className={`font-sans antialiased bg-cream selection:bg-pink-200 selection:text-pink-900 ${user ? 'pt-16 lg:pt-20' : ''}`}>
+                <JsonLd />
                 <MotionPreference reduceMotion={settings?.reduceMotion ?? false}>
                     <AudioProvider speechEnabled={settings?.speechEnabled ?? true}>
                         {user && <Header />}

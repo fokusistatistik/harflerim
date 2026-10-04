@@ -1,8 +1,12 @@
 import { FrogJumpGame } from '@/components/game/FrogJumpGame';
 
-export const metadata = {
-    title: 'Neşeli Kurbağa — Papatyalar',
-    description: 'Nilüfer yaprağına zamanlama ile zıplayan sevimli kurbağa oyunu.',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Neşeli Kurbağa — Nilüfer Zıplama ve Ritim',
+    description:
+        'Zamanlama ve ritim duygusunu geliştiren, nilüfer yapraklarına doğru anda zıplayarak nehir boyunca ilerleyen kurbağa oyunu.',
+    keywords: ['kurbağa oyunu', 'ritim oyunu', 'nilüfer zıplama', 'çocuk refleks oyunu'],
 };
 
 export default function FrogJumpPage() {

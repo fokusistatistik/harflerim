@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { CameraCharacter } from '@/components/character/CameraCharacter';
 import { GameHud } from '@/components/game/GameHud';
 import { GameIntroCard } from '@/components/ui/GameIntroCard';
+
+export const metadata: Metadata = {
+    title: 'Hareketli Karakter — Kamera ve Vücut Takibi',
+    description:
+        'Kamera ile çocuğun baş ve kol hareketlerini algılayarak ekrandaki Papatyalar kuklasını eşzamanlı hareket ettiren duyu-motor oyunu.',
+    keywords: ['kamera oyunu', 'vücut takibi', 'duyu motor', 'çocuk kukla', 'etkileşimli karakter'],
+};
 
 /**
  * Faz 3.4 — kanıtlayıcı entegrasyon noktası. Kamera ayarı (Ebeveyn Alanı →
