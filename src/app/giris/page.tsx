@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { LoginForm } from '@/components/auth/LoginForm';
-import { APP_NAME } from '@/config/brand';
+import { APP_NAME, APP_TAGLINE } from '@/config/brand';
 
 import type { Metadata } from 'next';
 
@@ -29,6 +29,21 @@ export default async function LoginPage() {
             </div>
 
             <LoginForm />
+
+            <div className="max-w-md text-center text-slate-600 space-y-2 mt-2">
+                <h1 className="text-xl md:text-2xl font-bold font-hand text-papatya-ink">
+                    {APP_NAME} — {APP_TAGLINE}
+                </h1>
+                <p className="text-sm text-papatya-ink-soft leading-relaxed">
+                    Otizm spektrumundaki ve özel eğitim gereksinimi olan çocuklara yönelik Türkçe fonetik harf eğitimi, AAC alternatif iletişim tahtası ve duyusal sakinleştirici oyunlar.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs font-semibold text-papatya-ink-soft">
+                    <span className="bg-white/80 border border-papatya-rule rounded-full px-3 py-1 shadow-sm">🌸 Harf Avı</span>
+                    <span className="bg-white/80 border border-papatya-rule rounded-full px-3 py-1 shadow-sm">🗣️ AAC İletişim</span>
+                    <span className="bg-white/80 border border-papatya-rule rounded-full px-3 py-1 shadow-sm">🎮 Duyu Dostu Oyunlar</span>
+                    <span className="bg-white/80 border border-papatya-rule rounded-full px-3 py-1 shadow-sm">🔒 Ebeveyn Korumalı</span>
+                </div>
+            </div>
         </main>
     );
 }

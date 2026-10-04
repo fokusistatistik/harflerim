@@ -87,6 +87,11 @@ export const metadata: Metadata = {
             'max-snippet': -1,
         },
     },
+    other: {
+        classification: 'Otizm Özel Eğitim ve İletişim Platformu',
+        subject: 'Otizm Spektrum Bozukluğu, AAC İletişim Tahtası, Özel Eğitim',
+        audience: 'Otizmli Çocuklar, Özel Eğitim Öğretmenleri, Ebeveynler, Terapistler',
+    },
 };
 
 export const viewport: Viewport = {
