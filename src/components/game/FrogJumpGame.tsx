@@ -1,299 +1,410 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GameHud } from '@/components/game/GameHud';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, BookOpen, Clock, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { useArcadeDayBudget } from '@/hooks/useArcadeDayBudget';
 import { ArcadeDayComplete } from '@/components/ui/ArcadeDayComplete';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { recordArcadeSkill } from '@/actions/arcade';
 import { useAudio } from '@/components/AudioProvider';
-import { Waves, Sparkles } from 'lucide-react';
+import { FrogEngine } from '@/lib/frogEngine';
+import {
+    POND_FRIENDS,
+    loadPondCollection,
+    savePondCollection,
+    addPondFriend,
+    type PondFriendDef,
+} from '@/lib/frogCollection';
 
-interface LilyPad {
-    id: number;
-    x: number; // percentage (0 - 100)
-    width: number; // percentage
-    speed: number;
-    direction: 1 | -1;
-}
+/** Sunucuya her zıplamada değil, her N başarılı etkileşimde tek kayıt gider (1 çekirdekli sunucuyu korur). */
+const SKILL_BATCH_SIZE = 4;
 
+/**
+ * Zıp Zıp Kurbağa — Pilot v2 (Tam Ekran 60fps HTML5 Canvas, Prosedürel Gölet ve Kurbağa Fiziği).
+ *
+ * Dış kabuk yalnızca günlük süre bütçesini izler; bitince sahne tamamen
+ * sökülür (motor, rAF ve ses sentezleyici temizlenir) ve yumuşak kapanış gösterilir.
+ */
 export function FrogJumpGame() {
     const budget = useArcadeDayBudget('arcade-frog-jump');
-    const reward = useRewardMoment();
-    const calmingMonitor = useCalmingModeMonitor('ritim-zamanlama');
-    const { speak } = useAudio();
 
-    // Kurbağa durumu: 'bank' (kıyıda) | 'jumping' (havada) | 'landed' (yaprakta) | 'missed' (kıyıya tutundu)
-    const [frogState, setFrogState] = useState<'bank' | 'jumping' | 'landed' | 'missed'>('bank');
-    const [jumpProgress, setJumpProgress] = useState(0); // 0 to 1
-    const [scoreCount, setScoreCount] = useState(0);
-    const [encouragement, setEncouragement] = useState<string | null>(null);
-
-    // Nilüfer yaprağı konumu
-    const [pad, setPad] = useState<LilyPad>({
-        id: 1,
-        x: 40,
-        width: 24,
-        speed: 0.22,
-        direction: 1,
-    });
-
-    const isDayComplete = budget?.isArcadeDayComplete ?? false;
-    const padRef = useRef(pad);
-    padRef.current = pad;
-
-    // Nilüfer yaprağının nehirde sakin salınım hareketi
-    useEffect(() => {
-        let animId: number;
-
-        const movePad = () => {
-            setPad((prev) => {
-                let nx = prev.x + prev.speed * prev.direction;
-                let ndir = prev.direction;
-
-                if (nx > 72) {
-                    ndir = -1;
-                    nx = 72;
-                } else if (nx < 8) {
-                    ndir = 1;
-                    nx = 8;
-                }
-
-                return {
-                    ...prev,
-                    x: nx,
-                    direction: ndir,
-                };
-            });
-
-            animId = requestAnimationFrame(movePad);
-        };
-
-        animId = requestAnimationFrame(movePad);
-        return () => cancelAnimationFrame(animId);
-    }, []);
-
-    // Zıplama eylemi
-    const handleJump = () => {
-        if (frogState !== 'bank' && frogState !== 'landed' && frogState !== 'missed') return;
-
-        setFrogState('jumping');
-        setJumpProgress(0);
-
-        // Zıplama sesi
-        try {
-            const audio = new Audio('/sounds/card.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
-        } catch {
-            // sessiz geç
-        }
-
-        // Zıplama animasyonu (yaklaşık 700ms sürer)
-        const startTime = Date.now();
-        const duration = 650;
-
-        const jumpInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(1, elapsed / duration);
-            setJumpProgress(progress);
-
-            if (progress >= 1) {
-                clearInterval(jumpInterval);
-                checkLanding();
-            }
-        }, 16);
-    };
-
-    // İniş kontrolü
-    const checkLanding = () => {
-        const currentPad = padRef.current;
-        const frogTargetX = 50; // Kurbağanın zıpladığı orta hat
-
-        const padLeft = currentPad.x;
-        const padRight = currentPad.x + currentPad.width;
-
-        // Kurbağa yaprağın sınırları içinde mi?
-        const isHit = frogTargetX >= padLeft - 4 && frogTargetX <= padRight + 4;
-
-        if (isHit) {
-            // Başarılı konma!
-            setFrogState('landed');
-            const newScore = scoreCount + 1;
-            setScoreCount(newScore);
-            calmingMonitor(true);
-
-            recordArcadeSkill('ritim-zamanlama', 'arcade-frog-jump', true).catch(() => {});
-
-            // Su damlası sesi
-            try {
-                const audio = new Audio('/sounds/pop.wav');
-                audio.volume = 0.6;
-                audio.play().catch(() => {});
-            } catch {
-                // sessiz geç
-            }
-
-            // Her 3 başarılı zıplamada konfeti kutlaması
-            if (newScore % 3 === 0) {
-                reward({ message: 'Harika bir zıplayış!' });
-            }
-
-            // 1.2 sn sonra kurbağayı tekrar başlangıç kıyısına yumuşakça döndür
-            setTimeout(() => {
-                setFrogState('bank');
-            }, 1200);
-        } else {
-            // Iska: Suya batmaz, kıyı kütüğüne tutunur!
-            setFrogState('missed');
-            calmingMonitor(false);
-            setEncouragement('Hop! Bir daha deneyelim 🌿');
-            speak('Hop! Bir daha deneyelim!').catch(() => {});
-
-            recordArcadeSkill('ritim-zamanlama', 'arcade-frog-jump', false).catch(() => {});
-
-            // 1.5 sn sonra tekrar hazır
-            setTimeout(() => {
-                setFrogState('bank');
-                setEncouragement(null);
-            }, 1500);
-        }
-    };
-
-    if (isDayComplete) {
+    if (budget?.isArcadeDayComplete) {
         return <ArcadeDayComplete />;
     }
 
-    const remainingMinutes = budget
-        ? Math.ceil(budget.remainingArcadeSeconds / 60)
-        : 30;
+    const remainingMinutes = budget ? Math.ceil(budget.remainingArcadeSeconds / 60) : 30;
+    return <FrogJumpScene remainingMinutes={remainingMinutes} />;
+}
 
-    // Kurbağa Y konumu (parabolik yay: zıplarken yukarı fırlar)
-    const frogY =
-        frogState === 'jumping'
-            ? Math.sin(jumpProgress * Math.PI) * -180
-            : frogState === 'landed'
-            ? -120
-            : 0;
+function FrogJumpScene({ remainingMinutes }: { remainingMinutes: number }) {
+    const reward = useRewardMoment();
+    const calmingMonitor = useCalmingModeMonitor('ritim-zamanlama');
+    const { speak, stop } = useAudio();
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const bookBtnRef = useRef<HTMLButtonElement | null>(null);
+    const engineRef = useRef<FrogEngine | null>(null);
+
+    const [scoreCount, setScoreCount] = useState(0);
+    const [collected, setCollected] = useState<string[]>([]);
+    const [bookOpen, setBookOpen] = useState(false);
+    const [bookBump, setBookBump] = useState(0);
+    const [muted, setMuted] = useState(false);
+    const [showHint, setShowHint] = useState(true);
+    const [encouragement, setEncouragement] = useState<string | null>(null);
+
+    const collectedRef = useRef<string[]>([]);
+    const mutedRef = useRef(false);
+    const pendingSkillRef = useRef(0);
+    const encouragementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fullscreenTriedRef = useRef(false);
+
+    const say = useCallback(
+        (text: string) => {
+            if (mutedRef.current) return;
+            speak(text).catch(() => {});
+        },
+        [speak]
+    );
+
+    const flushSkill = useCallback((success: boolean) => {
+        if (pendingSkillRef.current <= 0) return;
+        pendingSkillRef.current = 0;
+        recordArcadeSkill('ritim-zamanlama', 'arcade-frog-jump', success).catch(() => {});
+    }, []);
+
+    const handlersRef = useRef<{
+        onJump: () => void;
+        onLand: (score: number, friend: PondFriendDef) => void;
+        onMiss: () => void;
+        onFriendLand: (friend: PondFriendDef) => void;
+    }>({
+        onJump: () => {},
+        onLand: () => {},
+        onMiss: () => {},
+        onFriendLand: () => {},
+    });
+
+    handlersRef.current = {
+        onJump: () => {
+            setShowHint(false);
+        },
+
+        onLand: (score, _friend) => {
+            setScoreCount(score);
+            calmingMonitor(true);
+            pendingSkillRef.current += 1;
+            if (pendingSkillRef.current >= SKILL_BATCH_SIZE) {
+                flushSkill(true);
+            }
+
+            if (score % 3 === 0) {
+                const reduce = document.documentElement.dataset.reduceMotion === 'true';
+                reward({
+                    message: 'Harika bir zıplayış!',
+                    confettiOptions: { particleCount: reduce ? 0 : 35, spread: 55 },
+                });
+                say('Harika bir zıplayış! Nilüfere kondun!');
+            }
+        },
+
+        onMiss: () => {
+            calmingMonitor(false);
+            if (encouragementTimerRef.current) clearTimeout(encouragementTimerRef.current);
+            setEncouragement('Hop! Kıyıya tutunduk, bir daha deneyelim 🌿');
+            say('Hop! Bir daha deneyelim!');
+
+            encouragementTimerRef.current = setTimeout(() => {
+                setEncouragement(null);
+            }, 1800);
+        },
+
+        onFriendLand: (friend) => {
+            const result = addPondFriend(collectedRef.current, friend.id);
+            if (!result.isNew) return;
+
+            collectedRef.current = result.next;
+            setCollected(result.next);
+            savePondCollection(result.next);
+            setBookBump((n) => n + 1);
+
+            if (result.isComplete) {
+                reward({ message: 'Göl Dostları Defterin tamamlandı!' });
+                say('Tebrikler! Bütün göl dostlarını keşfettin!');
+            }
+        },
+    };
+
+    // Motoru kur / temizle
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const initial = loadPondCollection();
+        collectedRef.current = initial;
+        setCollected(initial);
+
+        const reduceMotion =
+            document.documentElement.dataset.reduceMotion === 'true' ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const engine = new FrogEngine(canvas, {
+            reduceMotion,
+            onJump: () => handlersRef.current.onJump(),
+            onLand: (s, f) => handlersRef.current.onLand(s, f),
+            onMiss: () => handlersRef.current.onMiss(),
+            onFriendLand: (f) => handlersRef.current.onFriendLand(f),
+            getCollected: () => collectedRef.current,
+            getBookTarget: () => {
+                const c = canvas.getBoundingClientRect();
+                const b = bookBtnRef.current?.getBoundingClientRect();
+                if (!b) return { x: c.width - 40, y: 40 };
+                return { x: b.left + b.width / 2 - c.left, y: b.top + b.height / 2 - c.top };
+            },
+        });
+        engineRef.current = engine;
+
+        const measure = () => {
+            const rect = container.getBoundingClientRect();
+            const w = rect.width || window.innerWidth;
+            const h = rect.height || window.innerHeight;
+            if (w > 0 && h > 0) {
+                engine.resize(w, h);
+            }
+        };
+        measure();
+        engine.start();
+
+        const ro = new ResizeObserver(measure);
+        ro.observe(container);
+
+        const prevOverflow = document.body.style.overflow;
+        const prevOverscroll = document.body.style.overscrollBehavior;
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none';
+
+        const hintTimer = setTimeout(() => setShowHint(false), 6500);
+        say('Nilüfer yaprağı hizalanınca ekrana dokun ve kurbağayı zıplat!');
+
+        return () => {
+            clearTimeout(hintTimer);
+            if (encouragementTimerRef.current) clearTimeout(encouragementTimerRef.current);
+            ro.disconnect();
+            engine.destroy();
+            engineRef.current = null;
+            flushSkill(true);
+            document.body.style.overflow = prevOverflow;
+            document.body.style.overscrollBehavior = prevOverscroll;
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Defter açıkken çizimi durdur
+    useEffect(() => {
+        engineRef.current?.setPaused(bookOpen);
+    }, [bookOpen]);
+
+    const tryFullscreen = () => {
+        if (fullscreenTriedRef.current) return;
+        fullscreenTriedRef.current = true;
+        if (!window.matchMedia('(pointer: coarse)').matches) return;
+        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+        if (document.fullscreenEnabled && el.requestFullscreen) {
+            el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+            Promise.resolve(el.webkitRequestFullscreen()).catch(() => {});
+        }
+    };
+
+    const handleActionJump = () => {
+        tryFullscreen();
+        engineRef.current?.jump();
+    };
+
+    const toggleMute = () => {
+        const next = !muted;
+        setMuted(next);
+        mutedRef.current = next;
+        engineRef.current?.setMuted(next);
+        if (next) stop();
+    };
+
+    const total = POND_FRIENDS.length;
+    const glass =
+        'min-w-tap min-h-tap flex items-center justify-center rounded-full bg-white/70 border border-white/80 text-papatya-ink shadow-sm active:scale-95 transition-transform backdrop-blur-md';
 
     return (
-        <main className="min-h-app flex flex-col p-3 md:p-6 max-w-5xl mx-auto w-full select-none overflow-hidden">
-            {/* Üst HUD */}
-            <header className="w-full mb-3 flex items-center justify-between gap-3">
-                <GameHud
-                    center={
-                        <div className="flex items-center gap-2 bg-papatya-surface/90 backdrop-blur px-4 py-1.5 rounded-full border border-papatya-ink/10 shadow-sm text-sm font-semibold text-papatya-ink">
-                            <Waves size={18} className="text-papatya-leaf" />
-                            <span>Kalan Süre: {remainingMinutes} dk</span>
-                        </div>
-                    }
-                    right={
-                        <div className="bg-papatya-surface/90 backdrop-blur px-3 py-1.5 rounded-full border border-papatya-ink/10 shadow-sm text-sm font-bold text-papatya-ink flex items-center gap-1.5">
-                            <Sparkles size={16} className="text-papatya-petal" />
-                            <span>Zıplama: {scoreCount}</span>
-                        </div>
-                    }
-                />
-            </header>
+        <div
+            ref={containerRef}
+            className="fixed inset-0 z-50 select-none overflow-hidden touch-none bg-[#0D9488]"
+            style={{ height: '100dvh' }}
+        >
+            <canvas
+                ref={canvasRef}
+                onPointerDown={handleActionJump}
+                className="absolute inset-0 block h-full w-full cursor-pointer"
+                role="img"
+                aria-label="Zıp zıp kurbağa gölet sahnesi. Ekrana dokunarak kurbağayı nilüfere doğru zıplatın."
+            />
 
-            {/* Nehir ve Oyun Sahnesi */}
+            {/* Üst Çubuk (HUD) */}
             <div
-                onClick={handleJump}
-                className="relative flex-1 w-full rounded-3xl overflow-hidden shadow-inner border-4 border-papatya-leaf/40 cursor-pointer touch-none flex flex-col justify-between"
-                style={{
-                    background: 'linear-gradient(180deg, #a8edea 0%, #fed6e3 100%)',
-                    minHeight: '480px',
-                }}
+                className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 px-3 z-30"
+                style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
             >
-                {/* Nehir Akıntısı Katmanı */}
-                <div className="absolute inset-0 bg-sky-400/20 pointer-events-none" />
+                {/* Sol: Geri Dönüş Butonu */}
+                <Link
+                    href="/games/fun-hub"
+                    aria-label="Oyun Dünyasına dön"
+                    className={`${glass} pointer-events-auto`}
+                >
+                    <ArrowLeft size={22} />
+                </Link>
 
-                {/* Karşı Kıyı / Çiçekler */}
-                <div className="w-full h-16 bg-emerald-600/20 border-b-2 border-emerald-600/30 flex items-center justify-around px-6 z-10">
-                    <span className="text-2xl">🌸</span>
-                    <span className="text-2xl">🌼</span>
-                    <span className="text-2xl">🪷</span>
-                    <span className="text-2xl">🌸</span>
-                    <span className="text-2xl">🌼</span>
-                </div>
-
-                {/* Orta Nehir Alanı: Süzülen Nilüfer Yaprağı */}
-                <div className="relative w-full h-36 flex items-center">
-                    <motion.div
-                        className="absolute flex flex-col items-center justify-center pointer-events-none"
-                        style={{
-                            left: `${pad.x}%`,
-                            width: `${pad.width}%`,
-                        }}
-                        animate={{
-                            scale: frogState === 'landed' ? [1, 1.15, 1] : 1,
-                        }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <div className="relative w-28 h-20 bg-emerald-500 rounded-[50%] border-4 border-emerald-400 shadow-md flex items-center justify-center">
-                            {/* Nilüfer Çiçeği */}
-                            <span className="text-2xl">🪷</span>
-                            {/* Yaprak damarları detayı */}
-                            <div className="absolute inset-2 border-t border-emerald-300/40 rounded-full" />
-                        </div>
-                        <span className="text-[11px] font-bold text-emerald-900 bg-white/70 px-2 rounded-full mt-1">
-                            Nilüfer
-                        </span>
-                    </motion.div>
-                </div>
-
-                {/* Alt Kıyı: Kurbağanın Başlangıç ve Zıplama Alanı */}
-                <div className="relative w-full h-36 bg-amber-700/20 border-t-2 border-amber-800/30 flex flex-col items-center justify-center">
-                    {/* Sığ Kıyı Kütüğü / Can Simidi */}
-                    <div className="w-32 h-10 bg-amber-800/40 rounded-full border-2 border-amber-800/60 flex items-center justify-center shadow-inner mb-2">
-                        <span className="text-xs font-bold text-amber-950">Başlangıç Kıyısı</span>
+                {/* Orta: Süre ve Başarı Göstergesi */}
+                <div className="flex flex-col items-center gap-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/65 px-3 py-1 text-xs font-semibold text-papatya-ink backdrop-blur-md shadow-sm">
+                        <Clock size={14} />
+                        <span>{remainingMinutes} dk</span>
                     </div>
 
-                    {/* Sevimli Kurbağa Karakteri */}
-                    <motion.div
-                        style={{
-                            transform: `translateY(${frogY}px)`,
-                        }}
-                        animate={
-                            frogState === 'bank'
-                                ? { y: [0, -6, 0] }
-                                : frogState === 'missed'
-                                ? { rotate: [-8, 8, 0] }
-                                : {}
-                        }
-                        transition={{ repeat: frogState === 'bank' ? Infinity : 0, duration: 2 }}
-                        className="absolute bottom-8 w-24 h-24 rounded-2xl bg-white/95 p-1.5 shadow-xl border-3 border-emerald-500 flex flex-col items-center justify-center pointer-events-none z-30"
-                    >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src="/karsilastirma/kurbaga.jpg"
-                            alt="Neşeli Kurbağa"
-                            className="w-full h-full object-contain rounded-xl"
-                        />
-                    </motion.div>
+                    <div className="flex items-center gap-1.5 rounded-full border-2 border-emerald-400 bg-white/90 px-3 py-1 shadow-md backdrop-blur-md">
+                        <Sparkles size={14} className="text-emerald" />
+                        <span className="text-xs font-extrabold text-papatya-ink">
+                            Zıplama: {scoreCount}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Teşvik ve No-Failure Mesajı */}
-                <AnimatePresence>
-                    {encouragement && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute top-20 left-1/2 -translate-x-1/2 bg-papatya-surface/95 border-2 border-papatya-petal shadow-lg px-6 py-2.5 rounded-full text-base font-bold text-papatya-ink text-center z-40"
-                        >
-                            {encouragement}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Sağ: Ses ve Hazine Defteri */}
+                <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
+                    <button
+                        type="button"
+                        onClick={toggleMute}
+                        aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
+                        aria-pressed={muted}
+                        className={glass}
+                    >
+                        {muted ? <VolumeX size={22} /> : <Volume2 size={22} />}
+                    </button>
 
-                {/* Alt Dokunma Yönlendirmesi */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none bg-papatya-surface/90 backdrop-blur px-5 py-2 rounded-full shadow-md text-xs md:text-sm font-bold text-papatya-ink text-center">
-                    🐸 Nilüfer yaprağı hizalanınca ekrana dokun ve kurbağayı zıplat!
+                    <button
+                        ref={bookBtnRef}
+                        type="button"
+                        onClick={() => setBookOpen(true)}
+                        aria-label={`Göl dostları defterim, ${collected.length} / ${total}`}
+                        className={`${glass} relative ${bookBump > 0 ? 'balloon-book-bump' : ''}`}
+                        key={bookBump}
+                    >
+                        <BookOpen size={22} />
+                        <span className="absolute -bottom-1 -right-1 rounded-full bg-emerald px-1.5 text-[10px] font-bold leading-4 text-white">
+                            {collected.length}/{total}
+                        </span>
+                    </button>
                 </div>
             </div>
-        </main>
+
+            {/* Teşvik ve No-Failure Bildirimi */}
+            {encouragement && (
+                <div
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border-2 border-emerald-300 bg-white/95 px-5 py-2 text-xs md:text-sm font-extrabold text-emerald-900 shadow-xl backdrop-blur-md transition-all z-40"
+                    style={{ top: 'max(4.5rem, calc(env(safe-area-inset-top) + 3.8rem))' }}
+                >
+                    {encouragement}
+                </div>
+            )}
+
+            {/* İlk Saniyelerde Kısa Sakinleştirici İpucu */}
+            {showHint && (
+                <div
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full bg-white/85 backdrop-blur-md px-5 py-2 text-xs md:text-sm font-semibold text-papatya-ink shadow-md z-30"
+                    style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 5rem))' }}
+                >
+                    🐸 Nilüfer yaprağı hizalanınca dokun ve zıpla!
+                </div>
+            )}
+
+            {/* Alt Dokunma / Zıplama Butonu (Küçük Parmaklar İçin Ekstra Rahat Hedef) */}
+            <div
+                className="pointer-events-auto absolute inset-x-0 bottom-4 flex justify-center px-4 z-30"
+                style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+            >
+                <button
+                    type="button"
+                    onPointerDown={handleActionJump}
+                    onClick={handleActionJump}
+                    aria-label="Kurbağayı Zıplat"
+                    className="flex items-center justify-center gap-2 rounded-full bg-emerald hover:bg-emerald/90 px-8 py-3.5 text-base md:text-lg font-extrabold text-white shadow-xl border-2 border-white/60 active:scale-95 transition-transform"
+                >
+                    <span className="text-xl">🐸</span>
+                    <span>Hadi Zıpla!</span>
+                </button>
+            </div>
+
+            {/* Göl Dostları Defteri Modalı */}
+            {bookOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Göl Dostları Defterim"
+                >
+                    <div className="w-full max-w-md rounded-3xl border-4 border-emerald-300/60 bg-papatya-surface p-5 shadow-2xl">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <Sparkles className="text-emerald" size={24} />
+                            <h2 className="text-center text-xl font-extrabold text-papatya-ink">
+                                Göl Dostları Defteri
+                            </h2>
+                        </div>
+                        <p className="mb-4 text-center text-sm font-semibold text-papatya-ink/70">
+                            {collected.length} / {total} Göl Dostu Keşfedildi
+                        </p>
+
+                        <div className="grid grid-cols-4 gap-2.5 sm:gap-3 max-h-[60vh] overflow-y-auto p-1">
+                            {POND_FRIENDS.map((item) => {
+                                const has = collected.includes(item.id);
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className="flex flex-col items-center justify-center rounded-2xl border-2 p-2.5 transition-all text-center"
+                                        style={{
+                                            borderColor: has ? '#34D399' : 'rgba(0,0,0,0.08)',
+                                            backgroundColor: has ? '#ECFDF5' : 'rgba(0,0,0,0.03)',
+                                        }}
+                                        title={has ? `${item.label} — ${item.description}` : 'Keşfedilmeyi bekliyor'}
+                                    >
+                                        <span
+                                            className="text-3xl mb-1"
+                                            style={has ? undefined : { filter: 'grayscale(1) opacity(0.25)' }}
+                                            aria-hidden="true"
+                                        >
+                                            {item.emoji}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-papatya-ink/80 leading-tight">
+                                            {has ? item.label : '???'}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setBookOpen(false)}
+                            className="mt-5 min-h-tap w-full rounded-full bg-emerald hover:bg-emerald/90 px-6 py-3 text-base font-bold text-white shadow-md active:scale-95 transition-transform"
+                        >
+                            Gölete Dön
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

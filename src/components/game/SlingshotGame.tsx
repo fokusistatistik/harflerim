@@ -1,397 +1,424 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GameHud } from '@/components/game/GameHud';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, BookOpen, Clock, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { useArcadeDayBudget } from '@/hooks/useArcadeDayBudget';
 import { ArcadeDayComplete } from '@/components/ui/ArcadeDayComplete';
 import { useRewardMoment } from '@/hooks/useRewardMoment';
 import { useCalmingModeMonitor } from '@/hooks/useCalmingModeMonitor';
 import { recordArcadeSkill } from '@/actions/arcade';
 import { useAudio } from '@/components/AudioProvider';
-import { Sparkles, Compass } from 'lucide-react';
+import { SlingshotEngine } from '@/lib/slingshotEngine';
+import type { FruitDef } from '@/lib/slingshotLogic';
+import {
+    ORCHARD_FRUITS,
+    loadOrchardCollection,
+    saveOrchardCollection,
+    addOrchardFruit,
+    type OrchardFruitDef,
+} from '@/lib/slingshotCollection';
 
-interface SlingshotBall {
-    x: number; // px from origin
-    y: number;
-    vx: number;
-    vy: number;
-    flying: boolean;
-}
+/** Sunucuya her atışta değil, her N başarılı etkileşimde tek kayıt gider (1 çekirdekli sunucuyu korur). */
+const SKILL_BATCH_SIZE = 4;
 
+/**
+ * Renkli Sapan / Meyve Sepeti — Pilot v2 (Tam Ekran 60fps HTML5 Canvas, Prosedürel Meyve Bahçesi ve Sapan Fiziği).
+ *
+ * Dış kabuk yalnızca günlük süre bütçesini izler; bitince sahne tamamen
+ * sökülür (motor, rAF ve ses sentezleyici temizlenir) ve yumuşak kapanış gösterilir.
+ */
 export function SlingshotGame() {
     const budget = useArcadeDayBudget('arcade-slingshot');
-    const reward = useRewardMoment();
-    const calmingMonitor = useCalmingModeMonitor('motor-hedefleme');
-    const { speak } = useAudio();
 
-    // Sapan başlangıç merkezi (px)
-    const slingOrigin = { x: 120, y: 300 };
-
-    // Sürükleme durumu
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragPos, setDragPos] = useState({ x: slingOrigin.x, y: slingOrigin.y });
-    const [ball, setBall] = useState<SlingshotBall>({
-        x: slingOrigin.x,
-        y: slingOrigin.y,
-        vx: 0,
-        vy: 0,
-        flying: false,
-    });
-
-    // Hedef sepet konumu (%)
-    const [targetY, setTargetY] = useState(45); // percentage
-    const [scoreCount, setScoreCount] = useState(0);
-    const [feedback, setFeedback] = useState<string | null>(null);
-
-    const containerRef = useRef<HTMLDivElement>(null);
-    const isDayComplete = budget?.isArcadeDayComplete ?? false;
-
-    // Dokunma başlatma
-    const handleStartDrag = (clientX: number, clientY: number) => {
-        if (ball.flying) return;
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const px = clientX - rect.left;
-        const py = clientY - rect.top;
-
-        // Sapan yakınından tutulduysa
-        const dist = Math.sqrt((px - slingOrigin.x) ** 2 + (py - slingOrigin.y) ** 2);
-        if (dist < 80) {
-            setIsDragging(true);
-            updateDragPosition(px, py);
-        }
-    };
-
-    // Sürükleme esneme hareketi
-    const updateDragPosition = (px: number, py: number) => {
-        const dx = px - slingOrigin.x;
-        const dy = py - slingOrigin.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxPull = 90; // Maksimum gerilme mesafesi
-
-        if (dist > maxPull) {
-            const angle = Math.atan2(dy, dx);
-            setDragPos({
-                x: slingOrigin.x + Math.cos(angle) * maxPull,
-                y: slingOrigin.y + Math.sin(angle) * maxPull,
-            });
-        } else {
-            setDragPos({ x: px, y: py });
-        }
-    };
-
-    const handleMoveDrag = (clientX: number, clientY: number) => {
-        if (!isDragging) return;
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        updateDragPosition(clientX - rect.left, clientY - rect.top);
-    };
-
-    // Bırakınca fırlatma
-    const handleRelease = () => {
-        if (!isDragging) return;
-        setIsDragging(false);
-
-        // Fırlatma hızı: Çekilen yönün tersine
-        const pullX = slingOrigin.x - dragPos.x;
-        const pullY = slingOrigin.y - dragPos.y;
-
-        if (Math.abs(pullX) < 15 && Math.abs(pullY) < 15) {
-            // Yeterince çekilmediyse geri yaylan
-            setDragPos({ x: slingOrigin.x, y: slingOrigin.y });
-            return;
-        }
-
-        // Fırlatma sesi
-        try {
-            const audio = new Audio('/sounds/card.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
-        } catch {
-            // sessiz geç
-        }
-
-        const speedMultiplier = 0.28;
-        const initVx = pullX * speedMultiplier;
-        const initVy = pullY * speedMultiplier;
-
-        setBall({
-            x: dragPos.x,
-            y: dragPos.y,
-            vx: initVx,
-            vy: initVy,
-            flying: true,
-        });
-
-        // Uçuş fiziği döngüsü
-        let curX = dragPos.x;
-        let curY = dragPos.y;
-        let curVx = initVx;
-        let curVy = initVy;
-        const gravity = 0.42;
-
-        const flightInterval = setInterval(() => {
-            curX += curVx;
-            curY += curVy;
-            curVy += gravity; // Yerçekimi
-
-            setBall({
-                x: curX,
-                y: curY,
-                vx: curVx,
-                vy: curVy,
-                flying: true,
-            });
-
-            if (!containerRef.current) return;
-            const containerWidth = containerRef.current.clientWidth;
-            const containerHeight = containerRef.current.clientHeight;
-
-            // Hedef sepet konumu (sağ tarafta)
-            const targetPixelX = containerWidth * 0.82;
-            const targetPixelY = containerHeight * (targetY / 100);
-
-            // Çarpışma kontrolü
-            const distToTarget = Math.sqrt((curX - targetPixelX) ** 2 + (curY - targetPixelY) ** 2);
-
-            if (distToTarget < 50) {
-                // HEDEF VURULDU!
-                clearInterval(flightInterval);
-                handleHit();
-                return;
-            }
-
-            // Ekran sınırından çıkma veya yere düşme
-            if (curX > containerWidth + 40 || curY > containerHeight - 20) {
-                clearInterval(flightInterval);
-                handleMiss();
-            }
-        }, 20);
-    };
-
-    const handleHit = () => {
-        setScoreCount((s) => s + 1);
-        calmingMonitor(true);
-        reward({ message: 'Sepeti Buldun! Harika!' });
-        recordArcadeSkill('motor-hedefleme', 'arcade-slingshot', true).catch(() => {});
-
-        // Yeni sepet konumu
-        setTimeout(() => {
-            setTargetY(25 + Math.random() * 45);
-            resetSling();
-        }, 1200);
-    };
-
-    const handleMiss = () => {
-        calmingMonitor(false);
-        setFeedback('Çok yaklaştın! Bir daha dene 🎯');
-        speak('Hedefe çok yaklaştın, bir daha fırlat!').catch(() => {});
-        recordArcadeSkill('motor-hedefleme', 'arcade-slingshot', false).catch(() => {});
-
-        setTimeout(() => {
-            setFeedback(null);
-            resetSling();
-        }, 1400);
-    };
-
-    const resetSling = () => {
-        setDragPos({ x: slingOrigin.x, y: slingOrigin.y });
-        setBall({
-            x: slingOrigin.x,
-            y: slingOrigin.y,
-            vx: 0,
-            vy: 0,
-            flying: false,
-        });
-    };
-
-    if (isDayComplete) {
+    if (budget?.isArcadeDayComplete) {
         return <ArcadeDayComplete />;
     }
 
-    const remainingMinutes = budget
-        ? Math.ceil(budget.remainingArcadeSeconds / 60)
-        : 30;
+    const remainingMinutes = budget ? Math.ceil(budget.remainingArcadeSeconds / 60) : 30;
+    return <SlingshotScene remainingMinutes={remainingMinutes} />;
+}
 
-    // Yörünge tahmin noktacıkları
-    const trajectoryDots = [];
-    if (isDragging) {
-        const pullX = slingOrigin.x - dragPos.x;
-        const pullY = slingOrigin.y - dragPos.y;
-        const speedMultiplier = 0.28;
-        let simX = slingOrigin.x;
-        let simY = slingOrigin.y;
-        let simVx = pullX * speedMultiplier;
-        let simVy = pullY * speedMultiplier;
+function SlingshotScene({ remainingMinutes }: { remainingMinutes: number }) {
+    const reward = useRewardMoment();
+    const calmingMonitor = useCalmingModeMonitor('motor-hedefleme');
+    const { speak, stop } = useAudio();
 
-        for (let i = 0; i < 9; i++) {
-            simX += simVx * 2.2;
-            simY += simVy * 2.2;
-            simVy += 0.42 * 2.2;
-            trajectoryDots.push({ x: simX, y: simY });
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const bookBtnRef = useRef<HTMLButtonElement | null>(null);
+    const engineRef = useRef<SlingshotEngine | null>(null);
+
+    const [scoreCount, setScoreCount] = useState(0);
+    const [collected, setCollected] = useState<string[]>([]);
+    const [bookOpen, setBookOpen] = useState(false);
+    const [bookBump, setBookBump] = useState(0);
+    const [muted, setMuted] = useState(false);
+    const [showHint, setShowHint] = useState(true);
+    const [encouragement, setEncouragement] = useState<string | null>(null);
+
+    const collectedRef = useRef<string[]>([]);
+    const mutedRef = useRef(false);
+    const pendingSkillRef = useRef(0);
+    const encouragementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fullscreenTriedRef = useRef(false);
+
+    const say = useCallback(
+        (text: string) => {
+            if (mutedRef.current) return;
+            speak(text).catch(() => {});
+        },
+        [speak]
+    );
+
+    const flushSkill = useCallback((success: boolean) => {
+        if (pendingSkillRef.current <= 0) return;
+        pendingSkillRef.current = 0;
+        recordArcadeSkill('motor-hedefleme', 'arcade-slingshot', success).catch(() => {});
+    }, []);
+
+    const handlersRef = useRef<{
+        onLaunch: (fruit: FruitDef) => void;
+        onCatch: (score: number, fruit: FruitDef) => void;
+        onMiss: () => void;
+        onFruitLand: (fruit: OrchardFruitDef) => void;
+    }>({
+        onLaunch: () => {},
+        onCatch: () => {},
+        onMiss: () => {},
+        onFruitLand: () => {},
+    });
+
+    handlersRef.current = {
+        onLaunch: () => {
+            setShowHint(false);
+        },
+
+        onCatch: (score, fruit) => {
+            setScoreCount(score);
+            calmingMonitor(true);
+            pendingSkillRef.current += 1;
+            if (pendingSkillRef.current >= SKILL_BATCH_SIZE) {
+                flushSkill(true);
+            }
+
+            if (score === 1) {
+                say(`${fruit.name} sepete girdi! Harika atış!`);
+            } else if (score % 3 === 0) {
+                const reduce = document.documentElement.dataset.reduceMotion === 'true';
+                reward({
+                    message: `${fruit.name} sepete girdi! Harika atış!`,
+                    confettiOptions: { particleCount: reduce ? 0 : 35, spread: 55 },
+                });
+                say(`Harika bir atış! ${fruit.name} sepete girdi!`);
+            }
+        },
+
+        onMiss: () => {
+            calmingMonitor(false);
+            if (encouragementTimerRef.current) clearTimeout(encouragementTimerRef.current);
+            setEncouragement('Yaklaştın! Bir daha deneyelim 🍎');
+            say('Çok yaklaştın! Bir daha fırlat!');
+
+            encouragementTimerRef.current = setTimeout(() => {
+                setEncouragement(null);
+            }, 1800);
+        },
+
+        onFruitLand: (fruit) => {
+            const result = addOrchardFruit(collectedRef.current, fruit.id);
+            if (!result.isNew) return;
+
+            collectedRef.current = result.next;
+            setCollected(result.next);
+            saveOrchardCollection(result.next);
+            setBookBump((n) => n + 1);
+
+            if (result.isComplete) {
+                reward({ message: 'Meyve Bahçesi Defterin tamamlandı!' });
+                say('Tebrikler! Bütün meyveleri topladın!');
+            }
+        },
+    };
+
+    // Motoru kur / temizle
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const initial = loadOrchardCollection();
+        collectedRef.current = initial;
+        setCollected(initial);
+
+        const reduceMotion =
+            document.documentElement.dataset.reduceMotion === 'true' ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const engine = new SlingshotEngine(canvas, {
+            reduceMotion,
+            onLaunch: (fruit) => handlersRef.current.onLaunch(fruit),
+            onCatch: (s, f) => handlersRef.current.onCatch(s, f),
+            onMiss: () => handlersRef.current.onMiss(),
+            onFruitLand: (f) => handlersRef.current.onFruitLand(f),
+            getCollected: () => collectedRef.current,
+            getBookTarget: () => {
+                const c = canvas.getBoundingClientRect();
+                const b = bookBtnRef.current?.getBoundingClientRect();
+                if (!b) return { x: c.width - 40, y: 40 };
+                return { x: b.left + b.width / 2 - c.left, y: b.top + b.height / 2 - c.top };
+            },
+        });
+        engineRef.current = engine;
+
+        const measure = () => {
+            const rect = container.getBoundingClientRect();
+            const w = rect.width || window.innerWidth;
+            const h = rect.height || window.innerHeight;
+            if (w > 0 && h > 0) {
+                engine.resize(w, h);
+            }
+        };
+        measure();
+        engine.start();
+
+        const ro = new ResizeObserver(measure);
+        ro.observe(container);
+
+        const prevOverflow = document.body.style.overflow;
+        const prevOverscroll = document.body.style.overscrollBehavior;
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none';
+
+        const hintTimer = setTimeout(() => setShowHint(false), 6500);
+        say('Sapanı geriye doğru çek, nişan al ve sepete fırlat!');
+
+        return () => {
+            clearTimeout(hintTimer);
+            if (encouragementTimerRef.current) clearTimeout(encouragementTimerRef.current);
+            ro.disconnect();
+            engine.destroy();
+            engineRef.current = null;
+            flushSkill(true);
+            document.body.style.overflow = prevOverflow;
+            document.body.style.overscrollBehavior = prevOverscroll;
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Defter açıkken çizimi durdur
+    useEffect(() => {
+        engineRef.current?.setPaused(bookOpen);
+    }, [bookOpen]);
+
+    const tryFullscreen = () => {
+        if (fullscreenTriedRef.current) return;
+        fullscreenTriedRef.current = true;
+        if (!window.matchMedia('(pointer: coarse)').matches) return;
+        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+        if (document.fullscreenEnabled && el.requestFullscreen) {
+            el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+            Promise.resolve(el.webkitRequestFullscreen()).catch(() => {});
         }
-    }
+    };
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        tryFullscreen();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        const rect = e.currentTarget.getBoundingClientRect();
+        engineRef.current?.pointerDown(e.clientX - rect.left, e.clientY - rect.top);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        engineRef.current?.pointerMove(e.clientX - rect.left, e.clientY - rect.top);
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        try {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+            // sessiz geç
+        }
+        engineRef.current?.pointerUp();
+    };
+
+    const handlePointerCancel = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        try {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+            // sessiz geç
+        }
+        engineRef.current?.pointerCancel();
+    };
+
+    const toggleMute = () => {
+        const next = !muted;
+        setMuted(next);
+        mutedRef.current = next;
+        engineRef.current?.setMuted(next);
+        if (next) stop();
+    };
+
+    const total = ORCHARD_FRUITS.length;
+    const glass =
+        'min-w-tap min-h-tap flex items-center justify-center rounded-full bg-white/70 border border-white/80 text-papatya-ink shadow-sm active:scale-95 transition-transform backdrop-blur-md';
 
     return (
-        <main className="min-h-app flex flex-col p-3 md:p-6 max-w-5xl mx-auto w-full select-none overflow-hidden">
-            {/* Üst HUD */}
-            <header className="w-full mb-3 flex items-center justify-between gap-3">
-                <GameHud
-                    center={
-                        <div className="flex items-center gap-2 bg-papatya-surface/90 backdrop-blur px-4 py-1.5 rounded-full border border-papatya-ink/10 shadow-sm text-sm font-semibold text-papatya-ink">
-                            <Compass size={18} className="text-papatya-petal" />
-                            <span>Kalan Süre: {remainingMinutes} dk</span>
-                        </div>
-                    }
-                    right={
-                        <div className="bg-papatya-surface/90 backdrop-blur px-3 py-1.5 rounded-full border border-papatya-ink/10 shadow-sm text-sm font-bold text-papatya-ink flex items-center gap-1.5">
-                            <Sparkles size={16} className="text-papatya-petal" />
-                            <span>İsabet: {scoreCount}</span>
-                        </div>
-                    }
-                />
-            </header>
+        <div
+            ref={containerRef}
+            className="fixed inset-0 z-50 select-none overflow-hidden touch-none bg-[#78350F]"
+            style={{ height: '100dvh' }}
+        >
+            <canvas
+                ref={canvasRef}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+                className="absolute inset-0 block h-full w-full cursor-grab active:cursor-grabbing touch-none"
+                role="img"
+                aria-label="Renkli sapan meyve sepeti sahnesi. Sapanı geriye çekerek meyveleri piknik sepetine fırlatın."
+            />
 
-            {/* Sapan Sahnesi */}
+            {/* Üst Çubuk (HUD) */}
             <div
-                ref={containerRef}
-                onMouseDown={(e) => handleStartDrag(e.clientX, e.clientY)}
-                onMouseMove={(e) => handleMoveDrag(e.clientX, e.clientY)}
-                onMouseUp={handleRelease}
-                onTouchStart={(e) => {
-                    const t = e.touches[0];
-                    if (t) handleStartDrag(t.clientX, t.clientY);
-                }}
-                onTouchMove={(e) => {
-                    const t = e.touches[0];
-                    if (t) handleMoveDrag(t.clientX, t.clientY);
-                }}
-                onTouchEnd={handleRelease}
-                className="relative flex-1 w-full rounded-3xl overflow-hidden shadow-inner border-4 border-papatya-petal/40 cursor-grab active:cursor-grabbing touch-none"
-                style={{
-                    background: 'linear-gradient(180deg, #ffecd2 0%, #fcb69f 100%)',
-                    minHeight: '480px',
-                }}
+                className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 px-3 z-30"
+                style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
             >
-                {/* Gökyüzü ve Yumuşak Bulutlar */}
-                <div className="absolute top-6 left-12 text-3xl opacity-60">☁️</div>
-                <div className="absolute top-12 right-24 text-4xl opacity-50">☁️</div>
-
-                {/* Hedef Sepet / Kutu (Sağ Tarafta) */}
-                <motion.div
-                    className="absolute flex flex-col items-center pointer-events-none"
-                    style={{
-                        right: '12%',
-                        top: `${targetY}%`,
-                        transform: 'translate(50%, -50%)',
-                    }}
-                    animate={{ y: [-5, 5, -5] }}
-                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                {/* Sol: Geri Dönüş Butonu */}
+                <Link
+                    href="/games/fun-hub"
+                    aria-label="Oyun Dünyasına dön"
+                    className={`${glass} pointer-events-auto`}
                 >
-                    <div className="w-24 h-24 rounded-3xl bg-amber-100/90 border-4 border-amber-600 shadow-xl flex items-center justify-center p-2">
-                        {/* Sepet İkonu / Papatya */}
-                        <span className="text-5xl">🧺</span>
+                    <ArrowLeft size={22} />
+                </Link>
+
+                {/* Orta: Süre ve Başarı Göstergesi */}
+                <div className="flex flex-col items-center gap-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/65 px-3 py-1 text-xs font-semibold text-papatya-ink backdrop-blur-md shadow-sm">
+                        <Clock size={14} />
+                        <span>{remainingMinutes} dk</span>
                     </div>
-                    <span className="mt-1 text-xs font-bold text-amber-950 bg-white/80 px-2.5 py-0.5 rounded-full shadow-sm">
-                        Hedef Sepet
-                    </span>
-                </motion.div>
 
-                {/* Sapan Çatısı (Sol Tarafta) */}
-                <div
-                    className="absolute pointer-events-none"
-                    style={{
-                        left: slingOrigin.x - 25,
-                        top: slingOrigin.y - 30,
-                    }}
-                >
-                    {/* Ahşap Sapan Vektörü */}
-                    <svg width="60" height="140" viewBox="0 0 60 140">
-                        {/* Sap */}
-                        <path d="M 25 60 L 25 140 L 35 140 L 35 60 Z" fill="#8B4513" rx="4" />
-                        {/* Sol Kol */}
-                        <path d="M 28 65 L 10 10 L 20 10 L 32 60 Z" fill="#A0522D" rx="4" />
-                        {/* Sağ Kol */}
-                        <path d="M 32 60 L 50 10 L 40 10 L 28 65 Z" fill="#A0522D" rx="4" />
-                    </svg>
+                    <div className="flex items-center gap-1.5 rounded-full border-2 border-amber-400 bg-white/90 px-3 py-1 shadow-md backdrop-blur-md">
+                        <Sparkles size={14} className="text-amber-600" />
+                        <span className="text-xs font-extrabold text-papatya-ink">
+                            Sepette: {scoreCount}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Sapan Lastikleri */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    {/* Sol Kol Lastiği */}
-                    <line
-                        x1={slingOrigin.x - 15}
-                        y1={slingOrigin.y - 20}
-                        x2={ball.flying ? slingOrigin.x : dragPos.x}
-                        y2={ball.flying ? slingOrigin.y : dragPos.y}
-                        stroke="#4A2E18"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                    />
-                    {/* Sağ Kol Lastiği */}
-                    <line
-                        x1={slingOrigin.x + 15}
-                        y1={slingOrigin.y - 20}
-                        x2={ball.flying ? slingOrigin.x : dragPos.x}
-                        y2={ball.flying ? slingOrigin.y : dragPos.y}
-                        stroke="#4A2E18"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                    />
-                </svg>
+                {/* Sağ: Ses ve Meyve Bahçesi Defteri */}
+                <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
+                    <button
+                        type="button"
+                        onClick={toggleMute}
+                        aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
+                        aria-pressed={muted}
+                        className={glass}
+                    >
+                        {muted ? <VolumeX size={22} /> : <Volume2 size={22} />}
+                    </button>
 
-                {/* Yörünge Kılavuz Noktacıkları */}
-                {trajectoryDots.map((dot, idx) => (
-                    <div
-                        key={idx}
-                        className="absolute w-3 h-3 rounded-full bg-papatya-ink/30 border border-white/60 pointer-events-none"
-                        style={{
-                            left: dot.x - 6,
-                            top: dot.y - 6,
-                            opacity: 1 - idx * 0.1,
-                        }}
-                    />
-                ))}
-
-                {/* Sapan Topu / Papatya */}
-                <div
-                    className="absolute pointer-events-none flex items-center justify-center rounded-full shadow-lg border-2 border-white/80 bg-white/95 overflow-hidden"
-                    style={{
-                        left: (ball.flying ? ball.x : dragPos.x) - 28,
-                        top: (ball.flying ? ball.y : dragPos.y) - 28,
-                        width: 56,
-                        height: 56,
-                        zIndex: 35,
-                    }}
-                >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="/karsilastirma/top.jpg"
-                        alt="Papatya Topu"
-                        className="w-full h-full object-contain p-1"
-                    />
-                </div>
-
-                {/* Geri Bildirim Toast'ı */}
-                <AnimatePresence>
-                    {feedback && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute top-16 left-1/2 -translate-x-1/2 bg-papatya-surface/95 border-2 border-papatya-petal shadow-lg px-6 py-2.5 rounded-full text-base font-bold text-papatya-ink text-center z-40"
-                        >
-                            {feedback}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Alt Yönlendirme İpucu */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none bg-papatya-surface/90 backdrop-blur px-5 py-2 rounded-full shadow-md text-xs md:text-sm font-bold text-papatya-ink text-center">
-                    🏹 Topu geriye doğru çek, nişan al ve sepete fırlat!
+                    <button
+                        ref={bookBtnRef}
+                        type="button"
+                        onClick={() => setBookOpen(true)}
+                        aria-label={`Meyve bahçesi defterim, ${collected.length} / ${total}`}
+                        className={`${glass} relative ${bookBump > 0 ? 'balloon-book-bump' : ''}`}
+                        key={bookBump}
+                    >
+                        <BookOpen size={22} />
+                        <span className="absolute -bottom-1 -right-1 rounded-full bg-amber-600 px-1.5 text-[10px] font-bold leading-4 text-white">
+                            {collected.length}/{total}
+                        </span>
+                    </button>
                 </div>
             </div>
-        </main>
+
+            {/* Teşvik ve No-Failure Bildirimi */}
+            {encouragement && (
+                <div
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border-2 border-amber-300 bg-white/95 px-5 py-2 text-xs md:text-sm font-extrabold text-amber-900 shadow-xl backdrop-blur-md transition-all z-40"
+                    style={{ top: 'max(4.5rem, calc(env(safe-area-inset-top) + 3.8rem))' }}
+                >
+                    {encouragement}
+                </div>
+            )}
+
+            {/* İlk Saniyelerde Kısa Sakinleştirici İpucu */}
+            {showHint && (
+                <div
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full bg-white/85 backdrop-blur-md px-5 py-2 text-xs md:text-sm font-semibold text-papatya-ink shadow-md z-30"
+                    style={{ bottom: 'max(2.5rem, calc(env(safe-area-inset-bottom) + 2rem))' }}
+                >
+                    🧺 Sapanı geri çek, nişan al ve sepete fırlat!
+                </div>
+            )}
+
+            {/* Meyve Bahçesi Defteri Modalı */}
+            {bookOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Meyve Bahçesi Defterim"
+                >
+                    <div className="w-full max-w-md rounded-3xl border-4 border-amber-300/60 bg-papatya-surface p-5 shadow-2xl">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <Sparkles className="text-amber-600" size={24} />
+                            <h2 className="text-center text-xl font-extrabold text-papatya-ink">
+                                Meyve Bahçesi Defteri
+                            </h2>
+                        </div>
+                        <p className="mb-4 text-center text-sm font-semibold text-papatya-ink/70">
+                            {collected.length} / {total} Meyve Keşfedildi
+                        </p>
+
+                        <div className="grid grid-cols-4 gap-2.5 sm:gap-3 max-h-[60vh] overflow-y-auto p-1">
+                            {ORCHARD_FRUITS.map((item) => {
+                                const has = collected.includes(item.id);
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className="flex flex-col items-center justify-center rounded-2xl border-2 p-2.5 transition-all text-center"
+                                        style={{
+                                            borderColor: has ? '#F59E0B' : 'rgba(0,0,0,0.08)',
+                                            backgroundColor: has ? '#FFFBEB' : 'rgba(0,0,0,0.03)',
+                                        }}
+                                        title={has ? `${item.label} — ${item.description}` : 'Keşfedilmeyi bekliyor'}
+                                    >
+                                        <span
+                                            className="text-3xl mb-1"
+                                            style={has ? undefined : { filter: 'grayscale(1) opacity(0.25)' }}
+                                            aria-hidden="true"
+                                        >
+                                            {item.emoji}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-papatya-ink/80 leading-tight">
+                                            {has ? item.label : '???'}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setBookOpen(false)}
+                            className="mt-5 min-h-tap w-full rounded-full bg-amber-600 hover:bg-amber-700 px-6 py-3 text-base font-bold text-white shadow-md active:scale-95 transition-transform"
+                        >
+                            Bahçeye Dön
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
